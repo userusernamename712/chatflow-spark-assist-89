@@ -1,12 +1,114 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
+import { toast } from '@/components/ui/use-toast';
+import ChatHeader from '@/components/ChatHeader';
+import ChatContainer from '@/components/ChatContainer';
+import ChatInput from '@/components/ChatInput';
+import { Message, ChatEvent } from '@/types/chat';
+import { sendChatMessage } from '@/services/chatService';
 
 const Index = () => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const customerId = "mooma"; // This would typically come from auth or user settings
+
+  const handleSendMessage = (content: string) => {
+    if (!content.trim() || isProcessing) return;
+
+    const newUserMessage: Message = {
+      id: uuidv4(),
+      type: 'user',
+      content: content.trim(),
+    };
+
+    setMessages((prev) => [...prev, newUserMessage]);
+    setIsProcessing(true);
+
+    sendChatMessage(
+      {
+        session_id: sessionId,
+        customer_id: customerId,
+        prompt: content.trim(),
+      },
+      handleChatEvent,
+      () => setIsProcessing(false),
+      handleError
+    );
+  };
+
+  const handleChatEvent = (event: ChatEvent) => {
+    // Update session ID if it's the first response
+    if (!sessionId && event.session_id) {
+      setSessionId(event.session_id);
+    }
+
+    if (event.type === 'text' && event.message) {
+      const messageId = uuidv4();
+      
+      // Add new message or update existing streaming message
+      setMessages((prev) => {
+        // Check if we're already streaming this message
+        const streamingMsgIndex = prev.findIndex(
+          (msg) => msg.type === 'assistant' && msg.isStreaming
+        );
+        
+        if (streamingMsgIndex >= 0) {
+          // Update the existing streaming message
+          const updatedMessages = [...prev];
+          updatedMessages[streamingMsgIndex] = {
+            ...updatedMessages[streamingMsgIndex],
+            content: event.message || '',
+            isStreaming: !event.finished,
+          };
+          return updatedMessages;
+        } else {
+          // Add a new streaming message
+          return [
+            ...prev,
+            {
+              id: messageId,
+              type: 'assistant',
+              content: event.message,
+              isStreaming: !event.finished,
+            },
+          ];
+        }
+      });
+    } else if (event.type === 'tool_call') {
+      // Add a tool call message
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: uuidv4(),
+          type: 'tool_call',
+          content: `Using ${event.tool}...`,
+          tool: event.tool,
+          arguments: event.arguments,
+          result: event.result,
+        },
+      ]);
+    } else if (event.type === 'error') {
+      handleError(new Error(event.message || 'Unknown error'));
+    }
+  };
+
+  const handleError = (error: Error) => {
+    console.error('Chat error:', error);
+    setIsProcessing(false);
+    toast({
+      variant: "destructive",
+      title: "Error",
+      description: error.message || "Something went wrong. Please try again.",
+    });
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background shadow-lg rounded-lg overflow-hidden">
+      <ChatHeader />
+      <ChatContainer messages={messages} isProcessing={isProcessing} />
+      <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />
     </div>
   );
 };

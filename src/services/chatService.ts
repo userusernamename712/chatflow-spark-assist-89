@@ -10,6 +10,9 @@ export const sendChatMessage = async (
   onError: (error: Error) => void
 ) => {
   try {
+    // Log the request being sent, including session_id
+    console.log('Sending chat request:', JSON.stringify(request));
+    
     const response = await fetch(`${API_URL}/chat`, {
       method: 'POST',
       headers: {
@@ -59,6 +62,8 @@ export const sendChatMessage = async (
           if (line.trim()) {
             try {
               const event = JSON.parse(line) as ChatEvent;
+              // Log each received event
+              console.log('Received event:', JSON.stringify(event));
               onEvent(event);
             } catch (e) {
               console.error('Error parsing JSON:', e, line);

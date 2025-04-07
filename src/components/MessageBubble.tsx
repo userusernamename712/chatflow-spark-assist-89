@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { MessageCircle, Bot, Terminal } from 'lucide-react';
+import { MessageCircle, Bot, Terminal, Code, ChevronDown, ChevronUp } from 'lucide-react';
 
 type MessageBubbleProps = {
   type: 'user' | 'assistant' | 'tool';
@@ -22,28 +22,32 @@ const MessageBubble = ({
 }: MessageBubbleProps) => {
   const isUser = type === 'user';
   const isTool = type === 'tool';
+  const [expanded, setExpanded] = React.useState(false);
 
   return (
     <div
       className={cn(
-        "message-bubble my-2 max-w-[85%] rounded-2xl p-4",
+        "message-bubble my-2 max-w-[85%] rounded-2xl p-4 shadow-lg",
         isUser 
-          ? "ml-auto bg-primary text-primary-foreground" 
+          ? "ml-auto bg-gradient-to-br from-primary to-primary/80 text-primary-foreground" 
           : isTool 
-            ? "mr-auto bg-secondary text-secondary-foreground tool-call border border-primary/30"
-            : "mr-auto bg-card text-card-foreground"
+            ? "mr-auto bg-gradient-to-br from-secondary to-secondary/80 text-secondary-foreground tool-call border border-primary/30"
+            : "mr-auto bg-gradient-to-br from-card to-card/90 text-card-foreground"
       )}
     >
       <div className="flex items-start gap-2">
         {!isUser && (
-          <div className="mt-1 rounded-full bg-primary/10 p-1">
-            {isTool ? <Terminal size={14} /> : <Bot size={14} />}
+          <div className={cn("mt-1 rounded-full p-1.5", 
+            isTool ? "bg-primary/20" : "bg-primary/10"
+          )}>
+            {isTool ? <Terminal size={14} className="text-primary" /> : <Bot size={14} className="text-primary" />}
           </div>
         )}
-        <div className="space-y-2">
+        <div className="space-y-2 flex-1">
           {isTool && toolName && (
-            <div className="text-xs font-medium text-primary">
-              Function call: {toolName}
+            <div className="text-xs font-medium text-primary flex items-center">
+              <Code size={12} className="mr-1" />
+              <span>Function: {toolName}</span>
             </div>
           )}
           
@@ -53,16 +57,32 @@ const MessageBubble = ({
           
           {isTool && toolArgs && (
             <div className="mt-2 rounded bg-muted/50 p-2 text-xs">
-              <div className="font-semibold text-muted-foreground mb-1">Arguments:</div>
+              <div className="font-semibold text-muted-foreground mb-1 flex items-center justify-between">
+                <span className="flex items-center">
+                  <Terminal size={12} className="mr-1" />
+                  Arguments
+                </span>
+                {toolResult !== undefined && (
+                  <button
+                    onClick={() => setExpanded(!expanded)}
+                    className="text-primary/80 hover:text-primary transition-colors p-1 rounded-full hover:bg-primary/10"
+                  >
+                    {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                )}
+              </div>
               <pre className="whitespace-pre-wrap break-all text-muted-foreground">
                 {JSON.stringify(toolArgs, null, 2)}
               </pre>
             </div>
           )}
           
-          {isTool && toolResult !== undefined && (
-            <div className="mt-2 rounded bg-muted/50 p-2 text-xs">
-              <div className="font-semibold text-muted-foreground mb-1">Result:</div>
+          {isTool && toolResult !== undefined && expanded && (
+            <div className="mt-2 rounded bg-muted/50 p-2 text-xs animate-fade-in">
+              <div className="font-semibold text-muted-foreground mb-1 flex items-center">
+                <Terminal size={12} className="mr-1" />
+                Result
+              </div>
               <pre className="whitespace-pre-wrap break-all text-muted-foreground">
                 {typeof toolResult === 'object' 
                   ? JSON.stringify(toolResult, null, 2) 
@@ -72,8 +92,8 @@ const MessageBubble = ({
           )}
         </div>
         {isUser && (
-          <div className="mt-1 rounded-full bg-primary/20 p-1">
-            <MessageCircle size={14} />
+          <div className="mt-1 rounded-full bg-primary/20 p-1.5">
+            <MessageCircle size={14} className="text-primary-foreground" />
           </div>
         )}
       </div>

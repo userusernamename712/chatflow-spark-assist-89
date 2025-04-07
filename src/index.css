@@ -42,7 +42,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground bg-gradient-to-br from-background to-background/80;
+    background-image: radial-gradient(
+      circle at 100% 100%,
+      hsl(var(--primary) / 0.15) 0%,
+      transparent 40%
+    );
   }
 
   /* Animation for typing effect */
@@ -67,6 +72,18 @@
     70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
     100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
   }
+  
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-5px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  @keyframes glow {
+    0% { box-shadow: 0 0 5px 0 rgba(59, 130, 246, 0.3); }
+    50% { box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.6); }
+    100% { box-shadow: 0 0 5px 0 rgba(59, 130, 246, 0.3); }
+  }
 }
 
 .typing-indicator::after {
@@ -81,4 +98,12 @@
 
 .tool-call {
   animation: slideIn 0.5s ease-out;
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+.glow-animation {
+  animation: glow 3s ease-in-out infinite;
 }

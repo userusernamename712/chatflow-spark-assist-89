@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -13,6 +12,19 @@ const Index = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const customerId = "mooma"; // This would typically come from auth or user settings
+
+  useEffect(() => {
+    const savedSessionId = localStorage.getItem('chatSessionId');
+    if (savedSessionId) {
+      setSessionId(savedSessionId);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (sessionId) {
+      localStorage.setItem('chatSessionId', sessionId);
+    }
+  }, [sessionId]);
 
   const handleSendMessage = (content: string) => {
     if (!content.trim() || isProcessing) return;
@@ -39,7 +51,6 @@ const Index = () => {
   };
 
   const handleChatEvent = (event: ChatEvent) => {
-    // Update session ID if it's the first response
     if (!sessionId && event.session_id) {
       setSessionId(event.session_id);
     }
@@ -47,15 +58,12 @@ const Index = () => {
     if (event.type === 'text' && event.message) {
       const messageId = uuidv4();
       
-      // Add new message or update existing streaming message
       setMessages((prev) => {
-        // Check if we're already streaming this message
         const streamingMsgIndex = prev.findIndex(
           (msg) => msg.type === 'assistant' && msg.isStreaming
         );
         
         if (streamingMsgIndex >= 0) {
-          // Update the existing streaming message
           const updatedMessages = [...prev];
           updatedMessages[streamingMsgIndex] = {
             ...updatedMessages[streamingMsgIndex],
@@ -64,7 +72,6 @@ const Index = () => {
           };
           return updatedMessages;
         } else {
-          // Add a new streaming message
           return [
             ...prev,
             {
@@ -77,7 +84,6 @@ const Index = () => {
         }
       });
     } else if (event.type === 'tool_call') {
-      // Add a tool call message
       setMessages((prev) => [
         ...prev,
         {
@@ -104,8 +110,13 @@ const Index = () => {
     });
   };
 
+  const clearChat = () => {
+    setMessages([]);
+    // Keep the session ID to maintain connection with server
+  };
+
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background shadow-lg rounded-lg overflow-hidden">
+    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background/80 backdrop-blur-md shadow-xl rounded-lg overflow-hidden border border-border/50">
       <ChatHeader />
       <ChatContainer messages={messages} isProcessing={isProcessing} />
       <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />

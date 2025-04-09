@@ -39,6 +39,13 @@ const ChatInput = ({ onSendMessage, isProcessing }: ChatInputProps) => {
     }
   }, [message]);
 
+  // Auto focus when processing is complete
+  useEffect(() => {
+    if (!isProcessing && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isProcessing]);
+
   return (
     <form onSubmit={handleSubmit} className="p-3 bg-zinc-900 rounded-b-lg border-t border-zinc-800">
       <div className="relative flex items-end">

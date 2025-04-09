@@ -50,7 +50,15 @@ const MessageBubble = ({
           {isTool && toolName && (
             <div className="text-xs font-medium text-zinc-500 flex items-center">
               <Code size={10} className="mr-1" />
-              <span>$ {toolName}</span>
+              <span>{toolName}</span>
+              {toolResult !== undefined && (
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="ml-2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                </button>
+              )}
             </div>
           )}
           
@@ -75,29 +83,7 @@ const MessageBubble = ({
             </div>
           )}
           
-          {isTool && toolArgs && (
-            <div className="mt-1 rounded bg-zinc-800/50 p-1.5 text-xs">
-              <div className="font-semibold text-zinc-500 mb-1 flex items-center justify-between">
-                <span className="flex items-center">
-                  <Terminal size={10} className="mr-1" />
-                  args
-                </span>
-                {toolResult !== undefined && (
-                  <button
-                    onClick={() => setExpanded(!expanded)}
-                    className="text-zinc-500 hover:text-zinc-300 transition-colors"
-                  >
-                    {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                  </button>
-                )}
-              </div>
-              <pre className="whitespace-pre-wrap break-all text-green-500/80 text-xs overflow-x-auto">
-                {JSON.stringify(toolArgs, null, 2)}
-              </pre>
-            </div>
-          )}
-          
-          {isTool && toolResult !== undefined && expanded && (
+          {isTool && expanded && (
             <div className="mt-1 rounded bg-zinc-800/50 p-1.5 text-xs animate-fade-in">
               <div className="font-semibold text-zinc-500 mb-1 flex items-center">
                 <Terminal size={10} className="mr-1" />

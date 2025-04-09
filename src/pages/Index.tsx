@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -11,7 +12,7 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const customerId = "mooma"; // This would typically come from auth or user settings
+  const customerId = "terminal-user"; // This would typically come from auth or user settings
 
   useEffect(() => {
     const savedSessionId = localStorage.getItem('chatSessionId');
@@ -116,7 +117,7 @@ const Index = () => {
   };
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-background/80 backdrop-blur-md shadow-xl rounded-lg overflow-hidden border border-border/50">
+    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-zinc-900 backdrop-blur-md shadow-2xl rounded-lg overflow-hidden border border-zinc-800">
       <ChatHeader />
       <ChatContainer messages={messages} isProcessing={isProcessing} />
       <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />

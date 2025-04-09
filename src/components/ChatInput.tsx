@@ -40,9 +40,9 @@ const ChatInput = ({ onSendMessage, isProcessing }: ChatInputProps) => {
   }, [message]);
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 bg-gradient-to-r from-card to-card/80 backdrop-blur-sm rounded-b-lg border-t border-border">
+    <form onSubmit={handleSubmit} className="p-3 bg-zinc-900 rounded-b-lg border-t border-zinc-800">
       <div className="relative flex items-end">
-        <div className="absolute left-3 bottom-3 text-muted-foreground">
+        <div className="absolute left-3 bottom-3 text-zinc-600">
           <Sparkles className="h-4 w-4" />
         </div>
         <Textarea
@@ -50,22 +50,22 @@ const ChatInput = ({ onSendMessage, isProcessing }: ChatInputProps) => {
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask a question..."
-          className="min-h-[60px] max-h-[150px] pr-12 pl-10 rounded-xl resize-none bg-secondary/80 text-secondary-foreground shadow-inner focus-visible:ring-primary/50"
+          placeholder="$ ai run..."
+          className="min-h-[50px] max-h-[150px] pr-12 pl-10 rounded-md resize-none bg-zinc-800/80 text-zinc-300 focus-visible:ring-zinc-700 font-mono text-sm border-zinc-700"
           disabled={isProcessing}
         />
         <Button
           type="submit"
           size="icon"
-          className="absolute right-2 bottom-2 rounded-lg h-9 w-9 bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-200 shadow-md hover:shadow-lg"
+          className="absolute right-2 bottom-2 rounded-md h-8 w-8 bg-zinc-700 hover:bg-zinc-600 text-zinc-300 transition-all duration-200"
           disabled={!message.trim() || isProcessing}
         >
           <Send className="h-4 w-4" />
           <span className="sr-only">Send</span>
         </Button>
       </div>
-      <div className="mt-2 text-xs text-muted-foreground text-center">
-        {isProcessing ? "Processing your request..." : "Press Enter to send, Shift+Enter for new line"}
+      <div className="mt-1.5 text-xs text-zinc-600 text-center font-mono">
+        {isProcessing ? "Processing request..." : "Press Enter to send, Shift+Enter for new line"}
       </div>
     </form>
   );

@@ -29,37 +29,38 @@ const MessageBubble = ({
   return (
     <div
       className={cn(
-        "message-bubble my-2 max-w-[85%] rounded-lg p-4 shadow-sm",
+        "message-bubble my-2 max-w-full px-3 py-2 font-mono text-sm",
         isUser 
-          ? "ml-auto bg-primary text-primary-foreground" 
+          ? "text-zinc-300 border-l-2 border-zinc-700 pl-3 pr-0" 
           : isTool 
-            ? "mr-auto bg-secondary text-secondary-foreground tool-call border border-primary/30"
-            : "mr-auto bg-card text-card-foreground border border-border"
+            ? "bg-zinc-800/40 border-l-2 border-zinc-700 rounded-sm" 
+            : "text-zinc-300"
       )}
     >
-      <div className="flex items-start gap-2">
+      <div className="flex items-start">
         {!isUser && (
-          <div className={cn("mt-1 rounded-full p-1.5", 
-            isTool ? "bg-primary/10" : "bg-primary/10"
+          <div className={cn("mt-1 mr-2", 
+            isTool ? "text-zinc-500" : "text-green-500"
           )}>
-            {isTool ? <Terminal size={12} className="text-primary" /> : <Bot size={12} className="text-primary" />}
+            {isTool ? <Terminal size={12} /> : <Bot size={12} />}
           </div>
         )}
-        <div className="space-y-2 flex-1">
+
+        <div className="space-y-1 flex-1 overflow-x-auto">
           {isTool && toolName && (
-            <div className="text-xs font-medium text-primary/80 flex items-center">
+            <div className="text-xs font-medium text-zinc-500 flex items-center">
               <Code size={10} className="mr-1" />
-              <span>Function: {toolName}</span>
+              <span>$ {toolName}</span>
             </div>
           )}
           
           {!isTool && (
             <div className={cn(isStreaming && "typing-indicator")}>
               {isStreaming ? (
-                <span>{content}</span>
+                <span className="text-zinc-300">{content}</span>
               ) : (
                 <ReactMarkdown 
-                  className="markdown" 
+                  className="markdown text-zinc-300" 
                   remarkPlugins={[remarkGfm]}
                 >
                   {content}
@@ -69,40 +70,40 @@ const MessageBubble = ({
           )}
           
           {isTool && (
-            <div className="text-sm">
+            <div className="text-sm text-zinc-400">
               {content}
             </div>
           )}
           
           {isTool && toolArgs && (
-            <div className="mt-2 rounded bg-background/50 p-2 text-xs">
-              <div className="font-semibold text-muted-foreground mb-1 flex items-center justify-between">
+            <div className="mt-1 rounded bg-zinc-800/50 p-1.5 text-xs">
+              <div className="font-semibold text-zinc-500 mb-1 flex items-center justify-between">
                 <span className="flex items-center">
                   <Terminal size={10} className="mr-1" />
-                  Arguments
+                  args
                 </span>
                 {toolResult !== undefined && (
                   <button
                     onClick={() => setExpanded(!expanded)}
-                    className="text-primary/80 hover:text-primary transition-colors p-1 rounded-full hover:bg-background/50"
+                    className="text-zinc-500 hover:text-zinc-300 transition-colors"
                   >
                     {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                   </button>
                 )}
               </div>
-              <pre className="whitespace-pre-wrap break-all text-muted-foreground text-xs">
+              <pre className="whitespace-pre-wrap break-all text-green-500/80 text-xs overflow-x-auto">
                 {JSON.stringify(toolArgs, null, 2)}
               </pre>
             </div>
           )}
           
           {isTool && toolResult !== undefined && expanded && (
-            <div className="mt-2 rounded bg-background/50 p-2 text-xs animate-fade-in">
-              <div className="font-semibold text-muted-foreground mb-1 flex items-center">
+            <div className="mt-1 rounded bg-zinc-800/50 p-1.5 text-xs animate-fade-in">
+              <div className="font-semibold text-zinc-500 mb-1 flex items-center">
                 <Terminal size={10} className="mr-1" />
-                Result
+                result
               </div>
-              <pre className="whitespace-pre-wrap break-all text-muted-foreground text-xs">
+              <pre className="whitespace-pre-wrap break-all text-green-500/80 text-xs overflow-x-auto">
                 {typeof toolResult === 'object' 
                   ? JSON.stringify(toolResult, null, 2) 
                   : String(toolResult)}
@@ -110,9 +111,10 @@ const MessageBubble = ({
             </div>
           )}
         </div>
+        
         {isUser && (
-          <div className="mt-1 rounded-full bg-primary-foreground/10 p-1.5">
-            <MessageCircle size={12} className="text-primary-foreground" />
+          <div className="mt-1 ml-2 text-zinc-500">
+            <MessageCircle size={12} />
           </div>
         )}
       </div>

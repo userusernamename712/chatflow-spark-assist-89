@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bot, Terminal, MessageSquare } from 'lucide-react';
+import { Bot, HelpCircle, MessageSquare } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import { Message } from '@/types/chat';
 
@@ -22,20 +22,20 @@ const ChatContainer = ({ messages, isProcessing }: ChatContainerProps) => {
       {messages.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-center p-8">
           <div className="rounded-full bg-zinc-800 p-4 mb-4">
-            <Terminal className="h-6 w-6 text-zinc-500" />
+            <Bot className="h-6 w-6 text-green-500" />
           </div>
-          <h3 className="text-lg font-mono font-semibold mb-2 text-zinc-300">AI Terminal</h3>
-          <p className="text-sm text-zinc-500 max-w-md font-mono">
-            Type a command to begin interacting with the AI assistant.
+          <h3 className="text-lg font-medium mb-2 text-zinc-300">Welcome</h3>
+          <p className="text-sm text-zinc-500 max-w-md mb-6">
+            I'm your AI assistant. Ask me questions or request information to get started.
           </p>
-          <div className="mt-8 flex flex-col space-y-2">
-            <div className="flex items-center bg-zinc-800/50 p-2 px-3 rounded-sm text-sm font-mono text-zinc-400 border-l-2 border-zinc-700">
-              <Bot className="h-3 w-3 mr-2 text-green-500" />
-              <span>$ ai run "What's my conversion rate?"</span>
+          <div className="mt-4 flex flex-col space-y-3">
+            <div className="flex items-center bg-zinc-800/50 p-3 rounded-sm text-sm text-zinc-400 border-l-2 border-green-800/50">
+              <HelpCircle className="h-3 w-3 mr-2 text-green-500" />
+              <span>Try asking "What can you help me with?"</span>
             </div>
-            <div className="flex items-center bg-zinc-800/50 p-2 px-3 rounded-sm text-sm font-mono text-zinc-400 border-l-2 border-zinc-700">
-              <Terminal className="h-3 w-3 mr-2 text-green-500" />
-              <span>$ ai run "Show me recent stats"</span>
+            <div className="flex items-center bg-zinc-800/50 p-3 rounded-sm text-sm text-zinc-400 border-l-2 border-green-800/50">
+              <MessageSquare className="h-3 w-3 mr-2 text-green-500" />
+              <span>Or "Tell me about my account"</span>
             </div>
           </div>
         </div>
@@ -55,7 +55,7 @@ const ChatContainer = ({ messages, isProcessing }: ChatContainerProps) => {
                 <MessageBubble
                   key={message.id}
                   type="tool"
-                  content={`Executing tool...`}
+                  content={`The assistant is looking up information for you...`}
                   toolName={message.tool}
                   toolArgs={message.arguments}
                   toolResult={message.result}

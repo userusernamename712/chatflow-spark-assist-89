@@ -29,18 +29,18 @@ const MessageBubble = ({
   return (
     <div
       className={cn(
-        "message-bubble my-2 max-w-full px-3 py-2 font-mono text-sm",
+        "message-bubble my-2 max-w-full px-3 py-2 font-sans text-sm",
         isUser 
           ? "text-zinc-300 border-l-2 border-zinc-700 pl-3 pr-0" 
           : isTool 
-            ? "bg-zinc-800/40 border-l-2 border-zinc-700 rounded-sm" 
+            ? "bg-zinc-800/40 border-l-2 border-green-800/50 rounded-sm" 
             : "text-zinc-300"
       )}
     >
       <div className="flex items-start">
         {!isUser && (
           <div className={cn("mt-1 mr-2", 
-            isTool ? "text-zinc-500" : "text-green-500"
+            isTool ? "text-green-500" : "text-green-500"
           )}>
             {isTool ? <Terminal size={12} /> : <Bot size={12} />}
           </div>
@@ -48,13 +48,14 @@ const MessageBubble = ({
 
         <div className="space-y-1 flex-1 overflow-x-auto">
           {isTool && toolName && (
-            <div className="text-xs font-medium text-zinc-500 flex items-center">
+            <div className="text-xs font-medium text-green-400/80 flex items-center">
               <Code size={10} className="mr-1" />
-              <span>{toolName}</span>
+              <span>Using {toolName}</span>
               {toolResult !== undefined && (
                 <button
                   onClick={() => setExpanded(!expanded)}
                   className="ml-2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  aria-label={expanded ? "Hide result" : "Show result"}
                 >
                   {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                 </button>
@@ -85,11 +86,11 @@ const MessageBubble = ({
           
           {isTool && expanded && (
             <div className="mt-1 rounded bg-zinc-800/50 p-1.5 text-xs animate-fade-in">
-              <div className="font-semibold text-zinc-500 mb-1 flex items-center">
+              <div className="font-medium text-zinc-500 mb-1 flex items-center">
                 <Terminal size={10} className="mr-1" />
-                result
+                Results
               </div>
-              <pre className="whitespace-pre-wrap break-all text-green-500/80 text-xs overflow-x-auto">
+              <pre className="whitespace-pre-wrap break-all text-green-400/80 text-xs overflow-x-auto">
                 {typeof toolResult === 'object' 
                   ? JSON.stringify(toolResult, null, 2) 
                   : String(toolResult)}

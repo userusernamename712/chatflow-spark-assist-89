@@ -5,35 +5,35 @@
 
 @layer base {
   :root {
-    --background: 222 47% 11%;
-    --foreground: 213 31% 91%;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
 
-    --card: 222 47% 15%;
-    --card-foreground: 213 31% 91%;
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 10%;
 
-    --popover: 222 47% 11%;
-    --popover-foreground: 213 31% 91%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
 
-    --primary: 216 100% 60%;
-    --primary-foreground: 213 31% 91%;
+    --primary: 0 0% 10%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 47% 20%;
-    --secondary-foreground: 213 31% 91%;
+    --secondary: 0 0% 94%;
+    --secondary-foreground: 0 0% 10%;
 
-    --muted: 223 47% 20%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 223 47% 20%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 10%;
 
-    --destructive: 0 62.8% 60.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 216 100% 60%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 20%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
   }
 }
 
@@ -42,11 +42,11 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground bg-gradient-to-br from-background to-background/80;
+    @apply bg-background text-foreground;
     background-image: radial-gradient(
-      circle at 100% 100%,
-      hsl(var(--primary) / 0.15) 0%,
-      transparent 40%
+      circle at 80% 80%,
+      hsl(var(--secondary) / 0.5) 0%,
+      transparent 50%
     );
   }
 
@@ -68,9 +68,9 @@
   }
   
   @keyframes pulse {
-    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
-    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.3); }
+    70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(0, 0, 0, 0); }
+    100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
   }
   
   @keyframes float {
@@ -80,9 +80,9 @@
   }
   
   @keyframes glow {
-    0% { box-shadow: 0 0 5px 0 rgba(59, 130, 246, 0.3); }
-    50% { box-shadow: 0 0 20px 5px rgba(59, 130, 246, 0.6); }
-    100% { box-shadow: 0 0 5px 0 rgba(59, 130, 246, 0.3); }
+    0% { box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2); }
+    50% { box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.3); }
+    100% { box-shadow: 0 0 5px 0 rgba(0, 0, 0, 0.2); }
   }
 }
 
@@ -106,4 +106,77 @@
 
 .glow-animation {
   animation: glow 3s ease-in-out infinite;
+}
+
+/* Markdown Styling */
+.markdown {
+  @apply text-sm leading-relaxed;
+}
+
+.markdown p {
+  @apply mb-4;
+}
+
+.markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
+  @apply font-bold mt-6 mb-4;
+}
+
+.markdown h1 {
+  @apply text-2xl;
+}
+
+.markdown h2 {
+  @apply text-xl;
+}
+
+.markdown h3 {
+  @apply text-lg;
+}
+
+.markdown ul, .markdown ol {
+  @apply pl-5 mb-4;
+}
+
+.markdown ul {
+  @apply list-disc;
+}
+
+.markdown ol {
+  @apply list-decimal;
+}
+
+.markdown li {
+  @apply mb-1;
+}
+
+.markdown a {
+  @apply text-primary underline;
+}
+
+.markdown blockquote {
+  @apply pl-4 border-l-4 border-primary/20 italic my-4;
+}
+
+.markdown pre {
+  @apply bg-muted p-4 rounded-md my-4 overflow-auto;
+}
+
+.markdown code {
+  @apply bg-muted px-1.5 py-0.5 rounded-md text-sm font-mono;
+}
+
+.markdown table {
+  @apply w-full border-collapse my-4;
+}
+
+.markdown th, .markdown td {
+  @apply border border-border p-2;
+}
+
+.markdown th {
+  @apply bg-muted font-semibold;
+}
+
+.markdown hr {
+  @apply my-6 border-t border-border;
 }

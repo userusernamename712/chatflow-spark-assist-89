@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -71,9 +70,14 @@
 }
 
 .typing-indicator::after {
-  content: '_';
+  content: '';
   display: inline-block;
+  width: 2px;
+  height: 1em;
+  background-color: #22c55e; /* green-500 */
+  margin-left: 2px;
   animation: blink 1s infinite;
+  vertical-align: middle;
 }
 
 .message-bubble {

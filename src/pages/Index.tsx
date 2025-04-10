@@ -56,33 +56,36 @@ const Index = () => {
       setSessionId(event.session_id);
     }
 
-    if (event.type === 'text' && event.message) {
-      const messageId = uuidv4();
-      
+    if (event.type === 'text') {
       setMessages((prev) => {
-        const streamingMsgIndex = prev.findIndex(
-          (msg) => msg.type === 'assistant' && msg.isStreaming
-        );
+        const currentMessages = [...prev];
+        const lastMessage = currentMessages[currentMessages.length - 1];
         
-        if (streamingMsgIndex >= 0) {
-          const updatedMessages = [...prev];
-          updatedMessages[streamingMsgIndex] = {
-            ...updatedMessages[streamingMsgIndex],
-            content: event.message || '',
+        // If the last message is from the assistant and is streaming
+        if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
+          // Update the content with the new token
+          const updatedMessage = {
+            ...lastMessage,
+            content: lastMessage.content + (event.message || ''),
             isStreaming: !event.finished,
           };
-          return updatedMessages;
-        } else {
+          return [...currentMessages.slice(0, -1), updatedMessage];
+        } 
+        // If there's no streaming message or the previous message wasn't from the assistant
+        else if (lastMessage?.type !== 'assistant' || !lastMessage.isStreaming) {
+          // Create a new message
           return [
-            ...prev,
+            ...currentMessages,
             {
-              id: messageId,
+              id: uuidv4(),
               type: 'assistant',
-              content: event.message,
+              content: event.message || '',
               isStreaming: !event.finished,
             },
           ];
         }
+        
+        return currentMessages;
       });
     } else if (event.type === 'tool_call') {
       setMessages((prev) => [

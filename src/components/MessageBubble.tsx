@@ -50,12 +50,12 @@ const MessageBubble = ({
           {isTool && toolName && (
             <div className="text-xs font-medium text-green-400/80 flex items-center">
               <Code size={10} className="mr-1" />
-              <span>Using {toolName}</span>
+              <span>{toolName}</span>
               {toolResult !== undefined && (
                 <button
                   onClick={() => setExpanded(!expanded)}
                   className="ml-2 text-zinc-500 hover:text-zinc-300 transition-colors"
-                  aria-label={expanded ? "Hide result" : "Show result"}
+                  aria-label={expanded ? "Hide details" : "Show details"}
                 >
                   {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                 </button>
@@ -80,7 +80,7 @@ const MessageBubble = ({
           
           {isTool && (
             <div className="text-sm text-zinc-400">
-              {content}
+              <span>Looking up information...</span>
             </div>
           )}
           

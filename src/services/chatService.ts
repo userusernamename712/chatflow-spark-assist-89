@@ -54,7 +54,7 @@ export const sendChatMessage = async (
         // Append new data to buffer
         buffer += decoder.decode(value, { stream: true });
         
-        // Process complete JSON objects
+        // Process complete JSON objects separated by newlines
         const lines = buffer.split('\n');
         buffer = lines.pop() || ''; // Keep the last potentially incomplete line in buffer
 

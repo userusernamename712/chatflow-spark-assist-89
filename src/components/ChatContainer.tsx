@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot, HelpCircle, MessageSquare } from 'lucide-react';
 import MessageBubble from './MessageBubble';
@@ -11,11 +11,20 @@ type ChatContainerProps = {
 };
 
 const ChatContainer = ({ messages, isProcessing }: ChatContainerProps) => {
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  React.useEffect(() => {
+  // Auto-scroll when messages change or streaming updates
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  // Check if any message is streaming, and scroll on each streaming update
+  useEffect(() => {
+    const streamingMessage = messages.find(msg => msg.isStreaming);
+    if (streamingMessage) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages.map(m => m.isStreaming ? m.content : '').join('')]);
 
   return (
     <ScrollArea className="flex-1 p-2 bg-zinc-900 backdrop-blur-sm">
@@ -55,7 +64,7 @@ const ChatContainer = ({ messages, isProcessing }: ChatContainerProps) => {
                 <MessageBubble
                   key={message.id}
                   type="tool"
-                  content={`The assistant is looking up information for you...`}
+                  content="Looking up information for you..."
                   toolName={message.tool}
                   toolArgs={message.arguments}
                   toolResult={message.result}
@@ -72,7 +81,7 @@ const ChatContainer = ({ messages, isProcessing }: ChatContainerProps) => {
               );
             }
           })}
-          {isProcessing && !messages[messages.length - 1]?.isStreaming && (
+          {isProcessing && !messages.some(msg => msg.isStreaming) && (
             <div className="flex space-x-2 p-2 items-center justify-center">
               <div className="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse"></div>
               <div className="h-1.5 w-1.5 bg-green-500 rounded-full animate-pulse delay-150"></div>

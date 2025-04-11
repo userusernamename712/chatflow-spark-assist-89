@@ -1,15 +1,10 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { MessageCircle, User, Terminal, MessageSquare } from 'lucide-react';
+import { MessageCircle, User, Terminal, Info, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type MessageBubbleProps = {
   type: 'user' | 'assistant' | 'tool';
@@ -34,12 +29,12 @@ const MessageBubble = ({
   return (
     <div
       className={cn(
-        "message-bubble my-2 max-w-full px-3 py-2 font-sans text-sm rounded-sm",
+        "message-bubble my-2 max-w-full px-3 py-2 font-sans text-sm",
         isUser 
-          ? "message-bubble-user ml-auto mr-2 max-w-[85%]" 
+          ? "message-bubble-user ml-auto mr-2 max-w-[85%] rounded-tr-none" 
           : isTool 
-            ? "message-bubble-tool" 
-            : "message-bubble-assistant"
+            ? "message-bubble-tool rounded-tl-none" 
+            : "message-bubble-assistant rounded-tl-none"
       )}
     >
       <div className="flex items-start">
@@ -52,25 +47,33 @@ const MessageBubble = ({
         )}
 
         <div className="space-y-1 flex-1 overflow-x-auto">
-          {isTool && toolName && toolResult && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="text-xs font-medium text-[var(--primary-color)] flex items-center bg-white py-1 px-2 rounded-full shadow-sm mb-2 inline-block tool-pill">
-                    <Terminal size={10} className="mr-1" />
-                    <span>{toolName}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent className="tool-tooltip">
-                  <div className="text-xs font-medium border-b border-[var(--neutral-color-strokes)] pb-1 mb-2">Tool Result</div>
-                  <pre className="whitespace-pre-wrap break-all text-xs overflow-x-auto max-h-[300px] overflow-y-auto">
-                    {typeof toolResult === 'object' 
-                      ? JSON.stringify(toolResult, null, 2) 
-                      : String(toolResult)}
-                  </pre>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+          {isTool && toolName && (
+            <div className="text-xs font-medium text-[var(--primary-color)] flex items-center bg-white py-1 px-2 rounded-full shadow-sm mb-2 inline-block">
+              <Terminal size={10} className="mr-1" />
+              <span>{toolName}</span>
+              
+              {toolResult !== undefined && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="ml-2 text-[var(--neutral-color-medium)] hover:text-[var(--neutral-color-dark)] transition-colors"
+                        aria-label="View result details"
+                      >
+                        <Info size={12} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top" className="max-w-[300px] overflow-auto">
+                      <div className="text-xs whitespace-pre-wrap">
+                        {typeof toolResult === 'object' 
+                          ? JSON.stringify(toolResult, null, 2) 
+                          : String(toolResult)}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
           )}
           
           {!isTool && (
@@ -90,7 +93,7 @@ const MessageBubble = ({
           
           {isTool && (
             <div className="text-sm text-[var(--neutral-color-medium)]">
-              <span>Using tool to look up information...</span>
+              <span>{content || "Looking up information..."}</span>
             </div>
           )}
         </div>

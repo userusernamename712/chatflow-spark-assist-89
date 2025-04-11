@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -157,11 +156,34 @@
 }
 
 .message-bubble-tool {
-  background-color: var(--status-informational-light);
+  background-color: var(--neutral-color-white);
   border-left: 2px solid var(--primary-color);
-  box-shadow: 0 2px 6px rgba(84, 121, 247, 0.1);
-  animation: toolFadeIn 0.3s ease-out, toolGlow 2s ease-in-out;
   position: relative;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.tool-pill {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--primary--color-medium);
+}
+
+.tool-pill:hover {
+  background-color: var(--primary--color-medium);
+  box-shadow: 0 2px 6px rgba(84, 121, 247, 0.2);
+}
+
+.tool-tooltip {
+  max-width: 300px;
+  background-color: var(--neutral-color-white);
+  color: var(--neutral-color-dark);
+  border: 1px solid var(--neutral-color-strokes);
+  padding: 0.75rem;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .tool-call {

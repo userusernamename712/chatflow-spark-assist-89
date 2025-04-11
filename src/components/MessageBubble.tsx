@@ -1,10 +1,9 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { MessageCircle, User, Terminal, Info, MessageSquare } from 'lucide-react';
+import { MessageCircle, User, Terminal, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 type MessageBubbleProps = {
   type: 'user' | 'assistant' | 'tool';
@@ -25,16 +24,17 @@ const MessageBubble = ({
 }: MessageBubbleProps) => {
   const isUser = type === 'user';
   const isTool = type === 'tool';
+  const [expanded, setExpanded] = React.useState(false);
 
   return (
     <div
       className={cn(
-        "message-bubble my-2 max-w-full px-3 py-2 font-sans text-sm",
+        "message-bubble my-2 max-w-full px-3 py-2 font-sans text-sm rounded-sm",
         isUser 
-          ? "message-bubble-user ml-auto mr-2 max-w-[85%] rounded-tr-none" 
+          ? "message-bubble-user ml-auto mr-2 max-w-[85%]" 
           : isTool 
-            ? "message-bubble-tool rounded-tl-none" 
-            : "message-bubble-assistant rounded-tl-none"
+            ? "message-bubble-tool" 
+            : "message-bubble-assistant"
       )}
     >
       <div className="flex items-start">
@@ -51,27 +51,14 @@ const MessageBubble = ({
             <div className="text-xs font-medium text-[var(--primary-color)] flex items-center bg-white py-1 px-2 rounded-full shadow-sm mb-2 inline-block">
               <Terminal size={10} className="mr-1" />
               <span>{toolName}</span>
-              
               {toolResult !== undefined && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        className="ml-2 text-[var(--neutral-color-medium)] hover:text-[var(--neutral-color-dark)] transition-colors"
-                        aria-label="View result details"
-                      >
-                        <Info size={12} />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-[300px] overflow-auto">
-                      <div className="text-xs whitespace-pre-wrap">
-                        {typeof toolResult === 'object' 
-                          ? JSON.stringify(toolResult, null, 2) 
-                          : String(toolResult)}
-                      </div>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <button
+                  onClick={() => setExpanded(!expanded)}
+                  className="ml-2 text-[var(--neutral-color-medium)] hover:text-[var(--neutral-color-dark)] transition-colors"
+                  aria-label={expanded ? "Hide details" : "Show details"}
+                >
+                  {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                </button>
               )}
             </div>
           )}
@@ -93,7 +80,21 @@ const MessageBubble = ({
           
           {isTool && (
             <div className="text-sm text-[var(--neutral-color-medium)]">
-              <span>{content || "Looking up information..."}</span>
+              <span>Looking up information...</span>
+            </div>
+          )}
+          
+          {isTool && expanded && (
+            <div className="mt-2 tool-result">
+              <div className="font-medium text-[var(--neutral-color-medium)] mb-1 flex items-center">
+                <Terminal size={10} className="mr-1" />
+                Results
+              </div>
+              <pre className="whitespace-pre-wrap break-all text-[var(--primary-color)] text-xs overflow-x-auto">
+                {typeof toolResult === 'object' 
+                  ? JSON.stringify(toolResult, null, 2) 
+                  : String(toolResult)}
+              </pre>
             </div>
           )}
         </div>

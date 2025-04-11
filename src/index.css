@@ -1,37 +1,62 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 9%;
-    --foreground: 0 0% 98%;
+    /* Primary colors */
+    --primary-color: #5479f7;
+    --primary-color-hover: #1d47d7;
+    --primary-color-background-hover: #ecf1ff;
+    --primary-dark: #212131;
+    --primary-color-dark: #809cf8;
+    --primary-color-active: #313146;
+    --primary--color-medium: #f1f5ff;
+    --primary--color-drawer: #212131;
+    --secondary--color-drawer: #303040;
+    --secondary--color-selected: #4b4b65;
 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    /* Neutral colors */
+    --neutral-color-dark: #4e5968;
+    --neutral-color-medium: #718096;
+    --neutral-color-light: #8692a3;
+    --neutral-color-strokes: #eaeaea;
+    --neutral-color-background: #f7f8f8;
+    --neutral-color-background-darker: #eff1f3;
+    --neutral-color-white: #ffffff;
+    --neutral-color-black: #000000;
 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 142 70% 50%;
-    --primary-foreground: 144 80% 10%;
-
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 142 70% 50%;
-
+    /* Status colors */
+    --status-succes-light: #f8ffee;
+    --status-succes-contrast: #72c140;
+    --status-error-light: #fff0f2;
+    --status-error-contrast: #ff9393;
+    --status-warning-light: #fef6e8;
+    --status-warning-contrast: #efb140;
+    --status-informational-light: #f1f5ff;
+    --status-informational-contrast: #5479f7;
+    
+    /* ShadCN variables - keeping but updating with our theme colors */
+    --background: 0 0% 100%;
+    --foreground: 222 14% 26%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 14% 26%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 14% 26%;
+    --primary: 221 90% 65%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 219 14% 28%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 8% 56%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 14% 26%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 90% 65%;
     --radius: 0.5rem;
   }
 }
@@ -42,7 +67,9 @@
   }
   body {
     @apply bg-background text-foreground;
-    background-color: #111111;
+    font-family: "Lato", sans-serif;
+    background-color: var(--neutral-color-white);
+    color: var(--neutral-color-dark);
   }
 
   /* Animation for typing effect */
@@ -67,6 +94,28 @@
     70% { transform: scale(1); }
     100% { transform: scale(0.95); }
   }
+
+  h1 {
+    font-size: 22px;
+    font-weight: bold;
+  }
+  h2 {
+    font-size: 20px;
+    font-weight: bold;
+  }
+  h3 {
+    font-weight: bold;
+    font-size: 1rem;
+  }
+  p {
+    font-size: 1rem;
+    color: var(--neutral-color-light);
+  }
+  label {
+    color: var(--neutral-color-light);
+    font-size: 14px;
+    text-transform: uppercase;
+  }
 }
 
 .typing-indicator::after {
@@ -74,7 +123,7 @@
   display: inline-block;
   width: 2px;
   height: 1em;
-  background-color: #22c55e; /* green-500 */
+  background-color: var(--primary-color); 
   margin-left: 2px;
   animation: blink 1s infinite;
   vertical-align: middle;
@@ -98,7 +147,8 @@
 }
 
 .markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
-  @apply font-bold mt-4 mb-2 text-zinc-300;
+  @apply font-bold mt-4 mb-2;
+  color: var(--neutral-color-dark);
 }
 
 .markdown h1 {
@@ -130,19 +180,26 @@
 }
 
 .markdown a {
-  @apply text-green-500 underline;
+  @apply underline;
+  color: var(--primary-color);
 }
 
 .markdown blockquote {
-  @apply pl-4 border-l-2 border-zinc-700 italic my-4 text-zinc-400;
+  @apply pl-4 border-l-2 my-4 italic;
+  border-color: var(--neutral-color-strokes);
+  color: var(--neutral-color-medium);
 }
 
 .markdown pre {
-  @apply bg-zinc-800 p-3 rounded-sm my-4 overflow-x-auto text-zinc-300;
+  @apply p-3 rounded-sm my-4 overflow-x-auto;
+  background-color: var(--neutral-color-background);
+  color: var(--neutral-color-dark);
 }
 
 .markdown code {
-  @apply bg-zinc-800 px-1.5 py-0.5 rounded-sm text-sm font-mono text-green-500;
+  @apply px-1.5 py-0.5 rounded-sm text-sm font-mono;
+  background-color: var(--neutral-color-background);
+  color: var(--primary-color);
 }
 
 .markdown table {
@@ -150,15 +207,18 @@
 }
 
 .markdown th, .markdown td {
-  @apply border border-zinc-800 p-2;
+  @apply border p-2;
+  border-color: var(--neutral-color-strokes);
 }
 
 .markdown th {
-  @apply bg-zinc-800 font-semibold;
+  @apply font-semibold;
+  background-color: var(--neutral-color-background);
 }
 
 .markdown hr {
-  @apply my-6 border-t border-zinc-800;
+  @apply my-6 border-t;
+  border-color: var(--neutral-color-strokes);
 }
 
 /* Custom scrollbar for Webkit browsers */
@@ -168,14 +228,36 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1a1a;
+  background: var(--neutral-color-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #333;
+  background: var(--neutral-color-medium);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #444;
+  background: var(--neutral-color-dark);
+}
+
+.card-animated-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.card-animated-hover:hover {
+  transform: translateY(-1px) scale(1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-darken-hover {
+  cursor: pointer;
+  position: relative;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.card-darken-hover:hover {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color-background-hover);
 }

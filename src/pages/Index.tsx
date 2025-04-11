@@ -114,13 +114,8 @@ const Index = () => {
     });
   };
 
-  const clearChat = () => {
-    setMessages([]);
-    // Keep the session ID to maintain connection with server
-  };
-
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-zinc-900 backdrop-blur-md shadow-2xl rounded-lg overflow-hidden border border-zinc-800">
+    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-white shadow-md rounded-lg overflow-hidden border border-[var(--neutral-color-strokes)]">
       <ChatHeader />
       <ChatContainer messages={messages} isProcessing={isProcessing} />
       <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />

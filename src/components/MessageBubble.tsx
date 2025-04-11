@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { MessageCircle, Bot, Terminal, Code, ChevronDown, ChevronUp } from 'lucide-react';
+import { MessageCircle, User, Terminal, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -31,30 +31,30 @@ const MessageBubble = ({
       className={cn(
         "message-bubble my-2 max-w-full px-3 py-2 font-sans text-sm",
         isUser 
-          ? "text-zinc-300 border-l-2 border-zinc-700 pl-3 pr-0" 
+          ? "text-[var(--neutral-color-dark)] border-l-2 border-[var(--primary-color)] pl-3 pr-0 bg-[var(--primary--color-medium)] bg-opacity-20" 
           : isTool 
-            ? "bg-zinc-800/40 border-l-2 border-green-800/50 rounded-sm" 
-            : "text-zinc-300"
+            ? "bg-[var(--status-informational-light)] border-l-2 border-[var(--primary-color)] rounded-sm" 
+            : "text-[var(--neutral-color-dark)]"
       )}
     >
       <div className="flex items-start">
         {!isUser && (
           <div className={cn("mt-1 mr-2", 
-            isTool ? "text-green-500" : "text-green-500"
+            isTool ? "text-[var(--primary-color)]" : "text-[var(--primary-color)]"
           )}>
-            {isTool ? <Terminal size={12} /> : <Bot size={12} />}
+            {isTool ? <Terminal size={12} /> : <MessageSquare size={12} />}
           </div>
         )}
 
         <div className="space-y-1 flex-1 overflow-x-auto">
           {isTool && toolName && (
-            <div className="text-xs font-medium text-green-400/80 flex items-center">
-              <Code size={10} className="mr-1" />
+            <div className="text-xs font-medium text-[var(--primary-color)] flex items-center">
+              <Terminal size={10} className="mr-1" />
               <span>{toolName}</span>
               {toolResult !== undefined && (
                 <button
                   onClick={() => setExpanded(!expanded)}
-                  className="ml-2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="ml-2 text-[var(--neutral-color-medium)] hover:text-[var(--neutral-color-dark)] transition-colors"
                   aria-label={expanded ? "Hide details" : "Show details"}
                 >
                   {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
@@ -66,10 +66,10 @@ const MessageBubble = ({
           {!isTool && (
             <div className={cn(isStreaming && "typing-indicator")}>
               {isStreaming ? (
-                <span className="text-zinc-300">{content}</span>
+                <span className="text-[var(--neutral-color-dark)]">{content}</span>
               ) : (
                 <ReactMarkdown 
-                  className="markdown text-zinc-300" 
+                  className="markdown text-[var(--neutral-color-dark)]" 
                   remarkPlugins={[remarkGfm]}
                 >
                   {content}
@@ -79,18 +79,18 @@ const MessageBubble = ({
           )}
           
           {isTool && (
-            <div className="text-sm text-zinc-400">
+            <div className="text-sm text-[var(--neutral-color-medium)]">
               <span>Looking up information...</span>
             </div>
           )}
           
           {isTool && expanded && (
-            <div className="mt-1 rounded bg-zinc-800/50 p-1.5 text-xs animate-fade-in">
-              <div className="font-medium text-zinc-500 mb-1 flex items-center">
+            <div className="mt-1 rounded bg-[var(--neutral-color-background)] p-1.5 text-xs animate-fade-in">
+              <div className="font-medium text-[var(--neutral-color-medium)] mb-1 flex items-center">
                 <Terminal size={10} className="mr-1" />
                 Results
               </div>
-              <pre className="whitespace-pre-wrap break-all text-green-400/80 text-xs overflow-x-auto">
+              <pre className="whitespace-pre-wrap break-all text-[var(--primary-color)] text-xs overflow-x-auto">
                 {typeof toolResult === 'object' 
                   ? JSON.stringify(toolResult, null, 2) 
                   : String(toolResult)}
@@ -100,8 +100,8 @@ const MessageBubble = ({
         </div>
         
         {isUser && (
-          <div className="mt-1 ml-2 text-zinc-500">
-            <MessageCircle size={12} />
+          <div className="mt-1 ml-2 text-[var(--primary-color)]">
+            <User size={12} />
           </div>
         )}
       </div>

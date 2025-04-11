@@ -29,26 +29,26 @@ const MessageBubble = ({
   return (
     <div
       className={cn(
-        "message-bubble my-2 max-w-full px-3 py-2 font-sans text-sm",
+        "message-bubble my-2 max-w-full px-3 py-2 font-sans text-sm rounded-sm",
         isUser 
-          ? "text-[var(--neutral-color-dark)] border-l-2 border-[var(--primary-color)] pl-3 pr-0 bg-[var(--primary--color-medium)] bg-opacity-20" 
+          ? "message-bubble-user ml-auto mr-2 max-w-[85%]" 
           : isTool 
-            ? "bg-[var(--status-informational-light)] border-l-2 border-[var(--primary-color)] rounded-sm" 
-            : "text-[var(--neutral-color-dark)]"
+            ? "message-bubble-tool" 
+            : "message-bubble-assistant"
       )}
     >
       <div className="flex items-start">
         {!isUser && (
           <div className={cn("mt-1 mr-2", 
-            isTool ? "text-[var(--primary-color)]" : "text-[var(--primary-color)]"
+            isTool ? "text-[var(--primary-color)]" : "text-[var(--primary-color-dark)]"
           )}>
-            {isTool ? <Terminal size={12} /> : <MessageSquare size={12} />}
+            {isTool ? <Terminal size={14} /> : <MessageSquare size={14} />}
           </div>
         )}
 
         <div className="space-y-1 flex-1 overflow-x-auto">
           {isTool && toolName && (
-            <div className="text-xs font-medium text-[var(--primary-color)] flex items-center">
+            <div className="text-xs font-medium text-[var(--primary-color)] flex items-center bg-white py-1 px-2 rounded-full shadow-sm mb-2 inline-block">
               <Terminal size={10} className="mr-1" />
               <span>{toolName}</span>
               {toolResult !== undefined && (
@@ -69,7 +69,7 @@ const MessageBubble = ({
                 <span className="text-[var(--neutral-color-dark)]">{content}</span>
               ) : (
                 <ReactMarkdown 
-                  className="markdown text-[var(--neutral-color-dark)]" 
+                  className="markdown" 
                   remarkPlugins={[remarkGfm]}
                 >
                   {content}
@@ -85,7 +85,7 @@ const MessageBubble = ({
           )}
           
           {isTool && expanded && (
-            <div className="mt-1 rounded bg-[var(--neutral-color-background)] p-1.5 text-xs animate-fade-in">
+            <div className="mt-2 tool-result">
               <div className="font-medium text-[var(--neutral-color-medium)] mb-1 flex items-center">
                 <Terminal size={10} className="mr-1" />
                 Results
@@ -101,7 +101,7 @@ const MessageBubble = ({
         
         {isUser && (
           <div className="mt-1 ml-2 text-[var(--primary-color)]">
-            <User size={12} />
+            <User size={14} />
           </div>
         )}
       </div>

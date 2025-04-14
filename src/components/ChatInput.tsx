@@ -1,6 +1,6 @@
 
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -47,10 +47,10 @@ const ChatInput = ({ onSendMessage, isProcessing }: ChatInputProps) => {
   }, [isProcessing]);
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 bg-white rounded-b-lg border-t border-[var(--neutral-color-strokes)]">
+    <form onSubmit={handleSubmit} className="p-3 bg-black rounded-b-lg border-t border-gray-800">
       <div className="relative flex items-end">
-        <div className="absolute left-3 bottom-3 text-[var(--primary-color)]">
-          <MessageSquare className="h-4 w-4" />
+        <div className="absolute left-3 bottom-3 text-white">
+          <Phone className="h-4 w-4" />
         </div>
         <Textarea
           ref={textareaRef}
@@ -58,20 +58,20 @@ const ChatInput = ({ onSendMessage, isProcessing }: ChatInputProps) => {
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Ask me anything..."
-          className="min-h-[50px] max-h-[150px] pr-12 pl-10 rounded-md resize-none bg-[var(--neutral-color-background)] text-[var(--neutral-color-dark)] focus-visible:ring-[var(--primary-color)] font-sans text-sm border-[var(--neutral-color-strokes)]"
+          className="min-h-[50px] max-h-[150px] pr-12 pl-10 rounded-md resize-none bg-gray-900 text-white focus-visible:ring-white font-sans text-sm border-gray-700"
           disabled={isProcessing}
         />
         <Button
           type="submit"
           size="icon"
-          className="absolute right-2 bottom-2 rounded-md h-8 w-8 bg-[var(--primary-color)] hover:bg-[var(--primary-color-hover)] text-white transition-all duration-200"
+          className="absolute right-2 bottom-2 rounded-md h-8 w-8 bg-white hover:bg-gray-200 text-black transition-all duration-200"
           disabled={!message.trim() || isProcessing}
         >
           <Send className="h-4 w-4" />
           <span className="sr-only">Send</span>
         </Button>
       </div>
-      <div className="mt-1.5 text-xs text-[var(--neutral-color-medium)] text-center">
+      <div className="mt-1.5 text-xs text-gray-400 text-center">
         {isProcessing ? "Thinking..." : "Type your message and press Enter to send"}
       </div>
     </form>

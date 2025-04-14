@@ -214,6 +214,15 @@
 }
 
 /* Enhanced Markdown Styling */
+.markdown {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+}
+
+.markdown.inline {
+  display: inline;
+}
+
 .markdown p {
   margin-bottom: 1rem;
   line-height: 1.6;

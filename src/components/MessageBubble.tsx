@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 import { MessageCircle, User, Terminal, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import 'katex/dist/katex.min.css';
+import { InlineMath, BlockMath } from 'react-katex';
 import {
   Tooltip,
   TooltipContent,
@@ -20,6 +22,21 @@ type MessageBubbleProps = {
   isStreaming?: boolean;
 };
 
+// Custom renderer for LaTeX
+const LatexRenderer = ({children}: {children: string}) => {
+  // Check if content is a block math ($$...$$ format)
+  if (children.startsWith('$$') && children.endsWith('$$')) {
+    return <BlockMath math={children.slice(2, -2)} />;
+  }
+  
+  // Check if content is inline math ($...$ format)
+  if (children.startsWith('$') && children.endsWith('$')) {
+    return <InlineMath math={children.slice(1, -1)} />;
+  }
+  
+  return <>{children}</>;
+};
+
 const MessageBubble = ({
   type,
   content,
@@ -30,6 +47,47 @@ const MessageBubble = ({
 }: MessageBubbleProps) => {
   const isUser = type === 'user';
   const isTool = type === 'tool';
+
+  // Process content to handle LaTeX outside of markdown
+  const processContent = (text: string) => {
+    if (isStreaming) return text;
+    
+    // Split by potential LaTeX expressions
+    const segments = text.split(/((?:\$\$[\s\S]*?\$\$)|(?:\$[^\$\n]+?\$))/g);
+    
+    if (segments.length === 1) {
+      return null; // No LaTeX, will use normal markdown renderer
+    }
+    
+    return segments.map((segment, index) => {
+      if (segment.startsWith('$$') && segment.endsWith('$$')) {
+        return <BlockMath key={index} math={segment.slice(2, -2)} />;
+      } else if (segment.startsWith('$') && segment.endsWith('$')) {
+        return <InlineMath key={index} math={segment.slice(1, -1)} />;
+      } else if (segment) {
+        return (
+          <ReactMarkdown 
+            key={index} 
+            className="markdown inline" 
+            remarkPlugins={[remarkGfm]}
+            components={{
+              // Recursive handling for nested LaTeX in code blocks
+              code: ({node, inline, className, children, ...props}) => {
+                const match = /language-(\w+)/.exec(className || '');
+                return inline ? 
+                  <LatexRenderer>{String(children)}</LatexRenderer> : 
+                  <code className={className} {...props}>{children}</code>;
+              }
+            }}
+          >
+            {segment}
+          </ReactMarkdown>
+        );
+      } else {
+        return null;
+      }
+    });
+  };
 
   return (
     <div
@@ -78,12 +136,22 @@ const MessageBubble = ({
               {isStreaming ? (
                 <span className="text-[var(--neutral-color-dark)]">{content}</span>
               ) : (
-                <ReactMarkdown 
-                  className="markdown" 
-                  remarkPlugins={[remarkGfm]}
-                >
-                  {content}
-                </ReactMarkdown>
+                processContent(content) || (
+                  <ReactMarkdown 
+                    className="markdown" 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                      code: ({node, inline, className, children, ...props}) => {
+                        const match = /language-(\w+)/.exec(className || '');
+                        return inline ? 
+                          <LatexRenderer>{String(children)}</LatexRenderer> : 
+                          <code className={className} {...props}>{children}</code>;
+                      }
+                    }}
+                  >
+                    {content}
+                  </ReactMarkdown>
+                )
               )}
             </div>
           )}

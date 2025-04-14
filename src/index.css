@@ -4,58 +4,58 @@
 
 @layer base {
   :root {
-    /* Primary colors - updated for bookline.AI */
-    --primary-color: #ffffff;
-    --primary-color-hover: #e6e6e6;
-    --primary-color-background-hover: #333333;
-    --primary-dark: #000000;
-    --primary-color-dark: #cccccc;
-    --primary-color-active: #1a1a1a;
-    --primary--color-medium: #1a1a1a;
-    --primary--color-drawer: #000000;
-    --secondary--color-drawer: #1a1a1a;
-    --secondary--color-selected: #333333;
+    /* Primary colors */
+    --primary-color: #5479f7;
+    --primary-color-hover: #1d47d7;
+    --primary-color-background-hover: #ecf1ff;
+    --primary-dark: #212131;
+    --primary-color-dark: #809cf8;
+    --primary-color-active: #313146;
+    --primary--color-medium: #f1f5ff;
+    --primary--color-drawer: #212131;
+    --secondary--color-drawer: #303040;
+    --secondary--color-selected: #4b4b65;
 
     /* Neutral colors */
-    --neutral-color-dark: #f0f0f0;
-    --neutral-color-medium: #cccccc;
-    --neutral-color-light: #a6a6a6;
-    --neutral-color-strokes: #333333;
-    --neutral-color-background: #1a1a1a;
-    --neutral-color-background-darker: #0d0d0d;
-    --neutral-color-white: #000000;
-    --neutral-color-black: #ffffff;
+    --neutral-color-dark: #4e5968;
+    --neutral-color-medium: #718096;
+    --neutral-color-light: #8692a3;
+    --neutral-color-strokes: #eaeaea;
+    --neutral-color-background: #f7f8f8;
+    --neutral-color-background-darker: #eff1f3;
+    --neutral-color-white: #ffffff;
+    --neutral-color-black: #000000;
 
     /* Status colors */
-    --status-succes-light: #002200;
-    --status-succes-contrast: #4caf50;
-    --status-error-light: #220000;
-    --status-error-contrast: #f44336;
-    --status-warning-light: #221a00;
-    --status-warning-contrast: #ff9800;
-    --status-informational-light: #00001a;
-    --status-informational-contrast: #ffffff;
+    --status-succes-light: #f8ffee;
+    --status-succes-contrast: #72c140;
+    --status-error-light: #fff0f2;
+    --status-error-contrast: #ff9393;
+    --status-warning-light: #fef6e8;
+    --status-warning-contrast: #efb140;
+    --status-informational-light: #f1f5ff;
+    --status-informational-contrast: #5479f7;
     
     /* ShadCN variables - keeping but updating with our theme colors */
-    --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
-    --card: 0 0% 0%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 0%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 0 0% 15%;
+    --background: 0 0% 100%;
+    --foreground: 222 14% 26%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 14% 26%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 14% 26%;
+    --primary: 221 90% 65%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 219 14% 28%;
     --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 80%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 100%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 8% 56%;
+    --accent: 220 14% 96%;
+    --accent-foreground: 222 14% 26%;
     --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 100%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 221 90% 65%;
     --radius: 0.5rem;
   }
 }
@@ -144,23 +144,46 @@
 }
 
 .message-bubble-user {
-  background-color: #1a1a1a;
-  border-left: 2px solid white;
+  background-color: var(--primary--color-medium);
+  border-left: 2px solid var(--primary-color);
   position: relative;
 }
 
 .message-bubble-assistant {
-  background-color: #000000;
-  border-left: 2px solid #cccccc;
+  background-color: var(--neutral-color-white);
+  border-left: 2px solid var(--primary-color-dark);
   position: relative;
 }
 
 .message-bubble-tool {
-  background-color: #00001a;
-  border-left: 2px solid white;
-  box-shadow: 0 2px 6px rgba(255, 255, 255, 0.1);
-  animation: toolFadeIn 0.3s ease-out, toolGlow 2s ease-in-out;
+  background-color: var(--neutral-color-white);
+  border-left: 2px solid var(--primary-color);
   position: relative;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.tool-pill {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid var(--primary--color-medium);
+}
+
+.tool-pill:hover {
+  background-color: var(--primary--color-medium);
+  box-shadow: 0 2px 6px rgba(84, 121, 247, 0.2);
+}
+
+.tool-tooltip {
+  max-width: 300px;
+  background-color: var(--neutral-color-white);
+  color: var(--neutral-color-dark);
+  border: 1px solid var(--neutral-color-strokes);
+  padding: 0.75rem;
+  z-index: 50;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .tool-call {
@@ -169,11 +192,11 @@
 
 .tool-result {
   animation: fadeIn 0.4s ease-out;
-  background-color: rgba(26, 26, 26, 0.7);
+  background-color: rgba(255, 255, 255, 0.7);
   border-radius: 4px;
   padding: 8px 12px;
-  border: 1px solid #333333;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--neutral-color-strokes);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   position: relative;
 }
 
@@ -184,9 +207,9 @@
   left: 20px;
   width: 12px;
   height: 12px;
-  background-color: #1a1a1a;
-  border-left: 1px solid #333333;
-  border-top: 1px solid #333333;
+  background-color: white;
+  border-left: 1px solid var(--neutral-color-strokes);
+  border-top: 1px solid var(--neutral-color-strokes);
   transform: rotate(45deg);
 }
 
@@ -194,21 +217,21 @@
 .markdown p {
   margin-bottom: 1rem;
   line-height: 1.6;
-  color: var(--neutral-color-light);
+  color: var(--neutral-color-dark);
 }
 
 .markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
-  color: #ffffff;
+  color: var(--neutral-color-dark);
   position: relative;
 }
 
 .markdown h1 {
   font-size: 1.5rem;
   padding-bottom: 0.3rem;
-  border-bottom: 1px solid #333333;
+  border-bottom: 1px solid var(--neutral-color-strokes);
 }
 
 .markdown h2 {
@@ -231,7 +254,7 @@
   transform: translateY(-50%);
   width: 4px;
   height: 1em;
-  background-color: #ffffff;
+  background-color: var(--primary-color);
   border-radius: 2px;
 }
 
@@ -252,7 +275,7 @@
 
 .markdown ul li::before {
   content: "•";
-  color: #ffffff;
+  color: var(--primary-color);
   font-weight: bold;
   display: inline-block;
   width: 1em;
@@ -270,35 +293,35 @@
 }
 
 .markdown a {
-  color: #ffffff;
+  color: var(--primary-color);
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.2s ease;
 }
 
 .markdown a:hover {
-  border-bottom-color: #ffffff;
+  border-bottom-color: var(--primary-color);
 }
 
 .markdown blockquote {
-  border-left: 3px solid #ffffff;
+  border-left: 3px solid var(--primary-color);
   padding-left: 1rem;
   margin: 1rem 0;
-  color: #cccccc;
+  color: var(--neutral-color-medium);
   font-style: italic;
-  background-color: #1a1a1a;
+  background-color: var(--primary--color-medium);
   padding: 0.75rem 1rem;
   border-radius: 0 4px 4px 0;
 }
 
 .markdown pre {
-  background-color: #1a1a1a;
+  background-color: var(--neutral-color-background);
   border-radius: 4px;
   padding: 1rem;
   overflow-x: auto;
   margin: 1rem 0;
   position: relative;
-  border: 1px solid #333333;
+  border: 1px solid var(--neutral-color-strokes);
 }
 
 .markdown pre::before {
@@ -308,14 +331,14 @@
   left: 0;
   width: 100%;
   height: 4px;
-  background: linear-gradient(90deg, #ffffff 0%, #cccccc 100%);
+  background: linear-gradient(90deg, var(--primary-color) 0%, var(--primary-color-dark) 100%);
   border-radius: 4px 4px 0 0;
 }
 
 .markdown code {
   font-family: monospace;
-  background-color: #1a1a1a;
-  color: #ffffff;
+  background-color: var(--neutral-color-background);
+  color: var(--primary-color);
   padding: 0.2rem 0.4rem;
   border-radius: 3px;
   font-size: 0.9em;
@@ -324,7 +347,7 @@
 .markdown pre code {
   background-color: transparent;
   padding: 0;
-  color: #f0f0f0;
+  color: var(--neutral-color-dark);
   font-size: 0.9em;
   line-height: 1.5;
 }
@@ -336,19 +359,19 @@
   margin: 1rem 0;
   overflow: hidden;
   border-radius: 4px;
-  border: 1px solid #333333;
+  border: 1px solid var(--neutral-color-strokes);
 }
 
 .markdown th, .markdown td {
   padding: 0.75rem;
   text-align: left;
-  border-bottom: 1px solid #333333;
+  border-bottom: 1px solid var(--neutral-color-strokes);
 }
 
 .markdown th {
-  background-color: #1a1a1a;
+  background-color: var(--primary--color-medium);
   font-weight: 600;
-  color: #f0f0f0;
+  color: var(--neutral-color-dark);
   position: relative;
 }
 
@@ -357,16 +380,16 @@
 }
 
 .markdown tr:nth-child(even) {
-  background-color: #111111;
+  background-color: var(--neutral-color-background);
 }
 
 .markdown tr:hover {
-  background-color: #1a1a1a;
+  background-color: var(--primary--color-medium);
 }
 
 .markdown hr {
   height: 1px;
-  background-color: #333333;
+  background-color: var(--neutral-color-strokes);
   border: none;
   margin: 1.5rem 0;
 }
@@ -375,12 +398,12 @@
   max-width: 100%;
   border-radius: 4px;
   margin: 1rem 0;
-  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .markdown strong {
   font-weight: 700;
-  color: #ffffff;
+  color: var(--neutral-color-dark);
 }
 
 .markdown em {
@@ -394,16 +417,16 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #1a1a1a;
+  background: var(--neutral-color-background);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cccccc;
+  background: var(--neutral-color-medium);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ffffff;
+  background: var(--neutral-color-dark);
 }
 
 .card-animated-hover {
@@ -413,7 +436,7 @@
 
 .card-animated-hover:hover {
   transform: translateY(-1px) scale(1);
-  box-shadow: 0 8px 20px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .card-darken-hover {
@@ -424,6 +447,6 @@
 }
 
 .card-darken-hover:hover {
-  border-color: #ffffff;
-  background-color: #333333;
+  border-color: var(--primary-color);
+  background-color: var(--primary-color-background-hover);
 }

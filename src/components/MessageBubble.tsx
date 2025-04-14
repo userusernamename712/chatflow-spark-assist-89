@@ -1,9 +1,15 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { MessageCircle, User, Terminal, ChevronDown, ChevronUp, MessageSquare } from 'lucide-react';
+import { MessageCircle, User, Terminal, MessageSquare } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type MessageBubbleProps = {
   type: 'user' | 'assistant' | 'tool';
@@ -24,7 +30,6 @@ const MessageBubble = ({
 }: MessageBubbleProps) => {
   const isUser = type === 'user';
   const isTool = type === 'tool';
-  const [expanded, setExpanded] = React.useState(false);
 
   return (
     <div
@@ -47,20 +52,25 @@ const MessageBubble = ({
         )}
 
         <div className="space-y-1 flex-1 overflow-x-auto">
-          {isTool && toolName && (
-            <div className="text-xs font-medium text-[var(--primary-color)] flex items-center bg-white py-1 px-2 rounded-full shadow-sm mb-2 inline-block">
-              <Terminal size={10} className="mr-1" />
-              <span>{toolName}</span>
-              {toolResult !== undefined && (
-                <button
-                  onClick={() => setExpanded(!expanded)}
-                  className="ml-2 text-[var(--neutral-color-medium)] hover:text-[var(--neutral-color-dark)] transition-colors"
-                  aria-label={expanded ? "Hide details" : "Show details"}
-                >
-                  {expanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-                </button>
-              )}
-            </div>
+          {isTool && toolName && toolResult && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="text-xs font-medium text-[var(--primary-color)] flex items-center bg-white py-1 px-2 rounded-full shadow-sm mb-2 inline-block tool-pill">
+                    <Terminal size={10} className="mr-1" />
+                    <span>{toolName}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent className="tool-tooltip">
+                  <div className="text-xs font-medium border-b border-[var(--neutral-color-strokes)] pb-1 mb-2">Tool Result</div>
+                  <pre className="whitespace-pre-wrap break-all text-xs overflow-x-auto max-h-[300px] overflow-y-auto">
+                    {typeof toolResult === 'object' 
+                      ? JSON.stringify(toolResult, null, 2) 
+                      : String(toolResult)}
+                  </pre>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           
           {!isTool && (
@@ -80,21 +90,7 @@ const MessageBubble = ({
           
           {isTool && (
             <div className="text-sm text-[var(--neutral-color-medium)]">
-              <span>Looking up information...</span>
-            </div>
-          )}
-          
-          {isTool && expanded && (
-            <div className="mt-2 tool-result">
-              <div className="font-medium text-[var(--neutral-color-medium)] mb-1 flex items-center">
-                <Terminal size={10} className="mr-1" />
-                Results
-              </div>
-              <pre className="whitespace-pre-wrap break-all text-[var(--primary-color)] text-xs overflow-x-auto">
-                {typeof toolResult === 'object' 
-                  ? JSON.stringify(toolResult, null, 2) 
-                  : String(toolResult)}
-              </pre>
+              <span>Using tool to look up information...</span>
             </div>
           )}
         </div>

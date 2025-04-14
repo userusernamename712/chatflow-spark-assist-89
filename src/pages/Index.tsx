@@ -51,6 +51,12 @@ const Index = () => {
     );
   };
 
+  const handleSendTypicalQuestion = (question: string) => {
+    if (!isProcessing) {
+      handleSendMessage(question);
+    }
+  };
+
   const handleChatEvent = (event: ChatEvent) => {
     if (!sessionId && event.session_id) {
       setSessionId(event.session_id);
@@ -117,7 +123,11 @@ const Index = () => {
   return (
     <div className="flex flex-col h-screen max-w-3xl mx-auto bg-white shadow-md rounded-lg overflow-hidden border border-[var(--neutral-color-strokes)]">
       <ChatHeader />
-      <ChatContainer messages={messages} isProcessing={isProcessing} />
+      <ChatContainer 
+        messages={messages} 
+        isProcessing={isProcessing} 
+        onSendTypicalQuestion={handleSendTypicalQuestion}
+      />
       <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />
     </div>
   );

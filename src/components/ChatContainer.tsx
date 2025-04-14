@@ -8,9 +8,10 @@ import { Message } from '@/types/chat';
 type ChatContainerProps = {
   messages: Message[];
   isProcessing: boolean;
+  onSendTypicalQuestion?: (question: string) => void;
 };
 
-const ChatContainer = ({ messages, isProcessing }: ChatContainerProps) => {
+const ChatContainer = ({ messages, isProcessing, onSendTypicalQuestion }: ChatContainerProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll when messages change or streaming updates
@@ -26,6 +27,12 @@ const ChatContainer = ({ messages, isProcessing }: ChatContainerProps) => {
     }
   }, [messages.map(m => m.isStreaming ? m.content : '').join('')]);
 
+  const handleQuestionClick = (question: string) => {
+    if (onSendTypicalQuestion) {
+      onSendTypicalQuestion(question);
+    }
+  };
+
   return (
     <ScrollArea className="flex-1 p-2 bg-white">
       {messages.length === 0 ? (
@@ -38,11 +45,17 @@ const ChatContainer = ({ messages, isProcessing }: ChatContainerProps) => {
             I'm your AI assistant. Ask me questions or request information to get started.
           </p>
           <div className="mt-4 flex flex-col space-y-3">
-            <div className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)]">
+            <div 
+              className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
+              onClick={() => handleQuestionClick("What can you help me with?")}
+            >
               <HelpCircle className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
               <span>Try asking "What can you help me with?"</span>
             </div>
-            <div className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)]">
+            <div 
+              className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
+              onClick={() => handleQuestionClick("Tell me about my account")}
+            >
               <MessageSquare className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
               <span>Or "Tell me about my account"</span>
             </div>

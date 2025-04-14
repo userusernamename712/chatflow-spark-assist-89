@@ -119,7 +119,7 @@
   }
   p {
     font-size: 1rem;
-    color: var(--neutral-color-light);
+    color: var(--neutral-color-black);
   }
   label {
     color: var(--neutral-color-light);
@@ -217,7 +217,7 @@
 .markdown p {
   margin-bottom: 1rem;
   line-height: 1.6;
-  color: var(--neutral-color-dark);
+  color: var(--neutral-color-black);
 }
 
 .markdown h1, .markdown h2, .markdown h3, .markdown h4, .markdown h5, .markdown h6 {

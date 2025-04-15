@@ -128,6 +128,7 @@
   }
 }
 
+/* Typing and message bubble styles */
 .typing-indicator::after {
   content: '';
   display: inline-block;
@@ -211,6 +212,29 @@
   border-left: 1px solid var(--neutral-color-strokes);
   border-top: 1px solid var(--neutral-color-strokes);
   transform: rotate(45deg);
+}
+
+/* LaTeX Document Styling */
+.latex-document {
+  font-family: "Computer Modern", "Latin Modern", "Latin Modern Math", serif;
+  background-color: #f8f9fa;
+  border: 1px solid var(--neutral-color-strokes);
+  border-left: 3px solid var(--primary-color);
+  line-height: 1.6;
+  overflow-x: auto;
+}
+
+/* KaTeX custom styles */
+.katex-display {
+  margin: 1.5em 0 !important;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0.5em 0;
+}
+
+.katex {
+  font-size: 1.1em;
+  line-height: 1.2;
 }
 
 /* Enhanced Markdown Styling */

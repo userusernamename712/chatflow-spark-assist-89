@@ -22,21 +22,6 @@ type MessageBubbleProps = {
   isStreaming?: boolean;
 };
 
-// Custom renderer for LaTeX
-const LatexRenderer = ({children}: {children: string}) => {
-  // Check if content is a block math ($$...$$ format)
-  if (children.startsWith('$$') && children.endsWith('$$')) {
-    return <BlockMath math={children.slice(2, -2)} />;
-  }
-  
-  // Check if content is inline math ($...$ format)
-  if (children.startsWith('$') && children.endsWith('$')) {
-    return <InlineMath math={children.slice(1, -1)} />;
-  }
-  
-  return <>{children}</>;
-};
-
 const MessageBubble = ({
   type,
   content,
@@ -47,24 +32,54 @@ const MessageBubble = ({
 }: MessageBubbleProps) => {
   const isUser = type === 'user';
   const isTool = type === 'tool';
-
-  // Process content to handle LaTeX outside of markdown
-  const processContent = (text: string) => {
-    if (isStreaming) return text;
+  
+  // Function to detect if string is a LaTeX block
+  const isLaTeXBlock = (text: string) => {
+    // Check for document class and typical LaTeX structure
+    return (
+      text.includes('\\documentclass') ||
+      (text.includes('\\begin{document}') && text.includes('\\end{document}'))
+    );
+  };
+  
+  // Function to render content with proper handling of LaTeX and Markdown
+  const renderContent = () => {
+    if (isStreaming) return <span className="text-[var(--neutral-color-black)]">{content}</span>;
     
-    // Split by potential LaTeX expressions
-    const segments = text.split(/((?:\$\$[\s\S]*?\$\$)|(?:\$[^\$\n]+?\$))/g);
-    
-    if (segments.length === 1) {
-      return null; // No LaTeX, will use normal markdown renderer
+    // Check if the entire content is a LaTeX document
+    if (isLaTeXBlock(content)) {
+      return (
+        <div className="latex-document bg-neutral-50 p-4 rounded-md font-mono text-sm overflow-auto">
+          <pre className="whitespace-pre-wrap">{content}</pre>
+        </div>
+      );
     }
     
+    // Process markdown with LaTeX support
+    // First, split by potential LaTeX delimiters
+    const segments = content.split(/((?:\$\$[\s\S]*?\$\$)|(?:\$[^\$\n]+?\$))/g);
+    
     return segments.map((segment, index) => {
+      // Block math: $$...$$
       if (segment.startsWith('$$') && segment.endsWith('$$')) {
-        return <BlockMath key={index} math={segment.slice(2, -2)} />;
-      } else if (segment.startsWith('$') && segment.endsWith('$')) {
-        return <InlineMath key={index} math={segment.slice(1, -1)} />;
-      } else if (segment) {
+        try {
+          return <BlockMath key={index} math={segment.slice(2, -2)} />;
+        } catch (error) {
+          console.error("LaTeX rendering error:", error);
+          return <code key={index} className="text-red-500">{segment}</code>;
+        }
+      } 
+      // Inline math: $...$
+      else if (segment.startsWith('$') && segment.endsWith('$') && segment.length > 2) {
+        try {
+          return <InlineMath key={index} math={segment.slice(1, -1)} />;
+        } catch (error) {
+          console.error("LaTeX rendering error:", error);
+          return <code key={index} className="text-red-500">{segment}</code>;
+        }
+      } 
+      // Regular markdown
+      else if (segment) {
         return (
           <ReactMarkdown 
             key={index} 
@@ -72,19 +87,27 @@ const MessageBubble = ({
             remarkPlugins={[remarkGfm]}
             components={{
               code: ({node, inline, className, children, ...props}) => {
-                const match = /language-(\w+)/.exec(className || '');
-                return inline ? 
-                  <LatexRenderer>{String(children)}</LatexRenderer> : 
-                  <code className={className} {...props}>{children}</code>;
+                if (inline) {
+                  // Check if this is LaTeX inside inline code
+                  const text = String(children);
+                  if (text.startsWith('$') && text.endsWith('$')) {
+                    try {
+                      return <InlineMath math={text.slice(1, -1)} />;
+                    } catch (error) {
+                      return <code className={className} {...props}>{children}</code>;
+                    }
+                  }
+                }
+                return <code className={className} {...props}>{children}</code>;
               }
             }}
           >
             {segment}
           </ReactMarkdown>
         );
-      } else {
-        return null;
       }
+      
+      return null;
     });
   };
 
@@ -131,27 +154,8 @@ const MessageBubble = ({
           )}
           
           {!isTool && (
-            <div className={cn(isStreaming && "typing-indicator")}>
-              {isStreaming ? (
-                <span className="text-[var(--neutral-color-dark)]">{content}</span>
-              ) : (
-                processContent(content) || (
-                  <ReactMarkdown 
-                    className="markdown" 
-                    remarkPlugins={[remarkGfm]}
-                    components={{
-                      code: ({node, inline, className, children, ...props}) => {
-                        const match = /language-(\w+)/.exec(className || '');
-                        return inline ? 
-                          <LatexRenderer>{String(children)}</LatexRenderer> : 
-                          <code className={className} {...props}>{children}</code>;
-                      }
-                    }}
-                  >
-                    {content}
-                  </ReactMarkdown>
-                )
-              )}
+            <div className={cn(isStreaming && "typing-indicator", "text-[var(--neutral-color-black)]")}>
+              {renderContent()}
             </div>
           )}
           

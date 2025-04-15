@@ -71,7 +71,6 @@ const MessageBubble = ({
             className="markdown inline" 
             remarkPlugins={[remarkGfm]}
             components={{
-              // Recursive handling for nested LaTeX in code blocks
               code: ({node, inline, className, children, ...props}) => {
                 const match = /language-(\w+)/.exec(className || '');
                 return inline ? 

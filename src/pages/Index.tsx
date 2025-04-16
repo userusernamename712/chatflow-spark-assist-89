@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -47,7 +48,7 @@ const Index = () => {
     sendChatMessage(
       {
         session_id: sessionId,
-        customer_id: user.id,
+        customer_id: user.id, // This will be overridden in the service with the fixed CUSTOMER_ID
         prompt: content.trim(),
       },
       handleChatEvent,
@@ -124,7 +125,7 @@ const Index = () => {
     login(username);
     toast({
       title: "Welcome!",
-      description: `You've logged in as ${username}.`,
+      description: `You've logged in as ${username}. You're now connected to the Grosso Napoletano client data.`,
     });
   };
 
@@ -152,7 +153,7 @@ const Index = () => {
         <ChatHeader />
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground">
-            Logged in as <strong>{user?.username}</strong>
+            <strong>{user?.username}</strong> | Client: Grosso Napoletano
           </span>
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-1" />

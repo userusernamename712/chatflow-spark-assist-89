@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/components/ui/use-toast';
+import { CUSTOMER_ID } from '@/types/auth';
 
 interface LoginFormProps {
   onLogin: (username: string) => void;
@@ -36,14 +37,14 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-sm">
       <div className="space-y-2">
-        <h2 className="text-2xl font-bold">Login</h2>
-        <p className="text-muted-foreground">Enter your username to access the chat.</p>
+        <h2 className="text-2xl font-bold">Team Login</h2>
+        <p className="text-muted-foreground">Enter your username to access the chat for <strong>{CUSTOMER_ID}</strong>.</p>
       </div>
       
       <div className="space-y-2">
         <Input
           type="text"
-          placeholder="Username"
+          placeholder="Your username"
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           disabled={isLoading}

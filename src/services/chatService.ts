@@ -1,5 +1,6 @@
 
 import { ChatRequest, ChatEvent } from '@/types/chat';
+import { CUSTOMER_ID } from '@/types/auth';
 
 const API_URL = 'http://0.0.0.0:8080';
 
@@ -13,9 +14,15 @@ export const sendChatMessage = async (
     // Add user information to the request for tracking
     console.log('Sending chat request:', JSON.stringify(request));
     
-    // Ensure request includes customer_id for identification
-    if (!request.customer_id) {
-      throw new Error('Customer ID is required');
+    // Always use the fixed customer ID
+    const enhancedRequest = {
+      ...request,
+      customer_id: CUSTOMER_ID,
+    };
+    
+    // Ensure request includes session ID for tracking the conversation
+    if (!enhancedRequest.session_id) {
+      console.log('No session ID provided, server will create one');
     }
     
     const response = await fetch(`${API_URL}/chat`, {
@@ -24,7 +31,7 @@ export const sendChatMessage = async (
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
       },
-      body: JSON.stringify(request),
+      body: JSON.stringify(enhancedRequest),
     });
 
     if (!response.ok) {

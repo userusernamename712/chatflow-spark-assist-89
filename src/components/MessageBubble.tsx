@@ -63,24 +63,6 @@ const MessageBubble = ({
     
     return content;
   };
-
-  // Function to properly process and render LaTeX in the text
-  const processLatexFormula = (formula: string) => {
-    try {
-      // Handle specific LaTeX macro patterns that might need special processing
-      let processedFormula = formula;
-      
-      // Replace common LaTeX macros if they're causing issues
-      processedFormula = processedFormula
-        .replace(/\\text\{([^}]*)\}/g, '\\text{$1}') // Ensure text command works
-        .replace(/\\frac\{([^}]*)\}\{([^}]*)\}/g, '\\frac{$1}{$2}'); // Ensure frac command works
-      
-      return processedFormula;
-    } catch (error) {
-      console.error("Error processing LaTeX formula:", error);
-      return formula; // Return original on error
-    }
-  };
   
   // Function to render content with proper handling of LaTeX and Markdown
   const renderContent = () => {
@@ -105,33 +87,15 @@ const MessageBubble = ({
       );
     }
     
-    // Special case for LaTeX equation that matches the format in the image
-    const ratioFormula = /\[\s*\\text\{Ratio de Conversión\}\s*=\s*\\frac\{[^}]*\}\{[^}]*\}\s*\]/g;
-    if (ratioFormula.test(content)) {
-      const formulas = content.match(/\[(.*?)\]/gs);
-      if (formulas && formulas.length > 0) {
-        return formulas.map((formula, idx) => {
-          // Remove the square brackets for proper rendering
-          const cleanFormula = formula.slice(1, -1).trim();
-          return (
-            <div key={idx} className="latex-display-formula my-4">
-              <BlockMath math={processLatexFormula(cleanFormula)} />
-            </div>
-          );
-        });
-      }
-    }
-    
-    // Process content with multiple LaTeX elements - handle both environments and inline/block math
-    if (content.includes('\\begin{') || content.includes('\\frac') || content.includes('\\text')) {
-      // Split content by LaTeX patterns
-      const segments = content.split(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$|\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\}|\[[^\]]*?\\frac\{.*?\}\{.*?\}[^\]]*?\])/g);
+    // If it contains LaTeX environment(s) but is not a full document, try to render them
+    if (content.includes('\\begin{') && content.includes('\\end{')) {
+      const segments = content.split(/(\$\$[\s\S]*?\$\$|\$[^\$\n]+?\$|\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\})/g);
       
       return segments.map((segment, index) => {
         // Block math: $$...$$
         if (segment.startsWith('$$') && segment.endsWith('$$')) {
           try {
-            return <BlockMath key={index} math={processLatexFormula(segment.slice(2, -2))} />;
+            return <BlockMath key={index} math={segment.slice(2, -2)} />;
           } catch (error) {
             console.error("LaTeX rendering error:", error);
             return <code key={index} className="text-red-500">{segment}</code>;
@@ -140,27 +104,16 @@ const MessageBubble = ({
         // Inline math: $...$
         else if (segment.startsWith('$') && segment.endsWith('$') && segment.length > 2) {
           try {
-            return <InlineMath key={index} math={processLatexFormula(segment.slice(1, -1))} />;
+            return <InlineMath key={index} math={segment.slice(1, -1)} />;
           } catch (error) {
             console.error("LaTeX rendering error:", error);
             return <code key={index} className="text-red-500">{segment}</code>;
           }
         }
-        // LaTeX fraction in square brackets [..\frac{..}{..}..]
-        else if (segment.match(/\[.*?\\frac\{.*?\}\{.*?\}.*?\]/s)) {
-          try {
-            // Remove the surrounding brackets for proper rendering
-            const cleanFormula = segment.slice(1, -1).trim();
-            return <BlockMath key={index} math={processLatexFormula(cleanFormula)} />;
-          } catch (error) {
-            console.error("LaTeX fraction rendering error:", error);
-            return <code key={index} className="latex-block">{segment}</code>;
-          }
-        }
         // LaTeX environments: \begin{...}...\end{...}
         else if (segment.match(/\\begin\{[^}]+\}[\s\S]*?\\end\{[^}]+\}/)) {
           try {
-            return <BlockMath key={index} math={processLatexFormula(segment)} />;
+            return <BlockMath key={index} math={segment} />;
           } catch (error) {
             console.error("LaTeX environment rendering error:", error);
             return <code key={index} className="latex-block">{segment}</code>;
@@ -179,7 +132,7 @@ const MessageBubble = ({
                     const text = String(children);
                     if (text.startsWith('$') && text.endsWith('$')) {
                       try {
-                        return <InlineMath math={processLatexFormula(text.slice(1, -1))} />;
+                        return <InlineMath math={text.slice(1, -1)} />;
                       } catch (error) {
                         return <code className={className} {...props}>{children}</code>;
                       }
@@ -187,15 +140,6 @@ const MessageBubble = ({
                   } else {
                     // Handle code blocks
                     const value = String(children).trim();
-                    // Check for standalone LaTeX formulas in code blocks
-                    if (value.includes('\\frac') || value.includes('\\text')) {
-                      try {
-                        return <BlockMath math={processLatexFormula(value)} />;
-                      } catch (error) {
-                        console.error("Error rendering LaTeX in code block:", error);
-                      }
-                    }
-                    
                     if (value.startsWith('\\documentclass') || 
                         (value.includes('\\begin{document}') && value.includes('\\end{document}'))) {
                       return (
@@ -218,29 +162,14 @@ const MessageBubble = ({
       });
     }
     
-    // Special case handling for the specific formula format from the images
-    const specificFormula = content.match(/\[\s*\\text\{Ratio de Conversión\}\s*=.*?\]/gs);
-    if (specificFormula && specificFormula.length > 0) {
-      return (
-        <>
-          <ReactMarkdown className="markdown" remarkPlugins={[remarkGfm]}>
-            {content.replace(specificFormula[0], '')}
-          </ReactMarkdown>
-          <div className="latex-display-formula my-4">
-            <BlockMath math={processLatexFormula(specificFormula[0].slice(1, -1))} />
-          </div>
-        </>
-      );
-    }
-    
     // Process markdown with LaTeX support (for simpler cases)
-    const latexSegments = content.split(/((?:\$\$[\s\S]*?\$\$)|(?:\$[^\$\n]+?\$)|(?:\[[^\]]*?\\frac\{.*?\}\{.*?\}[^\]]*?\]))/g);
+    const segments = content.split(/((?:\$\$[\s\S]*?\$\$)|(?:\$[^\$\n]+?\$))/g);
     
-    return latexSegments.map((segment, index) => {
+    return segments.map((segment, index) => {
       // Block math: $$...$$
       if (segment.startsWith('$$') && segment.endsWith('$$')) {
         try {
-          return <BlockMath key={index} math={processLatexFormula(segment.slice(2, -2))} />;
+          return <BlockMath key={index} math={segment.slice(2, -2)} />;
         } catch (error) {
           console.error("LaTeX rendering error:", error);
           return <code key={index} className="text-red-500">{segment}</code>;
@@ -249,23 +178,12 @@ const MessageBubble = ({
       // Inline math: $...$
       else if (segment.startsWith('$') && segment.endsWith('$') && segment.length > 2) {
         try {
-          return <InlineMath key={index} math={processLatexFormula(segment.slice(1, -1))} />;
+          return <InlineMath key={index} math={segment.slice(1, -1)} />;
         } catch (error) {
           console.error("LaTeX rendering error:", error);
           return <code key={index} className="text-red-500">{segment}</code>;
         }
-      }
-      // LaTeX formula in square brackets
-      else if (segment.match(/\[.*?\\frac\{.*?\}\{.*?\}.*?\]/s)) {
-        try {
-          // Remove the surrounding brackets for proper rendering
-          const cleanFormula = segment.slice(1, -1).trim();
-          return <BlockMath key={index} math={processLatexFormula(cleanFormula)} />;
-        } catch (error) {
-          console.error("LaTeX formula rendering error:", error);
-          return <code key={index} className="text-red-500">{segment}</code>;
-        }
-      }
+      } 
       // Regular markdown
       else if (segment) {
         return (
@@ -280,22 +198,14 @@ const MessageBubble = ({
                   const text = String(children);
                   if (text.startsWith('$') && text.endsWith('$')) {
                     try {
-                      return <InlineMath math={processLatexFormula(text.slice(1, -1))} />;
+                      return <InlineMath math={text.slice(1, -1)} />;
                     } catch (error) {
                       return <code className={className} {...props}>{children}</code>;
                     }
                   }
                 } else {
-                  // This is a code block, check for LaTeX formulas
+                  // This is a code block, check if it's LaTeX
                   const value = String(children).trim();
-                  if (value.includes('\\frac') || value.includes('\\text')) {
-                    try {
-                      return <BlockMath math={processLatexFormula(value)} />;
-                    } catch (error) {
-                      console.error("Error rendering LaTeX in code block:", error);
-                    }
-                  }
-                  
                   if (value.startsWith('\\documentclass') || 
                       (value.includes('\\begin{document}') && value.includes('\\end{document}'))) {
                     return (

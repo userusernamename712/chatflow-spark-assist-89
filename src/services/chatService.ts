@@ -10,8 +10,13 @@ export const sendChatMessage = async (
   onError: (error: Error) => void
 ) => {
   try {
-    // Log the request being sent, including session_id
+    // Add user information to the request for tracking
     console.log('Sending chat request:', JSON.stringify(request));
+    
+    // Ensure request includes customer_id for identification
+    if (!request.customer_id) {
+      throw new Error('Customer ID is required');
+    }
     
     const response = await fetch(`${API_URL}/chat`, {
       method: 'POST',
@@ -62,7 +67,7 @@ export const sendChatMessage = async (
           if (line.trim()) {
             try {
               const event = JSON.parse(line) as ChatEvent;
-              // Log each received event
+              // Log each received event with session and user info
               console.log('Received event:', JSON.stringify(event));
               onEvent(event);
             } catch (e) {

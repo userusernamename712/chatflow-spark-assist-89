@@ -2,7 +2,7 @@
 import { ChatRequest, ChatEvent } from '@/types/chat';
 import { CUSTOMER_ID } from '@/types/auth';
 
-const API_URL = 'http://0.0.0.0:80';
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const sendChatMessage = async (
   request: ChatRequest,

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -143,13 +144,8 @@ const Index = () => {
 
   const handleChangeCustomer = (customerId: string) => {
     if (customerId !== selectedCustomerId) {
-      if (messages.length > 0) {
-        if (confirm("Changing the client will start a new conversation. Continue?")) {
-          handleStartNewSession(customerId);
-        }
-      } else {
-        handleStartNewSession(customerId);
-      }
+      // Automatically start new session when customer changes
+      handleStartNewSession(customerId);
     }
   };
 
@@ -165,27 +161,30 @@ const Index = () => {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen items-center justify-center p-4">
-        <div className="animate-pulse">Loading...</div>
+      <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-4"></div>
+          <div className="text-[#403E43]">Loading...</div>
+        </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col h-screen items-center justify-center p-4">
+      <div className="flex flex-col h-screen items-center justify-center p-4 bg-gradient-to-b from-[#F1F0FB] to-white">
         <LoginForm />
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-white shadow-md rounded-lg overflow-hidden border border-[var(--neutral-color-strokes)]">
-      <div className="flex items-center justify-between p-4 border-b">
+    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden border border-[#E5DEFF]">
+      <div className="flex items-center justify-between p-4 border-b bg-white">
         <ChatHeader />
         <div className="flex items-center gap-2">
           <Select value={selectedCustomerId} onValueChange={handleChangeCustomer}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px] border-[#E5DEFF] bg-[#F1F0FB]">
               <SelectValue placeholder="Select client" />
             </SelectTrigger>
             <SelectContent>
@@ -197,18 +196,28 @@ const Index = () => {
             </SelectContent>
           </Select>
           
-          <Button variant="outline" size="sm" onClick={() => handleStartNewSession()}>
-            <Plus className="h-4 w-4 mr-1" />
-            New Session
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => handleStartNewSession()}
+            className="border-[#E5DEFF] hover:bg-[#F1F0FB]"
+          >
+            <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
+            New Chat
           </Button>
           
           <div className="flex flex-col text-right">
-            <span className="text-sm font-medium">{user?.username}</span>
-            <span className="text-xs text-muted-foreground">{user?.email}</span>
+            <span className="text-sm font-medium text-[#1A1F2C]">{user?.username}</span>
+            <span className="text-xs text-[#8E9196]">{user?.email}</span>
           </div>
           
-          <Button variant="ghost" size="sm" onClick={handleLogout}>
-            <LogOut className="h-4 w-4 mr-1" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={handleLogout}
+            className="hover:bg-[#F1F0FB]"
+          >
+            <LogOut className="h-4 w-4 mr-1 text-[#7E69AB]" />
             Logout
           </Button>
         </div>

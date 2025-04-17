@@ -1,7 +1,6 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
-  createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut,
   onAuthStateChanged,
@@ -13,7 +12,6 @@ import { v4 as uuidv4 } from 'uuid';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string, customerId: string) => Promise<void>;
-  register: (email: string, password: string, username: string, customerId: string) => Promise<void>;
   logout: () => Promise<void>;
   startNewSession: (customerId: string) => void;
   loading: boolean;
@@ -82,37 +80,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error('Error loading user data:', error);
       localStorage.removeItem('chatUser');
       setError('Error loading user data. Please try again.');
-    }
-  };
-
-  const register = async (email: string, password: string, username: string, customerId: string) => {
-    setError(null);
-    setLoading(true);
-    
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const firebaseUser = userCredential.user;
-      
-      const userData: User = {
-        id: firebaseUser.uid,
-        email,
-        username,
-        createdAt: new Date(),
-      };
-      
-      localStorage.setItem('chatUser', JSON.stringify(userData));
-      localStorage.setItem('chatSelectedCustomer', customerId);
-      
-      setAuthState({
-        user: userData,
-        isAuthenticated: true,
-        selectedCustomerId: customerId,
-      });
-    } catch (error: any) {
-      console.error('Registration error:', error);
-      setError(error.message || 'Failed to register. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -185,7 +152,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{ 
         ...authState, 
         login, 
-        register, 
         logout, 
         startNewSession,
         loading,

@@ -1,17 +1,9 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { toast } from '@/components/ui/use-toast';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Form,
   FormControl,
@@ -21,60 +13,47 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { useAuth } from '@/contexts/AuthContext';
-import { AVAILABLE_CUSTOMERS, DEFAULT_CUSTOMER_ID } from '@/types/auth';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DEFAULT_CUSTOMER_ID } from '@/types/auth';
+import { Mail, Lock, LogIn } from 'lucide-react';
 
 type FormValues = {
   email: string;
   password: string;
-  username?: string;
-  customerId: string;
 };
 
 const LoginForm = () => {
-  const { login, register, error, loading } = useAuth();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const { login, error, loading } = useAuth();
   
   const form = useForm<FormValues>({
     defaultValues: {
       email: '',
       password: '',
-      username: '',
-      customerId: DEFAULT_CUSTOMER_ID,
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     try {
-      if (activeTab === 'login') {
-        await login(values.email, values.password, values.customerId);
-        toast({
-          title: "Welcome back!",
-          description: `You've logged in successfully. You're now connected to the ${values.customerId} client data.`,
-        });
-      } else {
-        if (!values.username) {
-          toast({
-            variant: "destructive",
-            title: "Error",
-            description: "Username is required for registration",
-          });
-          return;
-        }
-        await register(values.email, values.password, values.username, values.customerId);
-        toast({
-          title: "Registration successful!",
-          description: `You've registered and logged in as ${values.email}.`,
-        });
-      }
+      await login(values.email, values.password, DEFAULT_CUSTOMER_ID);
+      toast({
+        title: "Welcome back!",
+        description: `You've logged in successfully to the bookline.AI team portal.`,
+      });
     } catch (err) {
       console.error('Auth error:', err);
     }
   };
 
   return (
-    <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-md">
-      <h1 className="text-2xl font-bold mb-6 text-center">Team Access Portal</h1>
+    <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg border border-[#E5DEFF]">
+      <div className="flex justify-center mb-6">
+        <img 
+          src="/lovable-uploads/550aab05-c6c5-4d4a-8ef2-665352be8d2e.png" 
+          alt="bookline.AI Logo" 
+          className="h-16 w-16 object-contain"
+        />
+      </div>
+      <h1 className="text-2xl font-bold mb-2 text-center text-[#1A1F2C]">Team Access Portal</h1>
+      <p className="text-center text-[#8E9196] mb-6">Sign in to access your bookline.AI dashboard</p>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -82,89 +61,73 @@ const LoginForm = () => {
         </div>
       )}
       
-      <Tabs defaultValue="login" className="w-full" onValueChange={(value) => setActiveTab(value as 'login' | 'register')}>
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="login">Login</TabsTrigger>
-          <TabsTrigger value="register">Register</TabsTrigger>
-        </TabsList>
-        
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="customerId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Select Client</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a client" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {AVAILABLE_CUSTOMERS.map((customer) => (
-                        <SelectItem key={customer.id} value={customer.id}>
-                          {customer.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <TabsContent value="register">
-              <FormField
-                control={form.control}
-                name="username"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Username</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Your name" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </TabsContent>
-            
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" placeholder="your.email@example.com" {...field} required />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input type="password" placeholder="••••••••" {...field} required />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Processing..." : activeTab === 'login' ? "Login" : "Register"}
-            </Button>
-          </form>
-        </Form>
-      </Tabs>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center">
+                  <Mail className="h-4 w-4 mr-2 text-[#9b87f5]" />
+                  Email
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    type="email" 
+                    placeholder="your.email@example.com" 
+                    className="bg-[#F1F0FB] border-[#E5DEFF]"
+                    {...field} 
+                    required 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center">
+                  <Lock className="h-4 w-4 mr-2 text-[#9b87f5]" />
+                  Password
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    type="password" 
+                    placeholder="••••••••" 
+                    className="bg-[#F1F0FB] border-[#E5DEFF]"
+                    {...field} 
+                    required 
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <Button 
+            type="submit" 
+            className="w-full bg-[#9b87f5] hover:bg-[#7E69AB] transition-colors mt-2" 
+            disabled={loading}
+          >
+            {loading ? (
+              <span className="flex items-center">
+                <span className="mr-2">Signing in</span>
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </span>
+            ) : (
+              <span className="flex items-center justify-center">
+                <LogIn className="h-4 w-4 mr-2" />
+                Sign in
+              </span>
+            )}
+          </Button>
+        </form>
+      </Form>
     </div>
   );
 };

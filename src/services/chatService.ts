@@ -1,6 +1,5 @@
 
 import { ChatRequest, ChatEvent } from '@/types/chat';
-import { CUSTOMER_ID } from '@/types/auth';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -11,17 +10,11 @@ export const sendChatMessage = async (
   onError: (error: Error) => void
 ) => {
   try {
-    // Add user information to the request for tracking
+    // Log the chat request with customer info
     console.log('Sending chat request:', JSON.stringify(request));
     
-    // Always use the fixed customer ID
-    const enhancedRequest = {
-      ...request,
-      customer_id: CUSTOMER_ID,
-    };
-    
     // Ensure request includes session ID for tracking the conversation
-    if (!enhancedRequest.session_id) {
+    if (!request.session_id) {
       console.log('No session ID provided, server will create one');
     }
     
@@ -31,7 +24,7 @@ export const sendChatMessage = async (
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
       },
-      body: JSON.stringify(enhancedRequest),
+      body: JSON.stringify(request),
     });
 
     if (!response.ok) {

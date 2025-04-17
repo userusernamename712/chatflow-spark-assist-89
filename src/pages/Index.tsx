@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -10,13 +9,21 @@ import { Message, ChatEvent } from '@/types/chat';
 import { sendChatMessage } from '@/services/chatService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, Plus, RefreshCw } from 'lucide-react';
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { user, isAuthenticated, logout, selectedCustomerId, startNewSession, loading } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -48,7 +55,7 @@ const Index = () => {
     sendChatMessage(
       {
         session_id: sessionId,
-        customer_id: user.id, // This will be overridden in the service with the fixed CUSTOMER_ID
+        customer_id: selectedCustomerId,
         prompt: content.trim(),
       },
       handleChatEvent,
@@ -121,12 +128,29 @@ const Index = () => {
     });
   };
 
-  const handleLogin = (username: string) => {
-    login(username);
+  const handleStartNewSession = (customerId?: string) => {
+    const newCustomerId = customerId || selectedCustomerId;
+    startNewSession(newCustomerId);
+    setMessages([]);
+    setSessionId(null);
     toast({
-      title: "Welcome!",
-      description: `You've logged in as ${username}. You're now connected to the Grosso Napoletano client data.`,
+      title: "New session started",
+      description: `You've started a new conversation with ${
+        AVAILABLE_CUSTOMERS.find(c => c.id === newCustomerId)?.name || newCustomerId
+      }.`,
     });
+  };
+
+  const handleChangeCustomer = (customerId: string) => {
+    if (customerId !== selectedCustomerId) {
+      if (messages.length > 0) {
+        if (confirm("Changing the client will start a new conversation. Continue?")) {
+          handleStartNewSession(customerId);
+        }
+      } else {
+        handleStartNewSession(customerId);
+      }
+    }
   };
 
   const handleLogout = () => {
@@ -139,10 +163,18 @@ const Index = () => {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center p-4">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col h-screen items-center justify-center p-4">
-        <LoginForm onLogin={handleLogin} />
+        <LoginForm />
       </div>
     );
   }
@@ -152,9 +184,29 @@ const Index = () => {
       <div className="flex items-center justify-between p-4 border-b">
         <ChatHeader />
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">
-            <strong>{user?.username}</strong> | Client: Grosso Napoletano
-          </span>
+          <Select value={selectedCustomerId} onValueChange={handleChangeCustomer}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select client" />
+            </SelectTrigger>
+            <SelectContent>
+              {AVAILABLE_CUSTOMERS.map((customer) => (
+                <SelectItem key={customer.id} value={customer.id}>
+                  {customer.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Button variant="outline" size="sm" onClick={() => handleStartNewSession()}>
+            <Plus className="h-4 w-4 mr-1" />
+            New Session
+          </Button>
+          
+          <div className="flex flex-col text-right">
+            <span className="text-sm font-medium">{user?.username}</span>
+            <span className="text-xs text-muted-foreground">{user?.email}</span>
+          </div>
+          
           <Button variant="ghost" size="sm" onClick={handleLogout}>
             <LogOut className="h-4 w-4 mr-1" />
             Logout

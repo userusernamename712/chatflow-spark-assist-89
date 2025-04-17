@@ -4,12 +4,13 @@ import { getAuth } from "firebase/auth";
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDemoKeyForLovableAppTesting",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "lovable-app-demo.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "lovable-app-demo",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "lovable-app-demo.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "123456789012",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:123456789012:web:abcdef1234567890"
+  apiKey: import.meta.env.FIREBASE_API_KEY,
+  authDomain: import.meta.env.FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.FIREBASE_MESSAGING_ID,
+  appId: import.meta.env.FIREBASE_APP_ID,
+  measurementId: import.meta.env.FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase

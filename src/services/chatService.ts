@@ -2,7 +2,7 @@
 import { ChatRequest, ChatEvent } from '@/types/chat';
 import { CUSTOMER_ID } from '@/types/auth';
 
-const API_URL = 'http://0.0.0.0:8080';
+const API_URL = 'http://0.0.0.0:80';
 
 export const sendChatMessage = async (
   request: ChatRequest,

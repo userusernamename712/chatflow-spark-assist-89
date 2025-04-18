@@ -6,11 +6,13 @@ import ChatHeader from '@/components/ChatHeader';
 import ChatContainer from '@/components/ChatContainer';
 import ChatInput from '@/components/ChatInput';
 import LoginForm from '@/components/LoginForm';
+import ConversationSidebar from '@/components/ConversationSidebar';
 import { Message, ChatEvent } from '@/types/chat';
+import { Conversation } from '@/types/conversation';
 import { sendChatMessage } from '@/services/chatService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Plus, RefreshCw } from 'lucide-react';
+import { LogOut, Plus, Menu, X } from 'lucide-react';
 import { 
   Select,
   SelectContent,
@@ -19,11 +21,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { updateConversation } from '@/services/conversationService';
 
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, logout, selectedCustomerId, startNewSession, loading } = useAuth();
 
   useEffect(() => {
@@ -159,6 +164,29 @@ const Index = () => {
     });
   };
 
+  const handleSelectConversation = (conversation: Conversation) => {
+    // If the selected conversation is from a different customer than current,
+    // we need to switch customers first
+    if (conversation.customer_id !== selectedCustomerId) {
+      handleChangeCustomer(conversation.customer_id);
+    }
+    
+    // Set the session ID and load the messages
+    setSessionId(conversation.session_id);
+    
+    // Map the conversation messages to our Message format
+    const mappedMessages: Message[] = conversation.messages
+      .filter(m => m.role !== 'system') // Filter out system messages
+      .map(m => ({
+        id: uuidv4(),
+        type: m.role === 'user' ? 'user' : 'assistant',
+        content: m.content,
+      }));
+    
+    setMessages(mappedMessages);
+    setSidebarOpen(false);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
@@ -179,55 +207,89 @@ const Index = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen max-w-3xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden border border-[#E5DEFF]">
-      <div className="flex items-center justify-between p-4 border-b bg-white">
-        <ChatHeader />
-        <div className="flex items-center gap-2">
-          <Select value={selectedCustomerId} onValueChange={handleChangeCustomer}>
-            <SelectTrigger className="w-[180px] border-[#E5DEFF] bg-[#F1F0FB]">
-              <SelectValue placeholder="Select client" />
-            </SelectTrigger>
-            <SelectContent>
-              {AVAILABLE_CUSTOMERS.map((customer) => (
-                <SelectItem key={customer.id} value={customer.id}>
-                  {customer.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => handleStartNewSession()}
-            className="border-[#E5DEFF] hover:bg-[#F1F0FB]"
-          >
-            <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
-            New Chat
-          </Button>
-          
-          <div className="flex flex-col text-right">
-            <span className="text-sm font-medium text-[#1A1F2C]">{user?.username}</span>
-            <span className="text-xs text-[#8E9196]">{user?.email}</span>
-          </div>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleLogout}
-            className="hover:bg-[#F1F0FB]"
-          >
-            <LogOut className="h-4 w-4 mr-1 text-[#7E69AB]" />
-            Logout
-          </Button>
-        </div>
+    <div className="flex h-screen bg-[#F6F6F7]">
+      {/* Desktop sidebar */}
+      <div className="hidden md:block w-72 border-r border-[#E5DEFF] bg-white shadow-sm">
+        <ConversationSidebar 
+          customerId={selectedCustomerId}
+          sessionId={sessionId}
+          onSelectConversation={handleSelectConversation}
+        />
       </div>
-      <ChatContainer 
-        messages={messages} 
-        isProcessing={isProcessing} 
-        onSendTypicalQuestion={handleSendTypicalQuestion}
-      />
-      <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />
+      
+      {/* Mobile sidebar (sheet) */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="p-0 w-[300px]">
+          <ConversationSidebar 
+            customerId={selectedCustomerId}
+            sessionId={sessionId}
+            onSelectConversation={handleSelectConversation}
+            isMobile={true}
+            onCloseMobile={() => setSidebarOpen(false)}
+          />
+        </SheetContent>
+      </Sheet>
+      
+      <div className="flex flex-col flex-1 max-w-3xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden border border-[#E5DEFF]">
+        <div className="flex items-center justify-between p-4 border-b bg-white">
+          <div className="flex items-center">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="md:hidden mr-2"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <ChatHeader />
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={selectedCustomerId} onValueChange={handleChangeCustomer}>
+              <SelectTrigger className="w-[180px] border-[#E5DEFF] bg-[#F1F0FB]">
+                <SelectValue placeholder="Select client" />
+              </SelectTrigger>
+              <SelectContent>
+                {AVAILABLE_CUSTOMERS.map((customer) => (
+                  <SelectItem key={customer.id} value={customer.id}>
+                    {customer.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleStartNewSession()}
+              className="border-[#E5DEFF] hover:bg-[#F1F0FB]"
+            >
+              <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
+              New Chat
+            </Button>
+            
+            <div className="hidden md:flex flex-col text-right">
+              <span className="text-sm font-medium text-[#1A1F2C]">{user?.username}</span>
+              <span className="text-xs text-[#8E9196]">{user?.email}</span>
+            </div>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleLogout}
+              className="hover:bg-[#F1F0FB]"
+            >
+              <LogOut className="h-4 w-4 mr-1 text-[#7E69AB]" />
+              <span className="hidden md:inline">Logout</span>
+            </Button>
+          </div>
+        </div>
+        <ChatContainer 
+          messages={messages} 
+          isProcessing={isProcessing} 
+          onSendTypicalQuestion={handleSendTypicalQuestion}
+        />
+        <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />
+      </div>
     </div>
   );
 };

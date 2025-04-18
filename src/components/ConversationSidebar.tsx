@@ -1,48 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { 
-  Clock, Star, StarIcon, StarOff, MessageCircle, Trash2, X, 
-  ChevronDown, ChevronUp, User, Wrench, FileText, Server
-} from 'lucide-react';
+import { Clock, Star, StarIcon, StarOff, MessageCircle, Trash2, X, User } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Conversation, ConversationRating } from '@/types/conversation';
-import { 
-  fetchConversationHistory, 
-  updateConversation, 
-  deleteConversation 
-} from '@/services/conversationService';
+import { fetchConversationHistory, updateConversation, deleteConversation } from '@/services/conversationService';
 import { toast } from '@/components/ui/use-toast';
-import { fetchApiMetadata } from '@/services/apiService';
-import { AVAILABLE_CUSTOMERS } from '@/types/auth';
+import ProfileDialog from './ProfileDialog';
 
 interface ConversationSidebarProps {
   customerId: string;
@@ -72,6 +39,8 @@ const ConversationSidebar = ({
     rating: null,
     feedback: '',
   });
+  
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
   const [showApiDetails, setShowApiDetails] = useState<{
@@ -327,116 +296,16 @@ const ConversationSidebar = ({
           )}
         </ScrollArea>
 
-        <div className="mt-auto border-t p-4">
-          <Collapsible>
-            <CollapsibleTrigger className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2">
-                <User className="h-5 w-5 text-[#7E69AB]" />
-                <span className="text-sm font-medium">Profile & Settings</span>
-              </div>
-              <ChevronDown className="h-4 w-4" />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="pt-4 space-y-4">
-              <div className="space-y-4">
-                <div>
-                  <label className="text-sm text-[#8E9196] mb-2 block">Select Customer</label>
-                  <div className="relative">
-                    <Input
-                      type="text"
-                      placeholder="Search customers..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="mb-2"
-                    />
-                    <div className="max-h-48 overflow-auto rounded-md border bg-white shadow-md">
-                      {filteredCustomers.map((customer) => (
-                        <button
-                          key={customer.id}
-                          onClick={() => {
-                            onChangeCustomer?.(customer.id);
-                            setSearchQuery('');
-                          }}
-                          className={`w-full px-4 py-2 text-left text-sm hover:bg-[#F1F0FB] transition-colors
-                            ${customer.id === customerId ? 'bg-[#F1F0FB] text-[#7E69AB]' : 'text-[#1A1F2C]'}`}
-                        >
-                          {customer.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="text-sm text-[#8E9196] mb-2 block">API Capabilities</label>
-                  <Tabs defaultValue="tools" className="w-full">
-                    <TabsList className="w-full grid grid-cols-3 h-9">
-                      <TabsTrigger value="tools" className="text-xs">
-                        <Wrench className="h-3 w-3 mr-1" />
-                        Tools
-                      </TabsTrigger>
-                      <TabsTrigger value="resources" className="text-xs">
-                        <FileText className="h-3 w-3 mr-1" />
-                        Resources
-                      </TabsTrigger>
-                      <TabsTrigger value="servers" className="text-xs">
-                        <Server className="h-3 w-3 mr-1" />
-                        Servers
-                      </TabsTrigger>
-                    </TabsList>
-
-                    <TabsContent value="tools" className="mt-2">
-                      <div className="space-y-2">
-                        {apiMetadata?.tools && Object.entries(apiMetadata.tools).map(([server, tools]) => (
-                          <div key={server} className="space-y-1">
-                            {Object.entries(tools).map(([name, tool]) => (
-                              <button
-                                key={name}
-                                onClick={() => setShowApiDetails({ type: 'tool', item: { name, ...tool } })}
-                                className="w-full p-2 text-left text-sm rounded hover:bg-[#F1F0FB] transition-colors"
-                              >
-                                {tool.name}
-                              </button>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="resources" className="mt-2">
-                      <div className="space-y-2">
-                        {apiMetadata?.resources && Object.entries(apiMetadata.resources).map(([server, resources]) => (
-                          <div key={server} className="space-y-1">
-                            {Object.entries(resources).map(([uri, resource]) => (
-                              <button
-                                key={uri}
-                                onClick={() => setShowApiDetails({ type: 'resource', item: resource })}
-                                className="w-full p-2 text-left text-sm rounded hover:bg-[#F1F0FB] transition-colors"
-                              >
-                                {resource.name}
-                              </button>
-                            ))}
-                          </div>
-                        ))}
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="servers" className="mt-2">
-                      <div className="space-y-2">
-                        {apiMetadata?.servers && apiMetadata.servers.map((server) => (
-                          <div
-                            key={server}
-                            className="p-2 text-sm rounded text-[#8E9196]"
-                          >
-                            {server.split('/').slice(-2)[0]}
-                          </div>
-                        ))}
-                      </div>
-                    </TabsContent>
-                  </Tabs>
-                </div>
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
+        <div className="p-4 border-t">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full"
+            onClick={() => setIsProfileOpen(true)}
+          >
+            <User className="h-4 w-4 mr-2" />
+            Profile & Settings
+          </Button>
         </div>
       </div>
 
@@ -493,26 +362,15 @@ const ConversationSidebar = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!showApiDetails} onOpenChange={() => setShowApiDetails(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{showApiDetails?.item?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="text-sm space-y-4">
-            {showApiDetails?.item?.description && (
-              <p className="text-[#8E9196]">{showApiDetails.item.description}</p>
-            )}
-            {showApiDetails?.type === 'tool' && showApiDetails.item.inputSchema && (
-              <div>
-                <h4 className="font-medium mb-2">Input Parameters:</h4>
-                <pre className="bg-[#F1F0FB] p-3 rounded text-xs overflow-auto">
-                  {JSON.stringify(showApiDetails.item.inputSchema.properties, null, 2)}
-                </pre>
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ProfileDialog
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        customerId={customerId}
+        onChangeCustomer={(id) => {
+          onChangeCustomer?.(id);
+          setIsProfileOpen(false);
+        }}
+      />
     </>
   );
 };

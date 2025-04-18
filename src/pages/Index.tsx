@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -22,7 +23,6 @@ import {
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { updateConversation } from '@/services/conversationService';
-import ApiCapabilitiesSidebar from '@/components/ApiCapabilitiesSidebar';
 
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -272,8 +272,6 @@ const Index = () => {
         />
         <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />
       </div>
-
-      <ApiCapabilitiesSidebar />
     </div>
   );
 };

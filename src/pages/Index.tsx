@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -23,6 +22,7 @@ import {
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { updateConversation } from '@/services/conversationService';
+import ApiCapabilitiesSidebar from '@/components/ApiCapabilitiesSidebar';
 
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -149,7 +149,6 @@ const Index = () => {
 
   const handleChangeCustomer = (customerId: string) => {
     if (customerId !== selectedCustomerId) {
-      // Automatically start new session when customer changes
       handleStartNewSession(customerId);
     }
   };
@@ -165,18 +164,14 @@ const Index = () => {
   };
 
   const handleSelectConversation = (conversation: Conversation) => {
-    // If the selected conversation is from a different customer than current,
-    // we need to switch customers first
     if (conversation.customer_id !== selectedCustomerId) {
       handleChangeCustomer(conversation.customer_id);
     }
     
-    // Set the session ID and load the messages
     setSessionId(conversation.session_id);
     
-    // Map the conversation messages to our Message format
     const mappedMessages: Message[] = conversation.messages
-      .filter(m => m.role !== 'system') // Filter out system messages
+      .filter(m => m.role !== 'system')
       .map(m => ({
         id: uuidv4(),
         type: m.role === 'user' ? 'user' : 'assistant',
@@ -208,7 +203,6 @@ const Index = () => {
 
   return (
     <div className="flex h-screen bg-[#F6F6F7]">
-      {/* Desktop sidebar */}
       <div className="hidden md:block w-72 border-r border-[#E5DEFF] bg-white shadow-sm">
         <ConversationSidebar 
           customerId={selectedCustomerId}
@@ -217,7 +211,6 @@ const Index = () => {
         />
       </div>
       
-      {/* Mobile sidebar (sheet) */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-[300px]">
           <ConversationSidebar 
@@ -290,6 +283,8 @@ const Index = () => {
         />
         <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />
       </div>
+
+      <ApiCapabilitiesSidebar />
     </div>
   );
 };

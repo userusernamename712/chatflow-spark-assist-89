@@ -208,6 +208,7 @@ const Index = () => {
           customerId={selectedCustomerId}
           sessionId={sessionId}
           onSelectConversation={handleSelectConversation}
+          onChangeCustomer={handleChangeCustomer}
         />
       </div>
       
@@ -217,6 +218,7 @@ const Index = () => {
             customerId={selectedCustomerId}
             sessionId={sessionId}
             onSelectConversation={handleSelectConversation}
+            onChangeCustomer={handleChangeCustomer}
             isMobile={true}
             onCloseMobile={() => setSidebarOpen(false)}
           />
@@ -237,19 +239,6 @@ const Index = () => {
             <ChatHeader />
           </div>
           <div className="flex items-center gap-2">
-            <Select value={selectedCustomerId} onValueChange={handleChangeCustomer}>
-              <SelectTrigger className="w-[180px] border-[#E5DEFF] bg-[#F1F0FB]">
-                <SelectValue placeholder="Select client" />
-              </SelectTrigger>
-              <SelectContent>
-                {AVAILABLE_CUSTOMERS.map((customer) => (
-                  <SelectItem key={customer.id} value={customer.id}>
-                    {customer.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
             <Button 
               variant="outline" 
               size="sm" 

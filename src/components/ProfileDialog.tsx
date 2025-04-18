@@ -101,7 +101,7 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
                           onClick={() => setSelectedDetails({ type: 'tool', item: tool, server })}
                           className="group p-3 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
                         >
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
                             <span className="font-medium text-sm">{tool.name}</span>
                             <Badge variant="secondary" className="text-xs">
                               {server.split('/').slice(-2)[0]}
@@ -122,7 +122,7 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
                           onClick={() => setSelectedDetails({ type: 'resource', item: resource, server })}
                           className="group p-3 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
                         >
-                          <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
                             <span className="font-medium text-sm">{resource.name}</span>
                             <Badge variant="secondary" className="text-xs">
                               {server.split('/').slice(-2)[0]}

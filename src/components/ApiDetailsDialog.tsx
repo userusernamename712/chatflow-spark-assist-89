@@ -24,7 +24,7 @@ const ApiDetailsDialog = ({ isOpen, onClose, type, item, server }: ApiDetailsDia
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl w-full">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
             {item.name}
             <Badge variant="secondary" className="text-xs">
               {serverName}
@@ -41,7 +41,7 @@ const ApiDetailsDialog = ({ isOpen, onClose, type, item, server }: ApiDetailsDia
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Input Parameters:</h4>
               <div className="bg-slate-50 p-4 rounded-md">
-                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-all">
+                <pre className="text-xs overflow-x-auto whitespace-pre-wrap break-words">
                   {JSON.stringify((item as Tool).inputSchema.properties, null, 2)}
                 </pre>
               </div>

@@ -10,6 +10,8 @@ import { Conversation, ConversationRating } from '@/types/conversation';
 import { fetchConversationHistory, updateConversation, deleteConversation } from '@/services/conversationService';
 import { toast } from '@/components/ui/use-toast';
 import ProfileDialog from './ProfileDialog';
+import { AVAILABLE_CUSTOMERS } from '@/types/auth';
+import { fetchApiMetadata } from '@/services/apiService';
 
 interface ConversationSidebarProps {
   customerId: string;

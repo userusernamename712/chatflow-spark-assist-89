@@ -9,6 +9,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Wrench, FileText, Server } from 'lucide-react';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 import { useQuery } from '@tanstack/react-query';
@@ -35,14 +36,15 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
     queryFn: fetchApiMetadata
   });
 
-  const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
-    customer.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCustomers = searchQuery 
+    ? AVAILABLE_CUSTOMERS.filter(customer =>
+        customer.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : [];
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Profile & Settings</DialogTitle>
           </DialogHeader>
@@ -57,21 +59,23 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="mb-2"
               />
-              <div className="max-h-48 overflow-auto rounded-md border bg-background">
-                {filteredCustomers.map((customer) => (
-                  <button
-                    key={customer.id}
-                    onClick={() => {
-                      onChangeCustomer(customer.id);
-                      setSearchQuery('');
-                    }}
-                    className={`w-full px-4 py-2 text-left text-sm hover:bg-slate-50 transition-colors
-                      ${customer.id === customerId ? 'bg-slate-50 text-primary' : ''}`}
-                  >
-                    {customer.name}
-                  </button>
-                ))}
-              </div>
+              {searchQuery && (
+                <div className="max-h-48 overflow-auto rounded-md border bg-background">
+                  {filteredCustomers.map((customer) => (
+                    <button
+                      key={customer.id}
+                      onClick={() => {
+                        onChangeCustomer(customer.id);
+                        setSearchQuery('');
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-slate-50 transition-colors
+                        ${customer.id === customerId ? 'bg-slate-50 text-primary' : ''}`}
+                    >
+                      {customer.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div>
@@ -92,60 +96,62 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="tools" className="mt-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {apiMetadata?.tools && Object.entries(apiMetadata.tools).map(([server, tools]) => (
-                      Object.entries(tools).map(([name, tool]) => (
-                        <div
-                          key={`${server}-${name}`}
-                          onClick={() => setSelectedDetails({ type: 'tool', item: tool, server })}
-                          className="group p-3 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
-                            <span className="font-medium text-sm">{tool.name}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {server.split('/').slice(-2)[0]}
-                            </Badge>
+                <ScrollArea className="h-[50vh] mt-2 rounded-md border">
+                  <TabsContent value="tools" className="p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {apiMetadata?.tools && Object.entries(apiMetadata.tools).map(([server, tools]) => (
+                        Object.entries(tools).map(([name, tool]) => (
+                          <div
+                            key={`${server}-${name}`}
+                            onClick={() => setSelectedDetails({ type: 'tool', item: tool, server })}
+                            className="group p-3 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
+                          >
+                            <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                              <span className="font-medium text-sm">{tool.name}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {server.split('/').slice(-2)[0]}
+                              </Badge>
+                            </div>
                           </div>
-                        </div>
-                      ))
-                    ))}
-                  </div>
-                </TabsContent>
+                        ))
+                      ))}
+                    </div>
+                  </TabsContent>
 
-                <TabsContent value="resources" className="mt-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {apiMetadata?.resources && Object.entries(apiMetadata.resources).map(([server, resources]) => (
-                      Object.entries(resources).map(([uri, resource]) => (
-                        <div
-                          key={`${server}-${uri}`}
-                          onClick={() => setSelectedDetails({ type: 'resource', item: resource, server })}
-                          className="group p-3 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
-                        >
-                          <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
-                            <span className="font-medium text-sm">{resource.name}</span>
-                            <Badge variant="secondary" className="text-xs">
-                              {server.split('/').slice(-2)[0]}
-                            </Badge>
+                  <TabsContent value="resources" className="p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {apiMetadata?.resources && Object.entries(apiMetadata.resources).map(([server, resources]) => (
+                        Object.entries(resources).map(([uri, resource]) => (
+                          <div
+                            key={`${server}-${uri}`}
+                            onClick={() => setSelectedDetails({ type: 'resource', item: resource, server })}
+                            className="group p-3 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
+                          >
+                            <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
+                              <span className="font-medium text-sm">{resource.name}</span>
+                              <Badge variant="secondary" className="text-xs">
+                                {server.split('/').slice(-2)[0]}
+                              </Badge>
+                            </div>
                           </div>
-                        </div>
-                      ))
-                    ))}
-                  </div>
-                </TabsContent>
+                        ))
+                      ))}
+                    </div>
+                  </TabsContent>
 
-                <TabsContent value="servers" className="mt-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {apiMetadata?.servers && apiMetadata.servers.map((server) => (
-                      <div
-                        key={server}
-                        className="p-3 border rounded-lg text-sm text-muted-foreground"
-                      >
-                        {server.split('/').slice(-2)[0]}
-                      </div>
-                    ))}
-                  </div>
-                </TabsContent>
+                  <TabsContent value="servers" className="p-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {apiMetadata?.servers && apiMetadata.servers.map((server) => (
+                        <div
+                          key={server}
+                          className="p-3 border rounded-lg text-sm text-muted-foreground"
+                        >
+                          {server.split('/').slice(-2)[0]}
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </ScrollArea>
               </Tabs>
             </div>
           </div>

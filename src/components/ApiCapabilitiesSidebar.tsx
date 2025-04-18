@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Database, FileText, Tool, Server } from 'lucide-react';
+import { Wrench, FileText, Server } from 'lucide-react';
 import { fetchApiMetadata } from '@/services/apiService';
 
 const ApiCapabilitiesSidebar = () => {
@@ -44,12 +43,16 @@ const ApiCapabilitiesSidebar = () => {
         <Tabs defaultValue="tools" className="w-full">
           <TabsList className="w-full">
             <TabsTrigger value="tools" className="flex-1">
-              <Tool className="h-4 w-4 mr-2" />
+              <Wrench className="h-4 w-4 mr-2" />
               Tools
             </TabsTrigger>
             <TabsTrigger value="resources" className="flex-1">
               <FileText className="h-4 w-4 mr-2" />
               Resources
+            </TabsTrigger>
+            <TabsTrigger value="servers" className="flex-1">
+              <Server className="h-4 w-4 mr-2" />
+              Servers
             </TabsTrigger>
           </TabsList>
 
@@ -89,6 +92,21 @@ const ApiCapabilitiesSidebar = () => {
                         <p className="text-xs text-[#8E9196]">{resource.description}</p>
                       </div>
                     ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </TabsContent>
+
+            <TabsContent value="servers" className="mt-4 space-y-4">
+              {data?.servers && data.servers.map((server) => (
+                <Card key={server} className="bg-white border-[#E5DEFF]">
+                  <CardHeader className="p-4">
+                    <CardTitle className="text-sm font-medium text-[#7E69AB]">
+                      {server.split('/').slice(-2)[0]}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-0">
+                    <p className="text-xs text-[#8E9196]">{server}</p>
                   </CardContent>
                 </Card>
               ))}

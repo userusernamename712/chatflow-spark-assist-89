@@ -39,7 +39,7 @@ export const updateConversation = async (
 ): Promise<Conversation> => {
   try {
     const response = await fetch(`${API_URL}/conversations/${conversationId}`, {
-      method: 'PUT',
+      method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },

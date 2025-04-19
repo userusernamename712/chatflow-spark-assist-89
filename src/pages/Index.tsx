@@ -16,6 +16,7 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { fetchConversation } from '@/services/conversationService';
 import { Conversation } from '@/types/conversation';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -25,6 +26,7 @@ const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chatSessionId'));
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (sessionId) {
@@ -79,7 +81,13 @@ const Index = () => {
         prompt: content.trim(),
       },
       handleChatEvent,
-      () => setIsProcessing(false),
+      () => {
+        setIsProcessing(false);
+        // Manually trigger a refetch of conversations only when a chat completes
+        if (!sessionId) {
+          queryClient.invalidateQueries({ queryKey: ['conversations', selectedCustomerId] });
+        }
+      },
       handleError
     );
   };
@@ -152,17 +160,22 @@ const Index = () => {
     }
   };
 
-  const handleStartNewConversation = () => {
-    startNewSession(selectedCustomerId);
+  const handleStartNewChat = () => {
+    startNewSession();
     if (isMobile) {
       setSidebarOpen(false);
     }
   };
 
-  const startNewSession = (customerId: string) => {
+  const startNewSession = () => {
     localStorage.removeItem('chatSessionId');
     setSessionId(null);
     setMessages([]);
+  };
+
+  const handleChangeCustomer = (customerId: string) => {
+    // This will be handled by the auth context
+    // Show toast in ConversationSidebar component
   };
 
   if (loading) {
@@ -191,7 +204,8 @@ const Index = () => {
           customerId={selectedCustomerId}
           sessionId={sessionId}
           onSelectConversation={handleSelectConversation}
-          startNewChat={handleStartNewConversation}
+          startNewChat={handleStartNewChat}
+          onChangeCustomer={handleChangeCustomer}
         />
       </div>
       
@@ -203,7 +217,8 @@ const Index = () => {
             onSelectConversation={handleSelectConversation}
             isMobile={true}
             onCloseMobile={() => setSidebarOpen(false)}
-            startNewChat={handleStartNewConversation}
+            startNewChat={handleStartNewChat}
+            onChangeCustomer={handleChangeCustomer}
           />
         </SheetContent>
       </Sheet>

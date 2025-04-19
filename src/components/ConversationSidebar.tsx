@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
@@ -74,7 +75,7 @@ const ConversationSidebar = ({
     queryKey: ['conversations', customerId],
     queryFn: () => fetchConversationHistory(customerId),
     enabled: !!customerId,
-    refetchInterval: 5000, // Reduced to 5 seconds for more real-time updates
+    // Removed refetchInterval to stop frequent fetching
   });
   
   const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
@@ -197,9 +198,14 @@ const ConversationSidebar = ({
   };
 
   const handleStartNewConversation = () => {
-    startNewSession(customerId);
-    localStorage.removeItem('chatSessionId');
-    window.location.reload();
+    if (startNewChat) {
+      startNewChat();
+    } else {
+      startNewSession(customerId);
+      localStorage.removeItem('chatSessionId');
+      window.location.reload();
+    }
+    
     if (isMobile && onCloseMobile) {
       onCloseMobile();
     }
@@ -216,9 +222,12 @@ const ConversationSidebar = ({
     if (onChangeCustomer) {
       onChangeCustomer(customerId);
       setSearchQuery('');
+      
+      // Show toast notification when customer is selected
+      const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
       toast({
         title: "Customer Selected",
-        description: `Switched to ${AVAILABLE_CUSTOMERS.find(c => c.id === customerId)?.name}`,
+        description: `Switched to ${selectedCustomer?.name}`,
         className: "bg-[#F1F0FB] border-[#9b87f5]",
       });
     }
@@ -259,7 +268,7 @@ const ConversationSidebar = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={startNewChat}
+          onClick={handleStartNewConversation}
           className="w-full mb-2 border-[#E5DEFF] hover:bg-[#F1F0FB]"
         >
           <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
@@ -324,10 +333,10 @@ const ConversationSidebar = ({
 
       <div className="p-4 border-t">
         <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
-        <Button 
+          <Button 
             variant="ghost" 
             size="sm" 
-            className="ml-2 h-6 w-6 p-0" 
+            className="mr-2 h-6 w-6 p-0" 
             onClick={() => setIsProfileOpen(true)}
           >
             <User className="h-3.5 w-3.5 text-[#8E9196]" />

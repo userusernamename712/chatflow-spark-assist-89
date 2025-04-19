@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X } from 'lucide-react';
+import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,9 +25,6 @@ import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 import ProfileDialog from './ProfileDialog';
-import { fetchApiMetadata } from '@/services/apiService';
-import { useNavigate } from 'react-router-dom';
-import ApiDetailsDialog from './ApiDetailsDialog';
 
 interface ConversationSidebarProps {
   customerId: string;
@@ -45,7 +43,6 @@ const ConversationSidebar = ({
   onCloseMobile,
   onChangeCustomer
 }: ConversationSidebarProps) => {
-  const navigate = useNavigate();
   const { user, logout, startNewSession } = useAuth();
   const [feedbackDialog, setFeedbackDialog] = useState<{
     isOpen: boolean;
@@ -62,10 +59,13 @@ const ConversationSidebar = ({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [showApiDetails, setShowApiDetails] = useState<{
-    type: 'tool' | 'resource' | 'template' | 'server';
-    item: any;
-  } | null>(null);
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
+    isOpen: boolean;
+    conversationId: string | null;
+  }>({
+    isOpen: false,
+    conversationId: null,
+  });
 
   const queryClient = useQueryClient();
   
@@ -76,11 +76,6 @@ const ConversationSidebar = ({
     refetchInterval: 5000, // Reduced to 5 seconds for more real-time updates
   });
   
-  const { data: apiMetadata } = useQuery({
-    queryKey: ['api-metadata'],
-    queryFn: fetchApiMetadata
-  });
-
   const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -158,15 +153,28 @@ const ConversationSidebar = ({
     });
   };
 
-  const handleDeleteConversation = (conversationId: string) => {
-    if (window.confirm('Are you sure you want to delete this conversation?')) {
-      deleteMutation.mutate(conversationId);
-      // If we're currently viewing this conversation, redirect to home
-      if (sessionId === conversationId) {
-        localStorage.removeItem('chatSessionId');
-        window.location.reload();
-      }
+  const handleOpenDeleteDialog = (conversationId: string) => {
+    setDeleteConfirmDialog({
+      isOpen: true,
+      conversationId
+    });
+  };
+
+  const handleDeleteConversation = () => {
+    if (!deleteConfirmDialog.conversationId) return;
+    
+    deleteMutation.mutate(deleteConfirmDialog.conversationId);
+    
+    // If we're currently viewing this conversation, redirect to home
+    if (sessionId === deleteConfirmDialog.conversationId) {
+      localStorage.removeItem('chatSessionId');
+      window.location.reload();
     }
+    
+    setDeleteConfirmDialog({
+      isOpen: false,
+      conversationId: null
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -266,10 +274,7 @@ const ConversationSidebar = ({
                 <div className="flex items-center justify-between p-2">
                   <div 
                     className="flex-1 cursor-pointer" 
-                    onClick={() => {
-                      onSelectConversation(conversation);
-                      if (isMobile && onCloseMobile) onCloseMobile();
-                    }}
+                    onClick={() => onSelectConversation(conversation)}
                   >
                     <div className="text-sm font-medium truncate">
                       {getFirstUserMessage(conversation)}
@@ -293,7 +298,7 @@ const ConversationSidebar = ({
                       )}>
                         Add feedback
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteConversation(conversation.session_id)}>
+                      <DropdownMenuItem onClick={() => handleOpenDeleteDialog(conversation.session_id)}>
                         Delete conversation
                       </DropdownMenuItem>
                     </DropdownMenuContent>
@@ -309,6 +314,14 @@ const ConversationSidebar = ({
         <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
           <User className="h-4 w-4 mr-2" />
           <span className="truncate">{user?.email}</span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="ml-2 h-6 w-6 p-0" 
+            onClick={() => setIsProfileOpen(true)}
+          >
+            <User className="h-3.5 w-3.5 text-[#8E9196]" />
+          </Button>
         </div>
         <Button
           variant="outline"
@@ -373,6 +386,44 @@ const ConversationSidebar = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={deleteConfirmDialog.isOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Conversation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this conversation? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteConversation}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ProfileDialog
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+      />
     </div>
   );
 };

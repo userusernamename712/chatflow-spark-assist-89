@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -13,14 +14,53 @@ import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { fetchConversation } from '@/services/conversationService';
+import { Conversation } from '@/types/conversation';
 
 const Index = () => {
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoadingConversation, setIsLoadingConversation] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
-  const sessionId = localStorage.getItem('chatSessionId');
+  const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chatSessionId'));
+
+  useEffect(() => {
+    if (sessionId) {
+      loadConversation(sessionId);
+    }
+  }, [sessionId]);
+
+  const loadConversation = async (conversationId: string) => {
+    try {
+      setIsLoadingConversation(true);
+      const conversation = await fetchConversation(conversationId);
+      
+      // Map conversation messages to the format expected by ChatContainer
+      const mappedMessages: Message[] = conversation.messages
+        .filter(m => m.role !== 'system')
+        .map(m => ({
+          id: uuidv4(),
+          type: m.role === 'user' ? 'user' : 'assistant',
+          content: m.content,
+        }));
+      
+      setMessages(mappedMessages);
+    } catch (error) {
+      console.error('Error loading conversation:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading conversation",
+        description: "Could not load the conversation. Please try again.",
+      });
+      // Clear the invalid session ID
+      localStorage.removeItem('chatSessionId');
+      setSessionId(null);
+    } finally {
+      setIsLoadingConversation(false);
+    }
+  };
 
   const handleSendMessage = (content: string) => {
     if (!content.trim() || isProcessing || !user) return;
@@ -106,10 +146,12 @@ const Index = () => {
     });
   };
 
-  const handleSelectConversation = (conversation: any) => {
+  const handleSelectConversation = (conversation: Conversation) => {
     localStorage.setItem('chatSessionId', conversation.session_id);
-    window.location.reload();
-    setSidebarOpen(false);
+    setSessionId(conversation.session_id);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
   };
 
   if (loading) {
@@ -167,12 +209,23 @@ const Index = () => {
             <ChatHeader />
           </div>
         </div>
-        <ChatContainer 
-          messages={messages} 
-          isProcessing={isProcessing} 
-          onSendTypicalQuestion={handleSendTypicalQuestion}
-        />
-        <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />
+        
+        {isLoadingConversation ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-2"></div>
+              <div className="text-sm text-[#403E43]">Loading conversation...</div>
+            </div>
+          </div>
+        ) : (
+          <ChatContainer 
+            messages={messages} 
+            isProcessing={isProcessing} 
+            onSendTypicalQuestion={handleSendTypicalQuestion}
+          />
+        )}
+        
+        <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing || isLoadingConversation} />
       </div>
     </div>
   );

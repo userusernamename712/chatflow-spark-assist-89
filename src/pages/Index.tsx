@@ -100,17 +100,28 @@ const Index = () => {
     );
   };
 
-  // New function to handle chat completion
-  const handleChatComplete = () => {
+  // Function to handle chat completion with the session ID from the stream
+  const handleChatComplete = (streamSessionId?: string | null) => {
     setIsProcessing(false);
     
-    // If this was the first message in a new conversation
-    if (!sessionId) {
+    // If we received a session ID from the stream, use it directly
+    if (streamSessionId && !sessionId) {
+      localStorage.setItem('chatSessionId', streamSessionId);
+      setSessionId(streamSessionId);
+      
+      // Still invalidate queries to keep the sidebar up to date
+      // but don't fetch and reload the conversation
+      queryClient.invalidateQueries({ queryKey: ['conversations', selectedCustomerId] });
+    } 
+    // If this was the first message and we didn't get a session ID from stream
+    else if (!sessionId && !streamSessionId) {
+      console.log('No session ID from stream, fetching from history');
+      
       // We need to extract the session ID from the server response
       // The conversation should have been created on the server
       queryClient.invalidateQueries({ queryKey: ['conversations', selectedCustomerId] });
       
-      // Fetch the most recent conversation to get its ID
+      // This is our fallback method if the stream didn't provide a session ID
       queryClient.fetchQuery({ 
         queryKey: ['conversations', selectedCustomerId],
         queryFn: async () => {
@@ -121,10 +132,12 @@ const Index = () => {
               (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             )[0];
             
-            // Set the session ID
-            const newSessionId = newestConversation.session_id;
-            localStorage.setItem('chatSessionId', newSessionId);
-            setSessionId(newSessionId);
+            // Set the session ID only if we didn't get one from the stream
+            if (!sessionId && !streamSessionId) {
+              const newSessionId = newestConversation.session_id;
+              localStorage.setItem('chatSessionId', newSessionId);
+              setSessionId(newSessionId);
+            }
           }
           return conversations;
         }
@@ -167,10 +180,12 @@ const Index = () => {
         return currentMessages;
       });
       
-      // If this message contains a session_id and we don't have one yet, save it
+      // Store the session ID in memory but don't update state yet
+      // This prevents the UI from reloading during streaming
+      // We'll set it in handleChatComplete when streaming is done
       if (event.session_id && !sessionId) {
+        // Just save to localStorage, but don't update state until streaming is complete
         localStorage.setItem('chatSessionId', event.session_id);
-        setSessionId(event.session_id);
       }
     } else if (event.type === 'tool_call') {
       setMessages((prev) => [

@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const sendChatMessage = async (
   request: ChatRequest,
   onEvent: (event: ChatEvent) => void,
-  onComplete: () => void,
+  onComplete: (sessionId?: string | null) => void,
   onError: (error: Error) => void
 ) => {
   try {
@@ -54,12 +54,20 @@ export const sendChatMessage = async (
                 sessionIdFromResponse = event.session_id;
               }
               
-              onEvent(event);
+              // Mark this event as the final one
+              const finalEvent = {
+                ...event,
+                finished: true
+              };
+              
+              onEvent(finalEvent);
             } catch (e) {
               console.error('Error parsing final buffer:', e);
             }
           }
-          onComplete();
+          
+          // Complete the chat with the session ID obtained from the stream
+          onComplete(sessionIdFromResponse);
           break;
         }
 

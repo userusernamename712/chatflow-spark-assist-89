@@ -93,7 +93,11 @@ const Conversation = () => {
         prompt: content.trim(),
       },
       handleChatEvent,
-      () => setIsProcessing(false),
+      (sessionId) => {
+        // Just set processing to false, we don't need to do anything with the session ID
+        // since we already have it for historical conversations
+        setIsProcessing(false);
+      },
       handleError
     );
   };

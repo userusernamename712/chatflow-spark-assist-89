@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { 
   signInWithEmailAndPassword, 
@@ -19,7 +18,6 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Check if we're in demo mode (no Firebase API key)
 const isDemoMode = !import.meta.env.VITE_FIREBASE_API_KEY || 
   import.meta.env.VITE_FIREBASE_API_KEY === "demo-api-key";
 
@@ -27,14 +25,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
     isAuthenticated: false,
-    selectedCustomerId: DEFAULT_CUSTOMER_ID,
+    selectedCustomerId: localStorage.getItem('chatSelectedCustomer') || DEFAULT_CUSTOMER_ID,
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isDemoMode) {
-      // In demo mode, check for stored user in localStorage
       const storedUser = localStorage.getItem('chatUser');
       if (storedUser) {
         try {
@@ -55,13 +52,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // Normal Firebase authentication flow
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
-        // User is signed in
         loadUserData(firebaseUser);
       } else {
-        // User is signed out
         setAuthState({
           user: null,
           isAuthenticated: false,
@@ -87,8 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (storedUser) {
         userData = JSON.parse(storedUser) as User;
       } else {
-        // Create new user data if not found in localStorage
-        userData = {
+        const userData: User = {
           id: firebaseUser.uid,
           email: firebaseUser.email || '',
           username: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
@@ -115,7 +108,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       if (isDemoMode) {
-        // In demo mode, create a dummy user
         const userData: User = {
           id: 'demo-user-id',
           email: email,
@@ -132,7 +124,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           selectedCustomerId: customerId,
         });
       } else {
-        // Normal Firebase login
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const firebaseUser = userCredential.user;
         
@@ -194,6 +185,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       ...prev,
       selectedCustomerId: customerId
     }));
+    
+    window.location.reload();
   };
 
   return (

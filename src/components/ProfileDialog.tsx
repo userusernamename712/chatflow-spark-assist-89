@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -15,6 +14,7 @@ import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 import { useQuery } from '@tanstack/react-query';
 import { fetchApiMetadata } from '@/services/apiService';
 import ApiDetailsDialog from './ApiDetailsDialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ProfileDialogProps {
   isOpen: boolean;
@@ -30,9 +30,10 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
     item: any;
     server: string;
   } | null>(null);
+  const { startNewSession } = useAuth();
 
   const { data: apiMetadata } = useQuery({
-    queryKey: ['api-metadata'],
+    queryKey: ['api-metadata', customerId],
     queryFn: fetchApiMetadata
   });
 
@@ -40,6 +41,14 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
     ? AVAILABLE_CUSTOMERS.filter(customer =>
         customer.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : [];
+
+  const handleCustomerSelect = (selectedCustomerId: string) => {
+    if (selectedCustomerId !== customerId) {
+      startNewSession(selectedCustomerId);
+      onChangeCustomer(selectedCustomerId);
+      setSearchQuery('');
+    }
+  };
 
   return (
     <>
@@ -64,10 +73,7 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
                   {filteredCustomers.map((customer) => (
                     <button
                       key={customer.id}
-                      onClick={() => {
-                        onChangeCustomer(customer.id);
-                        setSearchQuery('');
-                      }}
+                      onClick={() => handleCustomerSelect(customer.id)}
                       className={`w-full px-4 py-2 text-left text-sm hover:bg-slate-50 transition-colors
                         ${customer.id === customerId ? 'bg-slate-50 text-primary' : ''}`}
                     >

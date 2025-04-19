@@ -38,7 +38,6 @@ export const sendChatMessage = async (
 
     const decoder = new TextDecoder();
     let buffer = '';
-    let sessionIdFromResponse = null;
 
     const processStream = async () => {
       while (true) {
@@ -48,12 +47,6 @@ export const sendChatMessage = async (
           if (buffer.trim()) {
             try {
               const event = JSON.parse(buffer.trim()) as ChatEvent;
-              
-              // Check if this event contains a session_id
-              if (event.session_id && !sessionIdFromResponse) {
-                sessionIdFromResponse = event.session_id;
-              }
-              
               onEvent(event);
             } catch (e) {
               console.error('Error parsing final buffer:', e);
@@ -74,13 +67,6 @@ export const sendChatMessage = async (
           if (line.trim()) {
             try {
               const event = JSON.parse(line) as ChatEvent;
-              
-              // Check if this event contains a session_id
-              if (event.session_id && !sessionIdFromResponse) {
-                sessionIdFromResponse = event.session_id;
-                event.session_id = sessionIdFromResponse;
-              }
-              
               // Log each received event with session and user info
               console.log('Received event:', JSON.stringify(event));
               onEvent(event);

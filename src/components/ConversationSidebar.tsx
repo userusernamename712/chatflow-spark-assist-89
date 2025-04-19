@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -31,7 +32,6 @@ interface ConversationSidebarProps {
   onSelectConversation: (conversation: Conversation) => void;
   isMobile?: boolean;
   onCloseMobile?: () => void;
-  startNewChat?: () => void;
   onChangeCustomer?: (customerId: string) => void;
 }
 
@@ -41,13 +41,9 @@ const ConversationSidebar = ({
   onSelectConversation,
   isMobile = false,
   onCloseMobile,
-  startNewChat,
   onChangeCustomer
 }: ConversationSidebarProps) => {
   const { user, logout, startNewSession } = useAuth();
-  const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
-  
   const [feedbackDialog, setFeedbackDialog] = useState<{
     isOpen: boolean;
     conversationId: string | null;
@@ -75,40 +71,10 @@ const ConversationSidebar = ({
   
   const { data: conversations = [], isLoading, error } = useQuery({
     queryKey: ['conversations', customerId],
-    queryFn: async () => {
-      try {
-        return await fetchConversationHistory(customerId);
-      } catch (error) {
-        console.error('Error fetching conversation history:', error);
-        
-        if (retryCount < maxRetries) {
-          setRetryCount(prev => prev + 1);
-          throw error;
-        }
-        
-        console.warn('Max retries reached for conversation list, returning empty array');
-        return [];
-      }
-    },
+    queryFn: () => fetchConversationHistory(customerId),
     enabled: !!customerId,
-    retry: false,
-    meta: {
-      onError: (error: Error) => {
-        console.error('Error in conversation list query:', error);
-        
-        if (retryCount < maxRetries) {
-          const delay = Math.pow(2, retryCount) * 1000;
-          setTimeout(() => {
-            queryClient.invalidateQueries({ queryKey: ['conversations', customerId] });
-          }, delay);
-        }
-      }
-    }
+    refetchInterval: 5000, // Reduced to 5 seconds for more real-time updates
   });
-  
-  useEffect(() => {
-    setRetryCount(0);
-  }, [customerId]);
   
   const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -199,6 +165,7 @@ const ConversationSidebar = ({
     
     deleteMutation.mutate(deleteConfirmDialog.conversationId);
     
+    // If we're currently viewing this conversation, redirect to home
     if (sessionId === deleteConfirmDialog.conversationId) {
       localStorage.removeItem('chatSessionId');
       window.location.reload();
@@ -230,14 +197,9 @@ const ConversationSidebar = ({
   };
 
   const handleStartNewConversation = () => {
-    if (startNewChat) {
-      startNewChat();
-    } else {
-      startNewSession(customerId);
-      localStorage.removeItem('chatSessionId');
-      window.location.reload();
-    }
-    
+    startNewSession(customerId);
+    localStorage.removeItem('chatSessionId');
+    window.location.reload();
     if (isMobile && onCloseMobile) {
       onCloseMobile();
     }
@@ -250,20 +212,6 @@ const ConversationSidebar = ({
     }
   };
 
-  const handleCustomerSelect = (customerId: string) => {
-    if (onChangeCustomer) {
-      onChangeCustomer(customerId);
-      setSearchQuery('');
-      
-      const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
-      toast({
-        title: "Customer Selected",
-        description: `Switched to ${selectedCustomer?.name}`,
-        className: "bg-[#F1F0FB] border-[#9b87f5]",
-      });
-    }
-  };
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full p-4">
@@ -272,7 +220,15 @@ const ConversationSidebar = ({
     );
   }
 
-  const sortedConversations = [...(conversations || [])].sort(
+  if (error) {
+    return (
+      <div className="p-4 text-red-500">
+        Error loading conversations: {error instanceof Error ? error.message : 'Unknown error'}
+      </div>
+    );
+  }
+
+  const sortedConversations = [...conversations].sort(
     (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
   );
 
@@ -356,15 +312,16 @@ const ConversationSidebar = ({
 
       <div className="p-4 border-t">
         <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
+          <User className="h-4 w-4 mr-2" />
+          <span className="truncate">{user?.email}</span>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="mr-2 h-6 w-6 p-0" 
+            className="ml-2 h-6 w-6 p-0" 
             onClick={() => setIsProfileOpen(true)}
           >
             <User className="h-3.5 w-3.5 text-[#8E9196]" />
           </Button>
-          <span className="truncate">{user?.email}</span>
         </div>
         <Button
           variant="outline"
@@ -466,8 +423,6 @@ const ConversationSidebar = ({
       <ProfileDialog
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
-        customerId={customerId}
-        onChangeCustomer={handleCustomerSelect}
       />
     </div>
   );

@@ -324,9 +324,7 @@ const ConversationSidebar = ({
 
       <div className="p-4 border-t">
         <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
-          <User className="h-4 w-4 mr-2" />
-          <span className="truncate">{user?.email}</span>
-          <Button 
+        <Button 
             variant="ghost" 
             size="sm" 
             className="ml-2 h-6 w-6 p-0" 
@@ -334,6 +332,7 @@ const ConversationSidebar = ({
           >
             <User className="h-3.5 w-3.5 text-[#8E9196]" />
           </Button>
+          <span className="truncate">{user?.email}</span>
         </div>
         <Button
           variant="outline"

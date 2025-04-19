@@ -15,8 +15,12 @@ export interface AuthState {
 // Available customers that can be selected at login
 export const AVAILABLE_CUSTOMERS = [
   { id: "grupo-grosso-napoletano", name: "Grupo Grosso Napoletano" },
-  { id: "ristorante-italiano", name: "Ristorante Italiano" },
-  { id: "pizzeria-bella-napoli", name: "Pizzeria Bella Napoli" },
+  { id: "grupo-saona", name: "Grupo Saona" },
+  { id: "sibuya", name: "Grupo Sibuya" },
+  { id: "ona-hotels", name: "Hoteles Ona Hotels" },
+  { id: "pierre-et-vacances", name: "Hoteles Pierre et Vacances" },
+  { id: "med-playa", name: "Hoteles Med Playa" },
+  { id: "don-cactus", name: "Campings Don Cactus" },
 ];
 
 // Default customer ID

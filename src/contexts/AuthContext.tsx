@@ -8,7 +8,6 @@ import {
 } from 'firebase/auth';
 import { auth } from '@/config/firebase';
 import { User, AuthState, DEFAULT_CUSTOMER_ID } from '@/types/auth';
-import { v4 as uuidv4 } from 'uuid';
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string, customerId: string) => Promise<void>;

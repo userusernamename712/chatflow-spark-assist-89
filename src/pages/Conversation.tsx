@@ -1,37 +1,68 @@
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import ChatHeader from '@/components/ChatHeader';
 import ChatContainer from '@/components/ChatContainer';
 import ChatInput from '@/components/ChatInput';
-import LoginForm from '@/components/LoginForm';
-import ConversationSidebar from '@/components/ConversationSidebar';
 import { Message, ChatEvent } from '@/types/chat';
 import { sendChatMessage } from '@/services/chatService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
+import { fetchConversation } from '@/services/conversationService';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
+import ConversationSidebar from '@/components/ConversationSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-const Index = () => {
+const Conversation = () => {
+  const { conversationId } = useParams();
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
 
-  // Always create a new session when the home page loads
+  // Fetch conversation on mount
   useEffect(() => {
-    if (isAuthenticated) {
-      // Clear any existing session
-      localStorage.removeItem('chatSessionId');
-      setMessages([]);
+    if (!isAuthenticated || !conversationId) {
+      navigate('/');
+      return;
     }
-  }, [isAuthenticated]);
+
+    const loadConversation = async () => {
+      try {
+        setIsLoading(true);
+        const conversation = await fetchConversation(conversationId);
+        
+        // Map conversation messages to the format expected by ChatContainer
+        const mappedMessages: Message[] = conversation.messages
+          .filter(m => m.role !== 'system')
+          .map(m => ({
+            id: uuidv4(),
+            type: m.role === 'user' ? 'user' : 'assistant',
+            content: m.content,
+          }));
+        
+        setMessages(mappedMessages);
+      } catch (error) {
+        console.error('Error loading conversation:', error);
+        toast({
+          variant: "destructive",
+          title: "Error loading conversation",
+          description: "Could not load the conversation. Please try again.",
+        });
+        navigate('/');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadConversation();
+  }, [conversationId, isAuthenticated, navigate]);
 
   const handleSendMessage = (content: string) => {
     if (!content.trim() || isProcessing || !user) return;
@@ -47,7 +78,7 @@ const Index = () => {
 
     sendChatMessage(
       {
-        session_id: null, // Always send null to create a new session
+        session_id: conversationId || null,
         customer_id: selectedCustomerId,
         prompt: content.trim(),
       },
@@ -64,13 +95,6 @@ const Index = () => {
   };
 
   const handleChatEvent = (event: ChatEvent) => {
-    // If we received a session_id, route to the conversation page
-    if (event.session_id && messages.length === 1) {
-      // Navigate to the conversation page after the first message is sent
-      navigate(`/c/${event.session_id}`);
-      return;
-    }
-
     if (event.type === 'text') {
       setMessages((prev) => {
         const currentMessages = [...prev];
@@ -129,23 +153,20 @@ const Index = () => {
     setSidebarOpen(false);
   };
 
-  if (loading) {
+  if (loading || isLoading) {
     return (
       <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-4"></div>
-          <div className="text-[#403E43]">Loading...</div>
+          <div className="text-[#403E43]">Loading conversation...</div>
         </div>
       </div>
     );
   }
 
   if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col h-screen items-center justify-center p-4 bg-gradient-to-b from-[#F1F0FB] to-white">
-        <LoginForm />
-      </div>
-    );
+    navigate('/');
+    return null;
   }
 
   return (
@@ -153,9 +174,9 @@ const Index = () => {
       <div className="hidden md:block w-72 border-r border-[#E5DEFF] bg-white shadow-sm">
         <ConversationSidebar 
           customerId={selectedCustomerId}
-          sessionId={null}
+          sessionId={conversationId || null}
           onSelectConversation={(conversation) => handleSelectConversation(conversation.session_id)}
-          onChangeCustomer={() => {}}
+          onChangeCustomer={(customerId) => navigate('/')}
         />
       </div>
       
@@ -163,9 +184,9 @@ const Index = () => {
         <SheetContent side="left" className="p-0 w-[300px]">
           <ConversationSidebar 
             customerId={selectedCustomerId}
-            sessionId={null}
+            sessionId={conversationId || null}
             onSelectConversation={(conversation) => handleSelectConversation(conversation.session_id)}
-            onChangeCustomer={() => {}}
+            onChangeCustomer={(customerId) => navigate('/')}
             isMobile={true}
             onCloseMobile={() => setSidebarOpen(false)}
           />
@@ -183,7 +204,17 @@ const Index = () => {
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <ChatHeader />
+            <ChatHeader isHistoricalChat={true} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate('/')}
+              className="border-[#E5DEFF] hover:bg-[#F1F0FB]"
+            >
+              Return to Home
+            </Button>
           </div>
         </div>
         <ChatContainer 
@@ -197,4 +228,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Conversation;

@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Clock, Star, StarIcon, StarOff, MessageCircle, Trash2, X, User } from 'lucide-react';
+import { Clock, Star, StarIcon, StarOff, Plus, LogOut, X, User } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,6 +13,9 @@ import { toast } from '@/components/ui/use-toast';
 import ProfileDialog from './ProfileDialog';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 import { fetchApiMetadata } from '@/services/apiService';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import ApiDetailsDialog from './ApiDetailsDialog';
 
 interface ConversationSidebarProps {
   customerId: string;
@@ -30,6 +34,8 @@ const ConversationSidebar = ({
   onCloseMobile,
   onChangeCustomer
 }: ConversationSidebarProps) => {
+  const navigate = useNavigate();
+  const { logout, startNewSession } = useAuth();
   const [feedbackDialog, setFeedbackDialog] = useState<{
     isOpen: boolean;
     conversationId: string | null;
@@ -56,7 +62,7 @@ const ConversationSidebar = ({
     queryKey: ['conversations', customerId],
     queryFn: () => fetchConversationHistory(customerId),
     enabled: !!customerId,
-    refetchInterval: 30000,
+    refetchInterval: 5000, // Reduced to 5 seconds for more real-time updates
   });
   
   const { data: apiMetadata } = useQuery({
@@ -144,6 +150,10 @@ const ConversationSidebar = ({
   const handleDeleteConversation = (conversationId: string) => {
     if (window.confirm('Are you sure you want to delete this conversation?')) {
       deleteMutation.mutate(conversationId);
+      // If we're currently viewing this conversation, redirect to home
+      if (sessionId === conversationId) {
+        navigate('/');
+      }
     }
   };
 
@@ -164,6 +174,22 @@ const ConversationSidebar = ({
     return userMessage.content.length > 30 
       ? `${userMessage.content.substring(0, 30)}...` 
       : userMessage.content;
+  };
+
+  const handleStartNewConversation = () => {
+    startNewSession(customerId);
+    navigate('/');
+    if (isMobile && onCloseMobile) {
+      onCloseMobile();
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+    if (isMobile && onCloseMobile) {
+      onCloseMobile();
+    }
   };
 
   if (isLoading) {
@@ -196,6 +222,27 @@ const ConversationSidebar = ({
               <X className="h-4 w-4" />
             </Button>
           )}
+        </div>
+        
+        <div className="p-3 border-b">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleStartNewConversation}
+            className="w-full mb-2 border-[#E5DEFF] hover:bg-[#F1F0FB]"
+          >
+            <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
+            New Chat
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleLogout}
+            className="w-full text-red-500 border-[#E5DEFF] hover:bg-red-50"
+          >
+            <LogOut className="h-4 w-4 mr-1" />
+            Logout
+          </Button>
         </div>
         
         <ScrollArea className="flex-1">
@@ -238,7 +285,7 @@ const ConversationSidebar = ({
                           className="h-7 w-7 p-0"
                           onClick={() => handleDeleteConversation(conversation.session_id)}
                         >
-                          <Trash2 className="h-4 w-4 text-[#8E9196]" />
+                          <StarOff className="h-4 w-4 text-[#8E9196]" />
                         </Button>
                         <CollapsibleTrigger asChild>
                           <Button 

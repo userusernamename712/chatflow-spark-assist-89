@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import ChatHeader from '@/components/ChatHeader';
@@ -19,6 +19,7 @@ import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
 
 const Index = () => {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -27,8 +28,6 @@ const Index = () => {
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chatSessionId'));
   const queryClient = useQueryClient();
-  const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
 
   useEffect(() => {
     if (sessionId) {
@@ -50,26 +49,11 @@ const Index = () => {
         }));
       
       setMessages(mappedMessages);
-      setRetryCount(0); // Reset retry count on success
     } catch (error) {
       console.error('Error loading conversation:', error);
-      
-      // Silent retry mechanism - don't show error to user
-      if (retryCount < maxRetries) {
-        setRetryCount(prev => prev + 1);
-        // Exponential backoff
-        const delay = Math.pow(2, retryCount) * 1000;
-        
-        setTimeout(() => {
-          loadConversation(conversationId);
-        }, delay);
-      } else {
-        // After max retries, still don't show error toast to user
-        // Just reset conversation state without notification
-        localStorage.removeItem('chatSessionId');
-        setSessionId(null);
-        setRetryCount(0);
-      }
+      // Silent failure - just clear the session ID without showing error
+      localStorage.removeItem('chatSessionId');
+      setSessionId(null);
     } finally {
       setIsLoadingConversation(false);
     }
@@ -100,7 +84,6 @@ const Index = () => {
     );
   };
 
-  // New function to handle chat completion
   const handleChatComplete = () => {
     setIsProcessing(false);
     
@@ -200,8 +183,7 @@ const Index = () => {
   };
 
   const handleSelectConversation = (conversation: Conversation) => {
-    localStorage.setItem('chatSessionId', conversation.session_id);
-    setSessionId(conversation.session_id);
+    navigate(`/c/${conversation.session_id}`);
     if (isMobile) {
       setSidebarOpen(false);
     }

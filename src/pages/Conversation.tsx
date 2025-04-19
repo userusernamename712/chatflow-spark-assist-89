@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -25,8 +24,6 @@ const Conversation = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
-  const [retryCount, setRetryCount] = useState(0);
-  const maxRetries = 3;
 
   useEffect(() => {
     if (!isAuthenticated || !conversationId) {
@@ -48,31 +45,16 @@ const Conversation = () => {
           }));
         
         setMessages(mappedMessages);
-        setRetryCount(0); // Reset retry count on success
       } catch (error) {
         console.error('Error loading conversation:', error);
-        
-        // Silent retry mechanism - don't show error to user
-        if (retryCount < maxRetries) {
-          setRetryCount(prev => prev + 1);
-          // Exponential backoff
-          const delay = Math.pow(2, retryCount) * 1000;
-          
-          setTimeout(() => {
-            loadConversation();
-          }, delay);
-        } else {
-          // After max retries, redirect to home without showing error
-          console.error('Max retries reached, redirecting to home');
-          navigate('/');
-        }
+        navigate('/');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadConversation();
-  }, [conversationId, isAuthenticated, navigate, retryCount]);
+  }, [conversationId, isAuthenticated, navigate]);
 
   const handleSendMessage = (content: string) => {
     if (!content.trim() || isProcessing || !user) return;

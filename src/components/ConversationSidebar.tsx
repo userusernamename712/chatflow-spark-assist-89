@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -46,6 +45,9 @@ const ConversationSidebar = ({
   onChangeCustomer
 }: ConversationSidebarProps) => {
   const { user, logout, startNewSession } = useAuth();
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
+  
   const [feedbackDialog, setFeedbackDialog] = useState<{
     isOpen: boolean;
     conversationId: string | null;
@@ -73,10 +75,38 @@ const ConversationSidebar = ({
   
   const { data: conversations = [], isLoading, error } = useQuery({
     queryKey: ['conversations', customerId],
-    queryFn: () => fetchConversationHistory(customerId),
+    queryFn: async () => {
+      try {
+        return await fetchConversationHistory(customerId);
+      } catch (error) {
+        console.error('Error fetching conversation history:', error);
+        
+        if (retryCount < maxRetries) {
+          setRetryCount(prev => prev + 1);
+          throw error;
+        }
+        
+        console.warn('Max retries reached for conversation list, returning empty array');
+        return [];
+      }
+    },
     enabled: !!customerId,
-    // Removed refetchInterval to stop frequent fetching
+    retry: false,
+    onError: (error) => {
+      console.error('Error in conversation list query:', error);
+      
+      if (retryCount < maxRetries) {
+        const delay = Math.pow(2, retryCount) * 1000;
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey: ['conversations', customerId] });
+        }, delay);
+      }
+    },
   });
+  
+  useEffect(() => {
+    setRetryCount(0);
+  }, [customerId]);
   
   const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -223,7 +253,6 @@ const ConversationSidebar = ({
       onChangeCustomer(customerId);
       setSearchQuery('');
       
-      // Show toast notification when customer is selected
       const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
       toast({
         title: "Customer Selected",

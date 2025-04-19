@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -151,6 +152,13 @@ const Index = () => {
     }
   };
 
+  const handleStartNewConversation = () => {
+    startNewSession(selectedCustomerId);
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
   const startNewSession = (customerId: string) => {
     localStorage.removeItem('chatSessionId');
     setSessionId(null);
@@ -195,6 +203,7 @@ const Index = () => {
             onSelectConversation={handleSelectConversation}
             isMobile={true}
             onCloseMobile={() => setSidebarOpen(false)}
+            startNewChat={handleStartNewConversation}
           />
         </SheetContent>
       </Sheet>

@@ -32,6 +32,7 @@ interface ConversationSidebarProps {
   isMobile?: boolean;
   onCloseMobile?: () => void;
   startNewChat?: () => void;
+  onChangeCustomer?: (customerId: string) => void;
 }
 
 const ConversationSidebar = ({ 
@@ -40,7 +41,8 @@ const ConversationSidebar = ({
   onSelectConversation,
   isMobile = false,
   onCloseMobile,
-  startNewChat
+  startNewChat,
+  onChangeCustomer
 }: ConversationSidebarProps) => {
   const { user, logout, startNewSession } = useAuth();
   const [feedbackDialog, setFeedbackDialog] = useState<{
@@ -164,7 +166,6 @@ const ConversationSidebar = ({
     
     deleteMutation.mutate(deleteConfirmDialog.conversationId);
     
-    // If we're currently viewing this conversation, redirect to home
     if (sessionId === deleteConfirmDialog.conversationId) {
       localStorage.removeItem('chatSessionId');
       window.location.reload();
@@ -212,13 +213,15 @@ const ConversationSidebar = ({
   };
 
   const handleCustomerSelect = (customerId: string) => {
-    onChangeCustomer(customerId);
-    setSearchQuery('');
-    toast({
-      title: "Customer Selected",
-      description: `Switched to ${AVAILABLE_CUSTOMERS.find(c => c.id === customerId)?.name}`,
-      className: "bg-[#F1F0FB] border-[#9b87f5]",
-    });
+    if (onChangeCustomer) {
+      onChangeCustomer(customerId);
+      setSearchQuery('');
+      toast({
+        title: "Customer Selected",
+        description: `Switched to ${AVAILABLE_CUSTOMERS.find(c => c.id === customerId)?.name}`,
+        className: "bg-[#F1F0FB] border-[#9b87f5]",
+      });
+    }
   };
 
   if (isLoading) {

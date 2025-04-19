@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,7 +25,6 @@ const Conversation = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
 
-  // Fetch conversation on mount
   useEffect(() => {
     if (!isAuthenticated || !conversationId) {
       navigate('/');
@@ -38,7 +36,6 @@ const Conversation = () => {
         setIsLoading(true);
         const conversation = await fetchConversation(conversationId);
         
-        // Map conversation messages to the format expected by ChatContainer
         const mappedMessages: Message[] = conversation.messages
           .filter(m => m.role !== 'system')
           .map(m => ({
@@ -148,9 +145,13 @@ const Conversation = () => {
     });
   };
 
-  const handleSelectConversation = (conversationId: string) => {
-    navigate(`/c/${conversationId}`);
+  const handleSelectConversation = (conversation: any) => {
+    navigate(`/c/${conversation.session_id}`);
     setSidebarOpen(false);
+  };
+
+  const handleChangeCustomer = (customerId: string) => {
+    navigate('/');
   };
 
   if (loading || isLoading) {
@@ -175,8 +176,8 @@ const Conversation = () => {
         <ConversationSidebar 
           customerId={selectedCustomerId}
           sessionId={conversationId || null}
-          onSelectConversation={(conversation) => handleSelectConversation(conversation.session_id)}
-          onChangeCustomer={(customerId) => navigate('/')}
+          onSelectConversation={(conversation) => handleSelectConversation(conversation)}
+          onChangeCustomer={handleChangeCustomer}
         />
       </div>
       
@@ -185,8 +186,8 @@ const Conversation = () => {
           <ConversationSidebar 
             customerId={selectedCustomerId}
             sessionId={conversationId || null}
-            onSelectConversation={(conversation) => handleSelectConversation(conversation.session_id)}
-            onChangeCustomer={(customerId) => navigate('/')}
+            onSelectConversation={(conversation) => handleSelectConversation(conversation)}
+            onChangeCustomer={handleChangeCustomer}
             isMobile={true}
             onCloseMobile={() => setSidebarOpen(false)}
           />

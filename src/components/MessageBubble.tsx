@@ -277,8 +277,16 @@ const MessageBubble = ({
           )}
           
           {isTool && (
-            <div className="text-sm text-[var(--neutral-color-medium)]">
-              <span>Using tool to look up information...</span>
+            <div className="text-sm text-[var(--neutral-color-medium)] space-y-1">
+              <div>Using tool to look up information...</div>
+              <div className="text-xs text-[var(--neutral-color-dark)]">
+                Querying data from the last <strong>{toolArgs?.days ?? 1}</strong> day{(toolArgs?.days ?? 1) !== 1 ? 's' : ''}{' '}
+                for <strong>
+                  {toolArgs?.bot_ids?.length
+                    ? toolArgs.bot_ids.join(', ')
+                    : 'all bots'}
+                </strong>.
+              </div>
             </div>
           )}
         </div>

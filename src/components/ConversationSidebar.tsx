@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X } from 'lucide-react';
+import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -73,7 +73,7 @@ const ConversationSidebar = ({
     queryKey: ['conversations', customerId],
     queryFn: () => fetchConversationHistory(customerId),
     enabled: !!customerId,
-    refetchInterval: 5000, // Reduced to 5 seconds for more real-time updates
+    refetchInterval: 5000,
   });
   
   const { data: apiMetadata } = useQuery({
@@ -161,7 +161,6 @@ const ConversationSidebar = ({
   const handleDeleteConversation = (conversationId: string) => {
     if (window.confirm('Are you sure you want to delete this conversation?')) {
       deleteMutation.mutate(conversationId);
-      // If we're currently viewing this conversation, redirect to home
       if (sessionId === conversationId) {
         localStorage.removeItem('chatSessionId');
         window.location.reload();

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -37,7 +36,6 @@ const Index = () => {
       setIsLoadingConversation(true);
       const conversation = await fetchConversation(conversationId);
       
-      // Map conversation messages to the format expected by ChatContainer
       const mappedMessages: Message[] = conversation.messages
         .filter(m => m.role !== 'system')
         .map(m => ({
@@ -54,7 +52,6 @@ const Index = () => {
         title: "Error loading conversation",
         description: "Could not load the conversation. Please try again.",
       });
-      // Clear the invalid session ID
       localStorage.removeItem('chatSessionId');
       setSessionId(null);
     } finally {
@@ -154,6 +151,12 @@ const Index = () => {
     }
   };
 
+  const startNewSession = (customerId: string) => {
+    localStorage.removeItem('chatSessionId');
+    setSessionId(null);
+    setMessages([]);
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
@@ -180,6 +183,7 @@ const Index = () => {
           customerId={selectedCustomerId}
           sessionId={sessionId}
           onSelectConversation={handleSelectConversation}
+          startNewChat={handleStartNewConversation}
         />
       </div>
       

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
@@ -32,7 +31,7 @@ interface ConversationSidebarProps {
   onSelectConversation: (conversation: Conversation) => void;
   isMobile?: boolean;
   onCloseMobile?: () => void;
-  onChangeCustomer?: (customerId: string) => void;
+  startNewChat?: () => void;
 }
 
 const ConversationSidebar = ({ 
@@ -41,7 +40,7 @@ const ConversationSidebar = ({
   onSelectConversation,
   isMobile = false,
   onCloseMobile,
-  onChangeCustomer
+  startNewChat
 }: ConversationSidebarProps) => {
   const { user, logout, startNewSession } = useAuth();
   const [feedbackDialog, setFeedbackDialog] = useState<{
@@ -212,6 +211,16 @@ const ConversationSidebar = ({
     }
   };
 
+  const handleCustomerSelect = (customerId: string) => {
+    onChangeCustomer(customerId);
+    setSearchQuery('');
+    toast({
+      title: "Customer Selected",
+      description: `Switched to ${AVAILABLE_CUSTOMERS.find(c => c.id === customerId)?.name}`,
+      className: "bg-[#F1F0FB] border-[#9b87f5]",
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full p-4">
@@ -247,7 +256,7 @@ const ConversationSidebar = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={handleStartNewConversation}
+          onClick={startNewChat}
           className="w-full mb-2 border-[#E5DEFF] hover:bg-[#F1F0FB]"
         >
           <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
@@ -423,6 +432,8 @@ const ConversationSidebar = ({
       <ProfileDialog
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
+        customerId={customerId}
+        onChangeCustomer={handleCustomerSelect}
       />
     </div>
   );

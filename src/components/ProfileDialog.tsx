@@ -34,7 +34,8 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
 
   const { data: apiMetadata } = useQuery({
     queryKey: ['api-metadata', customerId],
-    queryFn: fetchApiMetadata
+    queryFn: () => fetchApiMetadata(customerId),
+    enabled: !!customerId,
   });
 
   const filteredCustomers = searchQuery 

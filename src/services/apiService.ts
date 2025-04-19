@@ -1,14 +1,15 @@
-
 import { ApiResponse } from '@/types/api';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-export const fetchApiMetadata = async (): Promise<ApiResponse> => {
+export const fetchApiMetadata = async (customer_id: string): Promise<ApiResponse> => {
   try {
+    const queryParam = `?customer_id=${encodeURIComponent(customer_id)}`;
+
     const [resourcesRes, templatesRes, toolsRes, serversRes] = await Promise.all([
-      fetch(`${API_URL}/resources`),
-      fetch(`${API_URL}/resource-templates`),
-      fetch(`${API_URL}/tools`),
+      fetch(`${API_URL}/resources${queryParam}`),
+      fetch(`${API_URL}/resource-templates${queryParam}`),
+      fetch(`${API_URL}/tools${queryParam}`),
       fetch(`${API_URL}/servers`),
     ]);
 

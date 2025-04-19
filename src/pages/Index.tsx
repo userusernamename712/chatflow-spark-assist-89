@@ -14,8 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { fetchConversation } from '@/services/conversationService';
+import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
 import { Conversation } from '@/types/conversation';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -25,6 +26,9 @@ const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chatSessionId'));
+  const queryClient = useQueryClient();
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   useEffect(() => {
     if (sessionId) {
@@ -37,7 +41,6 @@ const Index = () => {
       setIsLoadingConversation(true);
       const conversation = await fetchConversation(conversationId);
       
-      // Map conversation messages to the format expected by ChatContainer
       const mappedMessages: Message[] = conversation.messages
         .filter(m => m.role !== 'system')
         .map(m => ({
@@ -47,16 +50,26 @@ const Index = () => {
         }));
       
       setMessages(mappedMessages);
+      setRetryCount(0); // Reset retry count on success
     } catch (error) {
       console.error('Error loading conversation:', error);
-      toast({
-        variant: "destructive",
-        title: "Error loading conversation",
-        description: "Could not load the conversation. Please try again.",
-      });
-      // Clear the invalid session ID
-      localStorage.removeItem('chatSessionId');
-      setSessionId(null);
+      
+      // Silent retry mechanism - don't show error to user
+      if (retryCount < maxRetries) {
+        setRetryCount(prev => prev + 1);
+        // Exponential backoff
+        const delay = Math.pow(2, retryCount) * 1000;
+        
+        setTimeout(() => {
+          loadConversation(conversationId);
+        }, delay);
+      } else {
+        // After max retries, still don't show error toast to user
+        // Just reset conversation state without notification
+        localStorage.removeItem('chatSessionId');
+        setSessionId(null);
+        setRetryCount(0);
+      }
     } finally {
       setIsLoadingConversation(false);
     }
@@ -74,6 +87,7 @@ const Index = () => {
     setMessages((prev) => [...prev, newUserMessage]);
     setIsProcessing(true);
 
+    // Send message with current sessionId
     sendChatMessage(
       {
         session_id: sessionId,
@@ -81,9 +95,41 @@ const Index = () => {
         prompt: content.trim(),
       },
       handleChatEvent,
-      () => setIsProcessing(false),
+      handleChatComplete,
       handleError
     );
+  };
+
+  // New function to handle chat completion
+  const handleChatComplete = () => {
+    setIsProcessing(false);
+    
+    // If this was the first message in a new conversation
+    if (!sessionId) {
+      // We need to extract the session ID from the server response
+      // The conversation should have been created on the server
+      queryClient.invalidateQueries({ queryKey: ['conversations', selectedCustomerId] });
+      
+      // Fetch the most recent conversation to get its ID
+      queryClient.fetchQuery({ 
+        queryKey: ['conversations', selectedCustomerId],
+        queryFn: async () => {
+          const conversations = await fetchConversationHistory(selectedCustomerId);
+          if (conversations && conversations.length > 0) {
+            // Get the most recent conversation
+            const newestConversation = conversations.sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )[0];
+            
+            // Set the session ID
+            const newSessionId = newestConversation.session_id;
+            localStorage.setItem('chatSessionId', newSessionId);
+            setSessionId(newSessionId);
+          }
+          return conversations;
+        }
+      });
+    }
   };
 
   const handleSendTypicalQuestion = (question: string) => {
@@ -94,6 +140,7 @@ const Index = () => {
 
   const handleChatEvent = (event: ChatEvent) => {
     if (event.type === 'text') {
+      // Update messages based on streaming response
       setMessages((prev) => {
         const currentMessages = [...prev];
         const lastMessage = currentMessages[currentMessages.length - 1];
@@ -119,6 +166,12 @@ const Index = () => {
         
         return currentMessages;
       });
+      
+      // If this message contains a session_id and we don't have one yet, save it
+      if (event.session_id && !sessionId) {
+        localStorage.setItem('chatSessionId', event.session_id);
+        setSessionId(event.session_id);
+      }
     } else if (event.type === 'tool_call') {
       setMessages((prev) => [
         ...prev,
@@ -154,6 +207,24 @@ const Index = () => {
     }
   };
 
+  const handleStartNewChat = () => {
+    startNewSession();
+    if (isMobile) {
+      setSidebarOpen(false);
+    }
+  };
+
+  const startNewSession = () => {
+    localStorage.removeItem('chatSessionId');
+    setSessionId(null);
+    setMessages([]);
+  };
+
+  const handleChangeCustomer = (customerId: string) => {
+    // This will be handled by the auth context
+    // Show toast in ConversationSidebar component
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
@@ -180,6 +251,8 @@ const Index = () => {
           customerId={selectedCustomerId}
           sessionId={sessionId}
           onSelectConversation={handleSelectConversation}
+          startNewChat={handleStartNewChat}
+          onChangeCustomer={handleChangeCustomer}
         />
       </div>
       
@@ -191,6 +264,8 @@ const Index = () => {
             onSelectConversation={handleSelectConversation}
             isMobile={true}
             onCloseMobile={() => setSidebarOpen(false)}
+            startNewChat={handleStartNewChat}
+            onChangeCustomer={handleChangeCustomer}
           />
         </SheetContent>
       </Sheet>

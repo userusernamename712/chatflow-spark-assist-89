@@ -1,26 +1,26 @@
 
-export type Message = {
-  id: string;
-  type: 'user' | 'assistant' | 'tool_call' | 'error';
-  content: string;
-  tool?: string;
-  arguments?: Record<string, any>;
-  result?: any;
-  isStreaming?: boolean;
-};
-
-export type ChatEvent = {
-  session_id: string;
-  type: string;
-  message?: string;
-  tool?: string;
-  arguments?: Record<string, any>;
-  result?: any;
-  finished: boolean;
-};
-
-export type ChatRequest = {
+export interface ChatRequest {
   session_id: string | null;
   customer_id: string;
   prompt: string;
-};
+}
+
+export interface ChatEvent {
+  type: 'text' | 'tool_call' | 'error' | 'meta';
+  message?: string;
+  finished?: boolean;
+  tool?: string;
+  arguments?: Record<string, any>;
+  result?: any;
+  session_id?: string;
+}
+
+export interface Message {
+  id: string;
+  type: 'user' | 'assistant' | 'tool_call';
+  content: string;
+  isStreaming?: boolean;
+  tool?: string;
+  arguments?: Record<string, any>;
+  result?: any;
+}

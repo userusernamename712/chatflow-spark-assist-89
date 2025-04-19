@@ -32,6 +32,7 @@ interface ConversationSidebarProps {
   onSelectConversation: (conversation: Conversation) => void;
   isMobile?: boolean;
   onCloseMobile?: () => void;
+  startNewChat?: () => void;
   onChangeCustomer?: (customerId: string) => void;
 }
 
@@ -41,6 +42,7 @@ const ConversationSidebar = ({
   onSelectConversation,
   isMobile = false,
   onCloseMobile,
+  startNewChat,
   onChangeCustomer
 }: ConversationSidebarProps) => {
   const { user, logout, startNewSession } = useAuth();
@@ -73,7 +75,7 @@ const ConversationSidebar = ({
     queryKey: ['conversations', customerId],
     queryFn: () => fetchConversationHistory(customerId),
     enabled: !!customerId,
-    refetchInterval: 5000, // Reduced to 5 seconds for more real-time updates
+    // Removed refetchInterval to stop frequent fetching
   });
   
   const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
@@ -165,7 +167,6 @@ const ConversationSidebar = ({
     
     deleteMutation.mutate(deleteConfirmDialog.conversationId);
     
-    // If we're currently viewing this conversation, redirect to home
     if (sessionId === deleteConfirmDialog.conversationId) {
       localStorage.removeItem('chatSessionId');
       window.location.reload();
@@ -197,9 +198,14 @@ const ConversationSidebar = ({
   };
 
   const handleStartNewConversation = () => {
-    startNewSession(customerId);
-    localStorage.removeItem('chatSessionId');
-    window.location.reload();
+    if (startNewChat) {
+      startNewChat();
+    } else {
+      startNewSession(customerId);
+      localStorage.removeItem('chatSessionId');
+      window.location.reload();
+    }
+    
     if (isMobile && onCloseMobile) {
       onCloseMobile();
     }
@@ -209,6 +215,21 @@ const ConversationSidebar = ({
     await logout();
     if (isMobile && onCloseMobile) {
       onCloseMobile();
+    }
+  };
+
+  const handleCustomerSelect = (customerId: string) => {
+    if (onChangeCustomer) {
+      onChangeCustomer(customerId);
+      setSearchQuery('');
+      
+      // Show toast notification when customer is selected
+      const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
+      toast({
+        title: "Customer Selected",
+        description: `Switched to ${selectedCustomer?.name}`,
+        className: "bg-[#F1F0FB] border-[#9b87f5]",
+      });
     }
   };
 
@@ -312,16 +333,15 @@ const ConversationSidebar = ({
 
       <div className="p-4 border-t">
         <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
-          <User className="h-4 w-4 mr-2" />
-          <span className="truncate">{user?.email}</span>
           <Button 
             variant="ghost" 
             size="sm" 
-            className="ml-2 h-6 w-6 p-0" 
+            className="mr-2 h-6 w-6 p-0" 
             onClick={() => setIsProfileOpen(true)}
           >
             <User className="h-3.5 w-3.5 text-[#8E9196]" />
           </Button>
+          <span className="truncate">{user?.email}</span>
         </div>
         <Button
           variant="outline"
@@ -423,6 +443,8 @@ const ConversationSidebar = ({
       <ProfileDialog
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
+        customerId={customerId}
+        onChangeCustomer={handleCustomerSelect}
       />
     </div>
   );

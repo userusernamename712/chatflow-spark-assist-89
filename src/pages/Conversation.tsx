@@ -25,8 +25,9 @@ const Conversation = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
-  // Fetch conversation on mount
   useEffect(() => {
     if (!isAuthenticated || !conversationId) {
       navigate('/');
@@ -38,7 +39,6 @@ const Conversation = () => {
         setIsLoading(true);
         const conversation = await fetchConversation(conversationId);
         
-        // Map conversation messages to the format expected by ChatContainer
         const mappedMessages: Message[] = conversation.messages
           .filter(m => m.role !== 'system')
           .map(m => ({
@@ -48,21 +48,31 @@ const Conversation = () => {
           }));
         
         setMessages(mappedMessages);
+        setRetryCount(0); // Reset retry count on success
       } catch (error) {
         console.error('Error loading conversation:', error);
-        toast({
-          variant: "destructive",
-          title: "Error loading conversation",
-          description: "Could not load the conversation. Please try again.",
-        });
-        navigate('/');
+        
+        // Silent retry mechanism - don't show error to user
+        if (retryCount < maxRetries) {
+          setRetryCount(prev => prev + 1);
+          // Exponential backoff
+          const delay = Math.pow(2, retryCount) * 1000;
+          
+          setTimeout(() => {
+            loadConversation();
+          }, delay);
+        } else {
+          // After max retries, redirect to home without showing error
+          console.error('Max retries reached, redirecting to home');
+          navigate('/');
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     loadConversation();
-  }, [conversationId, isAuthenticated, navigate]);
+  }, [conversationId, isAuthenticated, navigate, retryCount]);
 
   const handleSendMessage = (content: string) => {
     if (!content.trim() || isProcessing || !user) return;
@@ -148,9 +158,13 @@ const Conversation = () => {
     });
   };
 
-  const handleSelectConversation = (conversationId: string) => {
-    navigate(`/c/${conversationId}`);
+  const handleSelectConversation = (conversation: any) => {
+    navigate(`/c/${conversation.session_id}`);
     setSidebarOpen(false);
+  };
+
+  const handleChangeCustomer = (customerId: string) => {
+    navigate('/');
   };
 
   if (loading || isLoading) {
@@ -175,8 +189,8 @@ const Conversation = () => {
         <ConversationSidebar 
           customerId={selectedCustomerId}
           sessionId={conversationId || null}
-          onSelectConversation={(conversation) => handleSelectConversation(conversation.session_id)}
-          onChangeCustomer={(customerId) => navigate('/')}
+          onSelectConversation={(conversation) => handleSelectConversation(conversation)}
+          onChangeCustomer={handleChangeCustomer}
         />
       </div>
       
@@ -185,8 +199,8 @@ const Conversation = () => {
           <ConversationSidebar 
             customerId={selectedCustomerId}
             sessionId={conversationId || null}
-            onSelectConversation={(conversation) => handleSelectConversation(conversation.session_id)}
-            onChangeCustomer={(customerId) => navigate('/')}
+            onSelectConversation={(conversation) => handleSelectConversation(conversation)}
+            onChangeCustomer={handleChangeCustomer}
             isMobile={true}
             onCloseMobile={() => setSidebarOpen(false)}
           />

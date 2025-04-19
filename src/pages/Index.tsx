@@ -1,6 +1,4 @@
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import ChatHeader from '@/components/ChatHeader';
@@ -17,21 +15,12 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
-  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
-
-  // Always create a new session when the home page loads
-  useEffect(() => {
-    if (isAuthenticated) {
-      // Clear any existing session
-      localStorage.removeItem('chatSessionId');
-      setMessages([]);
-    }
-  }, [isAuthenticated]);
+  const sessionId = localStorage.getItem('chatSessionId');
 
   const handleSendMessage = (content: string) => {
     if (!content.trim() || isProcessing || !user) return;
@@ -47,7 +36,7 @@ const Index = () => {
 
     sendChatMessage(
       {
-        session_id: null, // Always send null to create a new session
+        session_id: sessionId,
         customer_id: selectedCustomerId,
         prompt: content.trim(),
       },
@@ -64,13 +53,6 @@ const Index = () => {
   };
 
   const handleChatEvent = (event: ChatEvent) => {
-    // If we received a session_id, route to the conversation page
-    if (event.session_id && messages.length === 1) {
-      // Navigate to the conversation page after the first message is sent
-      navigate(`/c/${event.session_id}`);
-      return;
-    }
-
     if (event.type === 'text') {
       setMessages((prev) => {
         const currentMessages = [...prev];
@@ -124,8 +106,9 @@ const Index = () => {
     });
   };
 
-  const handleSelectConversation = (conversationId: string) => {
-    navigate(`/c/${conversationId}`);
+  const handleSelectConversation = (conversation: any) => {
+    localStorage.setItem('chatSessionId', conversation.session_id);
+    window.location.reload();
     setSidebarOpen(false);
   };
 
@@ -153,9 +136,8 @@ const Index = () => {
       <div className="hidden md:block w-72 border-r border-[#E5DEFF] bg-white shadow-sm">
         <ConversationSidebar 
           customerId={selectedCustomerId}
-          sessionId={null}
-          onSelectConversation={(conversation) => handleSelectConversation(conversation.session_id)}
-          onChangeCustomer={() => {}}
+          sessionId={sessionId}
+          onSelectConversation={handleSelectConversation}
         />
       </div>
       
@@ -163,9 +145,8 @@ const Index = () => {
         <SheetContent side="left" className="p-0 w-[300px]">
           <ConversationSidebar 
             customerId={selectedCustomerId}
-            sessionId={null}
-            onSelectConversation={(conversation) => handleSelectConversation(conversation.session_id)}
-            onChangeCustomer={() => {}}
+            sessionId={sessionId}
+            onSelectConversation={handleSelectConversation}
             isMobile={true}
             onCloseMobile={() => setSidebarOpen(false)}
           />

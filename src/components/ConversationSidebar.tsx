@@ -1,20 +1,31 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Clock, Star, StarIcon, StarOff, Plus, LogOut, X, User } from 'lucide-react';
+import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Conversation, ConversationRating } from '@/types/conversation';
 import { fetchConversationHistory, updateConversation, deleteConversation } from '@/services/conversationService';
 import { toast } from '@/components/ui/use-toast';
-import ProfileDialog from './ProfileDialog';
+import { useAuth } from '@/contexts/AuthContext';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
+import ProfileDialog from './ProfileDialog';
 import { fetchApiMetadata } from '@/services/apiService';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
 import ApiDetailsDialog from './ApiDetailsDialog';
 
 interface ConversationSidebarProps {
@@ -35,7 +46,7 @@ const ConversationSidebar = ({
   onChangeCustomer
 }: ConversationSidebarProps) => {
   const navigate = useNavigate();
-  const { logout, startNewSession } = useAuth();
+  const { user, logout, startNewSession } = useAuth();
   const [feedbackDialog, setFeedbackDialog] = useState<{
     isOpen: boolean;
     conversationId: string | null;
@@ -152,7 +163,8 @@ const ConversationSidebar = ({
       deleteMutation.mutate(conversationId);
       // If we're currently viewing this conversation, redirect to home
       if (sessionId === conversationId) {
-        navigate('/');
+        localStorage.removeItem('chatSessionId');
+        window.location.reload();
       }
     }
   };
@@ -178,7 +190,8 @@ const ConversationSidebar = ({
 
   const handleStartNewConversation = () => {
     startNewSession(customerId);
-    navigate('/');
+    localStorage.removeItem('chatSessionId');
+    window.location.reload();
     if (isMobile && onCloseMobile) {
       onCloseMobile();
     }
@@ -186,7 +199,6 @@ const ConversationSidebar = ({
 
   const handleLogout = async () => {
     await logout();
-    navigate('/');
     if (isMobile && onCloseMobile) {
       onCloseMobile();
     }
@@ -213,149 +225,100 @@ const ConversationSidebar = ({
   );
 
   return (
-    <>
-      <div className="flex flex-col h-full bg-white">
-        <div className="flex items-center justify-between p-3 border-b">
-          <h2 className="text-sm font-medium">Conversation History</h2>
-          {isMobile && (
-            <Button variant="ghost" size="sm" onClick={onCloseMobile}>
-              <X className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-        
-        <div className="p-3 border-b">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleStartNewConversation}
-            className="w-full mb-2 border-[#E5DEFF] hover:bg-[#F1F0FB]"
-          >
-            <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
-            New Chat
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center justify-between p-3 border-b">
+        <h2 className="text-sm font-medium">Conversation History</h2>
+        {isMobile && (
+          <Button variant="ghost" size="sm" onClick={onCloseMobile}>
+            <X className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleLogout}
-            className="w-full text-red-500 border-[#E5DEFF] hover:bg-red-50"
-          >
-            <LogOut className="h-4 w-4 mr-1" />
-            Logout
-          </Button>
-        </div>
-        
-        <ScrollArea className="flex-1">
-          {sortedConversations.length === 0 ? (
-            <div className="p-4 text-center text-sm text-muted-foreground">
-              No conversations yet
-            </div>
-          ) : (
-            <div className="p-2 space-y-2">
-              {sortedConversations.map((conversation) => (
-                <Collapsible key={conversation.session_id} className="w-full">
-                  <div 
-                    className={`flex flex-col rounded-md border ${
-                      sessionId === conversation.session_id 
-                        ? 'bg-[#F1F0FB] border-[#9b87f5]' 
-                        : 'bg-white border-[#E5DEFF] hover:bg-[#F9F8FF]'
-                    } transition-colors`}
-                  >
-                    <div className="flex items-center justify-between p-2">
-                      <div 
-                        className="flex-1 cursor-pointer" 
-                        onClick={() => {
-                          onSelectConversation(conversation);
-                          if (isMobile && onCloseMobile) onCloseMobile();
-                        }}
-                      >
-                        <div className="text-sm font-medium truncate">
-                          {getFirstUserMessage(conversation)}
-                        </div>
-                        <div className="flex items-center text-xs text-[#8E9196]">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {formatDate(conversation.updated_at)}
-                        </div>
-                      </div>
-                      
-                      <div className="flex space-x-1">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className="h-7 w-7 p-0"
-                          onClick={() => handleDeleteConversation(conversation.session_id)}
-                        >
-                          <StarOff className="h-4 w-4 text-[#8E9196]" />
-                        </Button>
-                        <CollapsibleTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 p-0"
-                          >
-                            <Star className="h-4 w-4 text-[#8E9196]" />
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-                    </div>
-                    
-                    <CollapsibleContent>
-                      <div className="p-2 pt-0 border-t border-[#E5DEFF]">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="text-xs text-[#8E9196]">Rate this conversation:</div>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-6 text-xs"
-                            onClick={() => handleOpenFeedbackDialog(
-                              conversation.session_id, 
-                              conversation.rating
-                            )}
-                          >
-                            Add feedback
-                          </Button>
-                        </div>
-                        <div className="flex justify-center space-x-1">
-                          {[1, 2, 3, 4, 5].map((rating) => (
-                            <button
-                              key={rating}
-                              onClick={() => handleRateConversation(conversation.session_id, rating)}
-                              className="focus:outline-none"
-                            >
-                              {conversation.rating && rating <= conversation.rating ? (
-                                <StarIcon className="h-5 w-5 text-yellow-400" />
-                              ) : (
-                                <StarOff className="h-5 w-5 text-gray-300" />
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                        {conversation.feedback && (
-                          <div className="mt-2 text-xs p-2 bg-[#F9F8FF] rounded border border-[#E5DEFF]">
-                            <div className="font-medium mb-1">Feedback:</div>
-                            <div>{conversation.feedback}</div>
-                          </div>
-                        )}
-                      </div>
-                    </CollapsibleContent>
-                  </div>
-                </Collapsible>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
+        )}
+      </div>
 
-        <div className="p-4 border-t">
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={() => setIsProfileOpen(true)}
-          >
-            <User className="h-4 w-4 mr-2" />
-            Profile & Settings
-          </Button>
+      <div className="p-3 border-b">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleStartNewConversation}
+          className="w-full mb-2 border-[#E5DEFF] hover:bg-[#F1F0FB]"
+        >
+          <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
+          New Chat
+        </Button>
+      </div>
+
+      <ScrollArea className="flex-1">
+        {sortedConversations.length === 0 ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">
+            No conversations yet
+          </div>
+        ) : (
+          <div className="p-2 space-y-2">
+            {sortedConversations.map((conversation) => (
+              <div 
+                key={conversation.session_id}
+                className={`flex flex-col rounded-md border ${
+                  sessionId === conversation.session_id 
+                    ? 'bg-[#F1F0FB] border-[#9b87f5]' 
+                    : 'bg-white border-[#E5DEFF] hover:bg-[#F9F8FF]'
+                } transition-colors`}
+              >
+                <div className="flex items-center justify-between p-2">
+                  <div 
+                    className="flex-1 cursor-pointer" 
+                    onClick={() => {
+                      onSelectConversation(conversation);
+                      if (isMobile && onCloseMobile) onCloseMobile();
+                    }}
+                  >
+                    <div className="text-sm font-medium truncate">
+                      {getFirstUserMessage(conversation)}
+                    </div>
+                    <div className="flex items-center text-xs text-[#8E9196]">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {formatDate(conversation.updated_at)}
+                    </div>
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                        <MoreHorizontal className="h-4 w-4 text-[#8E9196]" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleOpenFeedbackDialog(
+                        conversation.session_id,
+                        conversation.rating
+                      )}>
+                        Add feedback
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDeleteConversation(conversation.session_id)}>
+                        Delete conversation
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
+
+      <div className="p-4 border-t">
+        <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
+          <User className="h-4 w-4 mr-2" />
+          <span className="truncate">{user?.email}</span>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleLogout}
+          className="w-full border-[#E5DEFF] hover:bg-[#F1F0FB] text-[#9b87f5] hover:text-[#7E69AB]"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign out
+        </Button>
       </div>
 
       <Dialog 
@@ -382,7 +345,7 @@ const ConversationSidebar = ({
                 className="focus:outline-none transition-transform hover:scale-110"
               >
                 {feedbackDialog.rating && rating <= feedbackDialog.rating ? (
-                  <StarIcon className="h-8 w-8 text-yellow-400" />
+                  <Star className="h-8 w-8 text-yellow-400" />
                 ) : (
                   <StarOff className="h-8 w-8 text-gray-300" />
                 )}
@@ -410,17 +373,7 @@ const ConversationSidebar = ({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <ProfileDialog
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        customerId={customerId}
-        onChangeCustomer={(id) => {
-          onChangeCustomer?.(id);
-          setIsProfileOpen(false);
-        }}
-      />
-    </>
+    </div>
   );
 };
 

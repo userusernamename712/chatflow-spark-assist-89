@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { fetchConversation } from '@/services/conversationService';
+import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
 import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -74,6 +74,7 @@ const Index = () => {
     setMessages((prev) => [...prev, newUserMessage]);
     setIsProcessing(true);
 
+    // Send message with current sessionId
     sendChatMessage(
       {
         session_id: sessionId,
@@ -81,15 +82,41 @@ const Index = () => {
         prompt: content.trim(),
       },
       handleChatEvent,
-      () => {
-        setIsProcessing(false);
-        // Manually trigger a refetch of conversations only when a chat completes
-        if (!sessionId) {
-          queryClient.invalidateQueries({ queryKey: ['conversations', selectedCustomerId] });
-        }
-      },
+      handleChatComplete,
       handleError
     );
+  };
+
+  // New function to handle chat completion
+  const handleChatComplete = () => {
+    setIsProcessing(false);
+    
+    // If this was the first message in a new conversation
+    if (!sessionId) {
+      // We need to extract the session ID from the server response
+      // The conversation should have been created on the server
+      queryClient.invalidateQueries({ queryKey: ['conversations', selectedCustomerId] });
+      
+      // Fetch the most recent conversation to get its ID
+      queryClient.fetchQuery({ 
+        queryKey: ['conversations', selectedCustomerId],
+        queryFn: async () => {
+          const conversations = await fetchConversationHistory(selectedCustomerId);
+          if (conversations && conversations.length > 0) {
+            // Get the most recent conversation
+            const newestConversation = conversations.sort(
+              (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+            )[0];
+            
+            // Set the session ID
+            const newSessionId = newestConversation.session_id;
+            localStorage.setItem('chatSessionId', newSessionId);
+            setSessionId(newSessionId);
+          }
+          return conversations;
+        }
+      });
+    }
   };
 
   const handleSendTypicalQuestion = (question: string) => {
@@ -100,6 +127,7 @@ const Index = () => {
 
   const handleChatEvent = (event: ChatEvent) => {
     if (event.type === 'text') {
+      // Update messages based on streaming response
       setMessages((prev) => {
         const currentMessages = [...prev];
         const lastMessage = currentMessages[currentMessages.length - 1];
@@ -125,6 +153,12 @@ const Index = () => {
         
         return currentMessages;
       });
+      
+      // If this message contains a session_id and we don't have one yet, save it
+      if (event.session_id && !sessionId) {
+        localStorage.setItem('chatSessionId', event.session_id);
+        setSessionId(event.session_id);
+      }
     } else if (event.type === 'tool_call') {
       setMessages((prev) => [
         ...prev,

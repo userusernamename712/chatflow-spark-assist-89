@@ -4,26 +4,10 @@ import {
   signInWithEmailAndPassword, 
   signOut,
   onAuthStateChanged,
-  User as FirebaseUser,
-  connectAuthEmulator
+  User as FirebaseUser 
 } from 'firebase/auth';
 import { auth } from '@/config/firebase';
 import { User, AuthState, DEFAULT_CUSTOMER_ID } from '@/types/auth';
-
-// Check if we're in development/demo mode
-const isDemoMode = !import.meta.env.VITE_FIREBASE_API_KEY || 
-                   import.meta.env.VITE_FIREBASE_API_KEY === "AIzaSyDemoKeyForDevelopmentPurposesOnly";
-
-// In demo mode, configure auth emulator
-if (isDemoMode) {
-  try {
-    // This will throw in the browser environment if not properly set up,
-    // so we catch and log errors
-    connectAuthEmulator(auth, "http://localhost:9099");
-  } catch (error) {
-    console.log("Auth emulator not available, continuing with demo mode");
-  }
-}
 
 interface AuthContextType extends AuthState {
   login: (email: string, password: string, customerId: string) => Promise<void>;
@@ -45,27 +29,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // In demo mode, simulate a logged-in user
-    if (isDemoMode) {
-      const demoUser: User = {
-        id: "demo-user-id",
-        email: "demo@example.com",
-        username: "Demo User",
-        createdAt: new Date(),
-      };
-      
-      localStorage.setItem('chatUser', JSON.stringify(demoUser));
-      localStorage.setItem('chatSelectedCustomer', DEFAULT_CUSTOMER_ID);
-      
-      setAuthState({
-        user: demoUser,
-        isAuthenticated: true,
-        selectedCustomerId: DEFAULT_CUSTOMER_ID,
-      });
-      setLoading(false);
-      return;
-    }
-
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         // User is signed in
@@ -123,28 +86,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setError(null);
     setLoading(true);
     
-    // In demo mode, simulate successful login
-    if (isDemoMode) {
-      const demoUser: User = {
-        id: "demo-user-id",
-        email: email,
-        username: email.split('@')[0] || 'Demo User',
-        createdAt: new Date(),
-      };
-      
-      localStorage.setItem('chatUser', JSON.stringify(demoUser));
-      localStorage.setItem('chatSelectedCustomer', customerId);
-      
-      setAuthState({
-        user: demoUser,
-        isAuthenticated: true,
-        selectedCustomerId: customerId,
-      });
-      
-      setLoading(false);
-      return;
-    }
-    
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const firebaseUser = userCredential.user;
@@ -175,22 +116,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     setError(null);
     setLoading(true);
-    
-    // In demo mode, simulate logout
-    if (isDemoMode) {
-      localStorage.removeItem('chatUser');
-      localStorage.removeItem('chatSelectedCustomer');
-      localStorage.removeItem('chatSessionId');
-      
-      setAuthState({
-        user: null,
-        isAuthenticated: false,
-        selectedCustomerId: DEFAULT_CUSTOMER_ID,
-      });
-      
-      setLoading(false);
-      return;
-    }
     
     try {
       await signOut(auth);

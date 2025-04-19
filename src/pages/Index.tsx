@@ -27,6 +27,8 @@ const Index = () => {
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chatSessionId'));
   const queryClient = useQueryClient();
+  const [retryCount, setRetryCount] = useState(0);
+  const maxRetries = 3;
 
   useEffect(() => {
     if (sessionId) {
@@ -48,15 +50,26 @@ const Index = () => {
         }));
       
       setMessages(mappedMessages);
+      setRetryCount(0); // Reset retry count on success
     } catch (error) {
       console.error('Error loading conversation:', error);
-      toast({
-        variant: "destructive",
-        title: "Error loading conversation",
-        description: "Could not load the conversation. Please try again.",
-      });
-      localStorage.removeItem('chatSessionId');
-      setSessionId(null);
+      
+      // Silent retry mechanism - don't show error to user
+      if (retryCount < maxRetries) {
+        setRetryCount(prev => prev + 1);
+        // Exponential backoff
+        const delay = Math.pow(2, retryCount) * 1000;
+        
+        setTimeout(() => {
+          loadConversation(conversationId);
+        }, delay);
+      } else {
+        // After max retries, still don't show error toast to user
+        // Just reset conversation state without notification
+        localStorage.removeItem('chatSessionId');
+        setSessionId(null);
+        setRetryCount(0);
+      }
     } finally {
       setIsLoadingConversation(false);
     }

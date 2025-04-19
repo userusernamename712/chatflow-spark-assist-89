@@ -249,26 +249,34 @@ const MessageBubble = ({
         )}
 
         <div className="space-y-1 flex-1 overflow-x-auto">
-          {isTool && toolName && toolResult && (
-            <TooltipProvider>
+        {isTool && toolName && toolResult && (
+          <div className="flex items-center justify-between bg-white border border-[var(--neutral-color-strokes)] rounded-lg px-3 py-2 text-xs text-[var(--neutral-color-dark)] shadow-sm">
+            <span className="font-medium text-[var(--primary-color-dark)]">
+              {toolName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            </span>
+
+            <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="text-xs font-medium text-[var(--primary-color)] flex items-center bg-white py-1 px-2 rounded-full shadow-sm mb-2 inline-block tool-pill">
-                    <Terminal size={10} className="mr-1" />
-                    <span>{toolName}</span>
-                  </div>
+                  <span
+                    className="ml-2 underline cursor-help text-[var(--primary-color)] hover:opacity-90 transition text-xs font-normal"
+                  >
+                    View result
+                  </span>
                 </TooltipTrigger>
-                <TooltipContent className="tool-tooltip">
-                  <div className="text-xs font-medium border-b border-[var(--neutral-color-strokes)] pb-1 mb-2">Tool Result</div>
-                  <pre className="whitespace-pre-wrap break-all text-xs overflow-x-auto max-h-[300px] overflow-y-auto">
-                    {typeof toolResult === 'object' 
-                      ? JSON.stringify(toolResult, null, 2) 
-                      : String(toolResult)}
-                  </pre>
+                <TooltipContent
+                  side="top"
+                  className="max-w-sm break-words text-left whitespace-pre-wrap text-[11px] font-mono"
+                >
+                  {typeof toolResult === 'object'
+                    ? JSON.stringify(toolResult, null, 2)
+                    : String(toolResult)}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          )}
+          </div>
+        )}
+
           
           {!isTool && (
             <div className={cn(isStreaming && "typing-indicator", "text-[var(--neutral-color-black)]")}>

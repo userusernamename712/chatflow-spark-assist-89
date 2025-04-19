@@ -272,15 +272,7 @@ const ConversationSidebar = ({
     );
   }
 
-  if (error) {
-    return (
-      <div className="p-4 text-red-500">
-        Error loading conversations: {error instanceof Error ? error.message : 'Unknown error'}
-      </div>
-    );
-  }
-
-  const sortedConversations = [...conversations].sort(
+  const sortedConversations = [...(conversations || [])].sort(
     (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
   );
 

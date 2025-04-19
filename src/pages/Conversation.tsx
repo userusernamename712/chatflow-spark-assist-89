@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,7 +11,6 @@ import { sendChatMessage } from '@/services/chatService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
-import { fetchConversation } from '@/services/conversationService';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import ConversationSidebar from '@/components/ConversationSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -21,39 +21,14 @@ const Conversation = () => {
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
 
+  // This effect now just checks if we're authenticated, but doesn't load the conversation from DB
   useEffect(() => {
     if (!isAuthenticated || !conversationId) {
       navigate('/');
-      return;
     }
-
-    const loadConversation = async () => {
-      try {
-        setIsLoading(true);
-        const conversation = await fetchConversation(conversationId);
-        
-        const mappedMessages: Message[] = conversation.messages
-          .filter(m => m.role !== 'system')
-          .map(m => ({
-            id: uuidv4(),
-            type: m.role === 'user' ? 'user' : 'assistant',
-            content: m.content,
-          }));
-        
-        setMessages(mappedMessages);
-      } catch (error) {
-        console.error('Error loading conversation:', error);
-        navigate('/');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadConversation();
   }, [conversationId, isAuthenticated, navigate]);
 
   const handleSendMessage = (content: string) => {
@@ -149,12 +124,12 @@ const Conversation = () => {
     navigate('/');
   };
 
-  if (loading || isLoading) {
+  if (loading) {
     return (
       <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-4"></div>
-          <div className="text-[#403E43]">Loading conversation...</div>
+          <div className="text-[#403E43]">Loading...</div>
         </div>
       </div>
     );

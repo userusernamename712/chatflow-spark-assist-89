@@ -92,16 +92,18 @@ const ConversationSidebar = ({
     },
     enabled: !!customerId,
     retry: false,
-    onError: (error) => {
-      console.error('Error in conversation list query:', error);
-      
-      if (retryCount < maxRetries) {
-        const delay = Math.pow(2, retryCount) * 1000;
-        setTimeout(() => {
-          queryClient.invalidateQueries({ queryKey: ['conversations', customerId] });
-        }, delay);
+    meta: {
+      onError: (error: Error) => {
+        console.error('Error in conversation list query:', error);
+        
+        if (retryCount < maxRetries) {
+          const delay = Math.pow(2, retryCount) * 1000;
+          setTimeout(() => {
+            queryClient.invalidateQueries({ queryKey: ['conversations', customerId] });
+          }, delay);
+        }
       }
-    },
+    }
   });
   
   useEffect(() => {

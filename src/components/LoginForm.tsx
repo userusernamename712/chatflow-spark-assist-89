@@ -52,8 +52,8 @@ const LoginForm = () => {
           className="h-16 w-16 object-contain"
         />
       </div>
-      <h1 className="text-2xl font-bold mb-2 text-center text-[#1A1F2C]">Team Access Portal</h1>
-      <p className="text-center text-[#8E9196] mb-6">Sign in to access your bookline.AI dashboard</p>
+      <h1 className="text-2xl font-bold mb-2 text-center text-[#1A1F2C]">Chat with Bookline's Data Analytics</h1>
+      <p className="text-center text-[#8E9196] mb-6">Sign in to access your assistant</p>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">

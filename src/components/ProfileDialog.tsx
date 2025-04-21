@@ -15,6 +15,15 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchApiMetadata } from '@/services/apiService';
 import ApiDetailsDialog from './ApiDetailsDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { Languages } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
+import { 
+  Select, 
+  SelectTrigger, 
+  SelectValue, 
+  SelectContent, 
+  SelectItem 
+} from "@/components/ui/select";
 
 interface ProfileDialogProps {
   isOpen: boolean;
@@ -31,6 +40,7 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
     server: string;
   } | null>(null);
   const { startNewSession } = useAuth();
+  const { language, setLanguage, availableLanguages, languageLabel } = useLanguage();
 
   const { data: apiMetadata } = useQuery({
     queryKey: ['api-metadata', customerId],
@@ -83,6 +93,30 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
                   ))}
                 </div>
               )}
+            </div>
+
+            <div>
+              <label className="text-sm text-muted-foreground mb-2 block">Language</label>
+              <div className="flex gap-3 items-center">
+                <Languages className="h-4 w-4 text-muted-foreground" />
+                <Select 
+                  value={language} 
+                  onValueChange={(value) => setLanguage(value)}
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Select language">
+                      {languageLabel}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableLanguages.map(l => (
+                      <SelectItem key={l.code} value={l.code}>
+                        {l.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div>

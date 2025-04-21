@@ -40,7 +40,7 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
     server: string;
   } | null>(null);
   const { startNewSession } = useAuth();
-  const { language, setLanguage, availableLanguages, languageLabel } = useLanguage();
+  const { language, setLanguage, availableLanguages, languageLabel, t } = useLanguage();
 
   const { data: apiMetadata } = useQuery({
     queryKey: ['api-metadata', customerId],
@@ -66,15 +66,15 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle>Profile & Settings</DialogTitle>
+            <DialogTitle>{t("profile_title")}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-6">
             <div>
-              <label className="text-sm text-muted-foreground mb-2 block">Select Customer</label>
+              <label className="text-sm text-muted-foreground mb-2 block">{t("select_customer")}</label>
               <Input
                 type="text"
-                placeholder="Search customers..."
+                placeholder={t("search_customers")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="mb-2"
@@ -96,15 +96,15 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
             </div>
 
             <div>
-              <label className="text-sm text-muted-foreground mb-2 block">Language</label>
+              <label className="text-sm text-muted-foreground mb-2 block">{t("language")}</label>
               <div className="flex gap-3 items-center">
                 <Languages className="h-4 w-4 text-muted-foreground" />
                 <Select 
                   value={language} 
-                  onValueChange={(value) => setLanguage(value)}
+                  onValueChange={setLanguage}
                 >
                   <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Select language">
+                    <SelectValue placeholder={t("select_language")}>
                       {languageLabel}
                     </SelectValue>
                   </SelectTrigger>
@@ -120,23 +120,22 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
             </div>
 
             <div>
-              <label className="text-sm text-muted-foreground mb-2 block">API Capabilities</label>
+              <label className="text-sm text-muted-foreground mb-2 block">{t("api_capabilities")}</label>
               <Tabs defaultValue="tools" className="w-full">
                 <TabsList className="w-full grid grid-cols-3 h-9">
                   <TabsTrigger value="tools">
                     <Wrench className="h-3 w-3 mr-1" />
-                    Tools
+                    {t("tools")}
                   </TabsTrigger>
                   <TabsTrigger value="resources">
                     <FileText className="h-3 w-3 mr-1" />
-                    Resources
+                    {t("resources")}
                   </TabsTrigger>
                   <TabsTrigger value="servers">
                     <Server className="h-3 w-3 mr-1" />
-                    Servers
+                    {t("servers")}
                   </TabsTrigger>
                 </TabsList>
-
                 <ScrollArea className="h-[50vh] mt-2 rounded-md border">
                   <TabsContent value="tools" className="p-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

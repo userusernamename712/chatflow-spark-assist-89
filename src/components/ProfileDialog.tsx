@@ -15,6 +15,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchApiMetadata } from '@/services/apiService';
 import ApiDetailsDialog from './ApiDetailsDialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCustomers } from '@/contexts/CustomerContext';
 
 interface ProfileDialogProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
     server: string;
   } | null>(null);
   const { startNewSession } = useAuth();
+  const { customers, loading: customersLoading } = useCustomers();
 
   const { data: apiMetadata } = useQuery({
     queryKey: ['api-metadata', customerId],
@@ -39,7 +41,7 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
   });
 
   const filteredCustomers = searchQuery 
-    ? AVAILABLE_CUSTOMERS.filter(customer =>
+    ? customers.filter(customer =>
         customer.name.toLowerCase().includes(searchQuery.toLowerCase()))
     : [];
 

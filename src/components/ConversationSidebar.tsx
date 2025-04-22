@@ -36,6 +36,23 @@ interface ConversationSidebarProps {
   onChangeCustomer?: (customerId: string) => void;
 }
 
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied to clipboard",
+      description: `URL: ${text}`,
+    });
+  } catch (err) {
+    toast({
+      variant: "destructive",
+      title: "Failed to copy",
+      description: err instanceof Error ? err.message : 'An error occurred',
+    });
+  }
+};
+
+
 const ConversationSidebar = ({ 
   customerId, 
   sessionId,
@@ -321,6 +338,14 @@ const ConversationSidebar = ({
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleOpenDeleteDialog(conversation.session_id)}>
                         Delete conversation
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          const shareUrl = `${window.location.origin}/conversation-analyzer/${conversation.session_id}`;
+                          copyToClipboard(shareUrl);
+                        }}
+                      >
+                        Share Conversation
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

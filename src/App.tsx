@@ -8,6 +8,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { CustomerProvider } from "./contexts/CustomerContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import ConversationAnalyzerPage from "./pages/ConversationAnalyzer";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +29,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/conversation-analyzer/:conversation_id" element={<ConversationAnalyzerPage />} /> 
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

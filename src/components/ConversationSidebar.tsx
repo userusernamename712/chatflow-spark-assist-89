@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
@@ -24,7 +25,6 @@ import { toast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 import ProfileDialog from './ProfileDialog';
-import { useLanguage } from '@/hooks/useLanguage';
 
 interface ConversationSidebarProps {
   customerId: string;
@@ -59,6 +59,7 @@ const ConversationSidebar = ({
   });
   
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
     isOpen: boolean;
@@ -68,14 +69,13 @@ const ConversationSidebar = ({
     conversationId: null,
   });
 
-  const { language, t } = useLanguage();
-
   const queryClient = useQueryClient();
   
   const { data: conversations = [], isLoading, error } = useQuery({
     queryKey: ['conversations', customerId],
     queryFn: () => fetchConversationHistory(customerId),
     enabled: !!customerId,
+    // Removed refetchInterval to stop frequent fetching
   });
   
   const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
@@ -88,7 +88,7 @@ const ConversationSidebar = ({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations', customerId] });
       toast({
-        title: t("feedback_saved"),
+        title: 'Feedback saved',
         description: 'Thank you for your feedback!',
       });
     },
@@ -222,10 +222,12 @@ const ConversationSidebar = ({
     if (onChangeCustomer) {
       onChangeCustomer(customerId);
       setSearchQuery('');
+      
+      // Show toast notification when customer is selected
       const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
       toast({
-        title: t("customer_selected_title"),
-        description: `${t("customer_selected_desc")} ${selectedCustomer?.name}`,
+        title: "Customer Selected",
+        description: `Switched to ${selectedCustomer?.name}`,
         className: "bg-[#F1F0FB] border-[#9b87f5]",
       });
     }
@@ -242,7 +244,7 @@ const ConversationSidebar = ({
   if (error) {
     return (
       <div className="p-4 text-red-500">
-        {t("error_loading_conversations")}: {error instanceof Error ? error.message : "Unknown error"}
+        Error loading conversations: {error instanceof Error ? error.message : 'Unknown error'}
       </div>
     );
   }
@@ -254,7 +256,7 @@ const ConversationSidebar = ({
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex items-center justify-between p-3 border-b">
-        <h2 className="text-sm font-medium">{t("conversation_history")}</h2>
+        <h2 className="text-sm font-medium">Conversation History</h2>
         {isMobile && (
           <Button variant="ghost" size="sm" onClick={onCloseMobile}>
             <X className="h-4 w-4" />
@@ -270,14 +272,14 @@ const ConversationSidebar = ({
           className="w-full mb-2 border-[#E5DEFF] hover:bg-[#F1F0FB]"
         >
           <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
-          {t("new_chat")}
+          New Chat
         </Button>
       </div>
 
       <ScrollArea className="flex-1">
         {sortedConversations.length === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">
-            {t("no_conversations")}
+            No conversations yet
           </div>
         ) : (
           <div className="p-2 space-y-2">
@@ -296,7 +298,7 @@ const ConversationSidebar = ({
                     onClick={() => onSelectConversation(conversation)}
                   >
                     <div className="text-sm font-medium truncate">
-                      {getFirstUserMessage(conversation) || t("new_conversation")}
+                      {getFirstUserMessage(conversation)}
                     </div>
                     <div className="flex items-center text-xs text-[#8E9196]">
                       <Clock className="h-3 w-3 mr-1" />
@@ -315,10 +317,10 @@ const ConversationSidebar = ({
                         conversation.session_id,
                         conversation.rating
                       )}>
-                        {t("add_feedback")}
+                        Add feedback
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleOpenDeleteDialog(conversation.session_id)}>
-                        {t("delete_conversation")}
+                        Delete conversation
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -348,7 +350,7 @@ const ConversationSidebar = ({
           className="w-full border-[#E5DEFF] hover:bg-[#F1F0FB] text-[#9b87f5] hover:text-[#7E69AB]"
         >
           <LogOut className="h-4 w-4 mr-2" />
-          {t("sign_out")}
+          Sign out
         </Button>
       </div>
 
@@ -362,9 +364,9 @@ const ConversationSidebar = ({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{t("rate_conversation")}</DialogTitle>
+            <DialogTitle>Rate Conversation</DialogTitle>
             <DialogDescription>
-              {t("rate_experience")}
+              Please rate your experience and provide any feedback.
             </DialogDescription>
           </DialogHeader>
           
@@ -385,7 +387,7 @@ const ConversationSidebar = ({
           </div>
           
           <Textarea
-            placeholder={t("add_feedback_optional")}
+            placeholder="Add your feedback here (optional)"
             value={feedbackDialog.feedback}
             onChange={(e) => setFeedbackDialog(prev => ({ ...prev, feedback: e.target.value }))}
             className="min-h-[100px]"
@@ -396,10 +398,10 @@ const ConversationSidebar = ({
               variant="outline" 
               onClick={() => setFeedbackDialog(prev => ({ ...prev, isOpen: false }))}
             >
-              {t("cancel")}
+              Cancel
             </Button>
             <Button onClick={handleSaveFeedback}>
-              {t("save")}
+              Save
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -415,9 +417,9 @@ const ConversationSidebar = ({
       >
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>{t("delete_conversation")}</DialogTitle>
+            <DialogTitle>Delete Conversation</DialogTitle>
             <DialogDescription>
-              {t("are_you_sure_delete")}
+              Are you sure you want to delete this conversation? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           
@@ -426,13 +428,13 @@ const ConversationSidebar = ({
               variant="outline" 
               onClick={() => setDeleteConfirmDialog(prev => ({ ...prev, isOpen: false }))}
             >
-              {t("cancel")}
+              Cancel
             </Button>
             <Button 
               variant="destructive" 
               onClick={handleDeleteConversation}
             >
-              {t("delete")}
+              Delete
             </Button>
           </DialogFooter>
         </DialogContent>

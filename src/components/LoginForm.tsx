@@ -15,7 +15,6 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { DEFAULT_CUSTOMER_ID } from '@/types/auth';
 import { Mail, Lock, LogIn } from 'lucide-react';
-import { useLanguage } from '@/hooks/useLanguage';
 
 type FormValues = {
   email: string;
@@ -24,7 +23,6 @@ type FormValues = {
 
 const LoginForm = () => {
   const { login, error, loading } = useAuth();
-  const { t } = useLanguage();
   
   const form = useForm<FormValues>({
     defaultValues: {
@@ -37,8 +35,8 @@ const LoginForm = () => {
     try {
       await login(values.email, values.password, DEFAULT_CUSTOMER_ID);
       toast({
-        title: t("welcome_back"),
-        description: t("login_success_desc"),
+        title: "Welcome back!",
+        description: `You've logged in successfully to the bookline.AI team portal.`,
       });
     } catch (err) {
       console.error('Auth error:', err);
@@ -54,12 +52,12 @@ const LoginForm = () => {
           className="h-16 w-16 object-contain"
         />
       </div>
-      <h1 className="text-2xl font-bold mb-2 text-center text-[#1A1F2C]">{t("chat_with_bookline")}</h1>
-      <p className="text-center text-[#8E9196] mb-6">{t("sign_in_to_access")}</p>
+      <h1 className="text-2xl font-bold mb-2 text-center text-[#1A1F2C]">Chat with Bookline's Data Analytics</h1>
+      <p className="text-center text-[#8E9196] mb-6">Sign in to access your assistant</p>
       
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          {t("auth_error")}
+          {error}
         </div>
       )}
       
@@ -72,12 +70,12 @@ const LoginForm = () => {
               <FormItem>
                 <FormLabel className="flex items-center">
                   <Mail className="h-4 w-4 mr-2 text-[#9b87f5]" />
-                  {t("email")}
+                  Email
                 </FormLabel>
                 <FormControl>
                   <Input 
                     type="email" 
-                    placeholder={t("email_placeholder")}
+                    placeholder="your.email@example.com" 
                     className="bg-[#F1F0FB] border-[#E5DEFF]"
                     {...field} 
                     required 
@@ -95,12 +93,12 @@ const LoginForm = () => {
               <FormItem>
                 <FormLabel className="flex items-center">
                   <Lock className="h-4 w-4 mr-2 text-[#9b87f5]" />
-                  {t("password")}
+                  Password
                 </FormLabel>
                 <FormControl>
                   <Input 
                     type="password" 
-                    placeholder={t("password_placeholder")}
+                    placeholder="••••••••" 
                     className="bg-[#F1F0FB] border-[#E5DEFF]"
                     {...field} 
                     required 
@@ -118,13 +116,13 @@ const LoginForm = () => {
           >
             {loading ? (
               <span className="flex items-center">
-                <span className="mr-2">{t("signing_in")}</span>
+                <span className="mr-2">Signing in</span>
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               </span>
             ) : (
               <span className="flex items-center justify-center">
                 <LogIn className="h-4 w-4 mr-2" />
-                {t("sign_in")}
+                Sign in
               </span>
             )}
           </Button>

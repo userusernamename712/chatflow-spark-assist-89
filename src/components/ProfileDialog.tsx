@@ -15,15 +15,6 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchApiMetadata } from '@/services/apiService';
 import ApiDetailsDialog from './ApiDetailsDialog';
 import { useAuth } from '@/contexts/AuthContext';
-import { Languages } from 'lucide-react';
-import { useLanguage } from '@/hooks/useLanguage';
-import { 
-  Select, 
-  SelectTrigger, 
-  SelectValue, 
-  SelectContent, 
-  SelectItem 
-} from "@/components/ui/select";
 
 interface ProfileDialogProps {
   isOpen: boolean;
@@ -40,7 +31,6 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
     server: string;
   } | null>(null);
   const { startNewSession } = useAuth();
-  const { language, setLanguage, availableLanguages, languageLabel, t } = useLanguage();
 
   const { data: apiMetadata } = useQuery({
     queryKey: ['api-metadata', customerId],
@@ -66,15 +56,15 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden">
           <DialogHeader>
-            <DialogTitle>{t("profile_title")}</DialogTitle>
+            <DialogTitle>Profile & Settings</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-6">
             <div>
-              <label className="text-sm text-muted-foreground mb-2 block">{t("select_customer")}</label>
+              <label className="text-sm text-muted-foreground mb-2 block">Select Customer</label>
               <Input
                 type="text"
-                placeholder={t("search_customers")}
+                placeholder="Search customers..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="mb-2"
@@ -96,46 +86,23 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
             </div>
 
             <div>
-              <label className="text-sm text-muted-foreground mb-2 block">{t("language")}</label>
-              <div className="flex gap-3 items-center">
-                <Languages className="h-4 w-4 text-muted-foreground" />
-                <Select 
-                  value={language} 
-                  onValueChange={setLanguage}
-                >
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder={t("select_language")}>
-                      {languageLabel}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableLanguages.map(l => (
-                      <SelectItem key={l.code} value={l.code}>
-                        {l.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground mb-2 block">{t("api_capabilities")}</label>
+              <label className="text-sm text-muted-foreground mb-2 block">API Capabilities</label>
               <Tabs defaultValue="tools" className="w-full">
                 <TabsList className="w-full grid grid-cols-3 h-9">
                   <TabsTrigger value="tools">
                     <Wrench className="h-3 w-3 mr-1" />
-                    {t("tools")}
+                    Tools
                   </TabsTrigger>
                   <TabsTrigger value="resources">
                     <FileText className="h-3 w-3 mr-1" />
-                    {t("resources")}
+                    Resources
                   </TabsTrigger>
                   <TabsTrigger value="servers">
                     <Server className="h-3 w-3 mr-1" />
-                    {t("servers")}
+                    Servers
                   </TabsTrigger>
                 </TabsList>
+
                 <ScrollArea className="h-[50vh] mt-2 rounded-md border">
                   <TabsContent value="tools" className="p-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

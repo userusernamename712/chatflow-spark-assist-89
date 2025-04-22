@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,6 +14,7 @@ import { fetchConversation } from '@/services/conversationService';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import ConversationSidebar from '@/components/ConversationSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Share } from 'lucide-react';
 
 const Conversation = () => {
   const { conversationId } = useParams();
@@ -171,6 +171,23 @@ const Conversation = () => {
     navigate('/');
   };
 
+  const handleShare = async () => {
+    const url = `${window.location.origin}/c/${conversationId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied",
+        description: "Conversation link has been copied to clipboard",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to copy link to clipboard",
+      });
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
@@ -225,6 +242,15 @@ const Conversation = () => {
             <ChatHeader isHistoricalChat={true} />
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleShare}
+              className="border-[#E5DEFF] hover:bg-[#F1F0FB]"
+            >
+              <Share className="h-4 w-4 mr-2" />
+              Share
+            </Button>
             <Button 
               variant="outline" 
               size="sm" 

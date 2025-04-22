@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,7 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { CustomerProvider } from "./contexts/CustomerContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import Conversation from "./pages/Conversation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +28,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
+              <Route path="/c/:conversationId" element={<Conversation />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

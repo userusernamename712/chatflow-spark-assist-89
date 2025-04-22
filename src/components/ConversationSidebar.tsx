@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
+import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock, Share } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -75,7 +74,6 @@ const ConversationSidebar = ({
     queryKey: ['conversations', customerId],
     queryFn: () => fetchConversationHistory(customerId),
     enabled: !!customerId,
-    // Removed refetchInterval to stop frequent fetching
   });
   
   const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
@@ -178,6 +176,23 @@ const ConversationSidebar = ({
     });
   };
 
+  const handleShareConversation = async (conversationId: string) => {
+    const url = `${window.location.origin}/c/${conversationId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast({
+        title: "Link copied",
+        description: "Conversation link has been copied to clipboard",
+      });
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to copy link to clipboard",
+      });
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleString(undefined, {
@@ -223,7 +238,6 @@ const ConversationSidebar = ({
       onChangeCustomer(customerId);
       setSearchQuery('');
       
-      // Show toast notification when customer is selected
       const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
       toast({
         title: "Customer Selected",
@@ -313,6 +327,10 @@ const ConversationSidebar = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleShareConversation(conversation.session_id)}>
+                        <Share className="h-4 w-4 mr-2" />
+                        Share link
+                      </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleOpenFeedbackDialog(
                         conversation.session_id,
                         conversation.rating

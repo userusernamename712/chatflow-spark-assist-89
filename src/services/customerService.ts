@@ -6,7 +6,10 @@ interface Customer {
 
 interface CustomerResponse {
   data: Customer[];
-  next_start_after?: string;
+  pagination: {
+    total: number;
+    limit: number;
+  };
 }
 
 const API_URL = "https://papi.bookline.io/customers/ids_names";
@@ -42,6 +45,13 @@ export const fetchCustomers = async (): Promise<Customer[]> => {
       }
 
       customers.push(...data);
+      
+      // If we've fetched all customers or the number of customers is less than the limit,
+      // we're done fetching
+      if (data.length < limit) {
+        break;
+      }
+      
       nextStartAfter = data[data.length - 1].id;
     }
 

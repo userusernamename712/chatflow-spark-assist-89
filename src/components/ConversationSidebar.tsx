@@ -341,7 +341,7 @@ const ConversationSidebar = ({
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => {
-                          const shareUrl = `${window.location.origin}/conversation-analyzer/${conversation.session_id}`;
+                          const shareUrl = `${window.location.origin}/c/${conversation.session_id}`;
                           copyToClipboard(shareUrl);
                         }}
                       >

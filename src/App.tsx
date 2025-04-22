@@ -29,7 +29,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/conversation-analyzer/:conversation_id" element={<ConversationAnalyzerPage />} /> 
+              <Route path="/c/:conversation_id" element={<ConversationAnalyzerPage />} /> 
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

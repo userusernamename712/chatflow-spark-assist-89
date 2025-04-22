@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,6 +14,7 @@ import { fetchConversation } from '@/services/conversationService';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import ConversationSidebar from '@/components/ConversationSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Conversation = () => {
   const { conversationId } = useParams();
@@ -27,6 +27,7 @@ const Conversation = () => {
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (!isAuthenticated || !conversationId) {
@@ -176,7 +177,7 @@ const Conversation = () => {
       <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
         <div className="flex flex-col items-center">
           <div className="w-12 h-12 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-4"></div>
-          <div className="text-[#403E43]">Loading conversation...</div>
+          <div className="text-[#403E43]">{t("loading_conversation")}</div>
         </div>
       </div>
     );
@@ -231,7 +232,7 @@ const Conversation = () => {
               onClick={() => navigate('/')}
               className="border-[#E5DEFF] hover:bg-[#F1F0FB]"
             >
-              Return to Home
+              {t("return_home")}
             </Button>
           </div>
         </div>

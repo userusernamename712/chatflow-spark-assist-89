@@ -1,4 +1,3 @@
-
 import { useCallback, useEffect, useState } from "react";
 
 export const TRANSLATIONS = {
@@ -34,7 +33,23 @@ export const TRANSLATIONS = {
     customer_selected_title: "Customer Selected",
     customer_selected_desc: "Switched to",
     new_conversation: "New conversation",
-    error_loading_conversations: "Error loading conversations"
+    error_loading_conversations: "Error loading conversations",
+    welcome_back: "Welcome back!",
+    login_success_desc: "You've logged in successfully to the bookline.AI team portal.",
+    chat_with_bookline: "Chat with Bookline's Data Analytics",
+    sign_in_to_access: "Sign in to access your assistant",
+    email: "Email",
+    email_placeholder: "your.email@example.com",
+    password: "Password",
+    password_placeholder: "••••••••",
+    sign_in: "Sign in",
+    signing_in: "Signing in",
+    auth_error: "Authentication error",
+    return_home: "Return to Home",
+    loading: "Loading",
+    loading_conversation: "Loading conversation",
+    viewing_chat_history: "viewing chat history",
+    online: "online"
   },
   ca: {
     profile_title: "Perfil i configuració",
@@ -68,7 +83,23 @@ export const TRANSLATIONS = {
     customer_selected_title: "Client seleccionat",
     customer_selected_desc: "S'ha canviat a",
     new_conversation: "Conversa nova",
-    error_loading_conversations: "Error en carregar les converses"
+    error_loading_conversations: "Error en carregar les converses",
+    welcome_back: "Benvingut/da de nou!",
+    login_success_desc: "Has iniciat sessió correctament al portal d'equip de bookline.AI.",
+    chat_with_bookline: "Xateja amb l'analítica de dades de Bookline",
+    sign_in_to_access: "Inicia sessió per accedir al teu assistent",
+    email: "Correu electrònic",
+    email_placeholder: "el.teu.correu@exemple.com",
+    password: "Contrasenya",
+    password_placeholder: "••••••••",
+    sign_in: "Iniciar sessió",
+    signing_in: "Iniciant sessió",
+    auth_error: "Error d'autenticació",
+    return_home: "Tornar a l'inici",
+    loading: "Carregant",
+    loading_conversation: "Carregant conversa",
+    viewing_chat_history: "visualitzant historial",
+    online: "en línia"
   },
   es: {
     profile_title: "Perfil y configuración",
@@ -102,7 +133,23 @@ export const TRANSLATIONS = {
     customer_selected_title: "Cliente seleccionado",
     customer_selected_desc: "Cambiado a",
     new_conversation: "Conversación nueva",
-    error_loading_conversations: "Error al cargar conversaciones"
+    error_loading_conversations: "Error al cargar conversaciones",
+    welcome_back: "¡Bienvenido/a de nuevo!",
+    login_success_desc: "Has iniciado sesión correctamente en el portal de equipo de bookline.AI.",
+    chat_with_bookline: "Chatea con el análisis de datos de Bookline",
+    sign_in_to_access: "Inicia sesión para acceder a tu asistente",
+    email: "Correo electrónico",
+    email_placeholder: "tu.correo@ejemplo.com",
+    password: "Contraseña",
+    password_placeholder: "••••••••",
+    sign_in: "Iniciar sesión",
+    signing_in: "Iniciando sesión",
+    auth_error: "Error de autenticación",
+    return_home: "Volver al inicio",
+    loading: "Cargando",
+    loading_conversation: "Cargando conversación",
+    viewing_chat_history: "viendo historial",
+    online: "en línea"
   }
 };
 
@@ -114,7 +161,6 @@ const LANGUAGES = [
 
 const LANGUAGE_KEY = "selected-language";
 
-// Helper for getting the current language and translation lookup
 export function useLanguage() {
   const [language, setLanguageState] = useState<string>(() => {
     return localStorage.getItem(LANGUAGE_KEY) || "en";
@@ -128,7 +174,6 @@ export function useLanguage() {
     setLanguageState(code);
   }, []);
 
-  // t(key) for getting translation for the current language
   const t = useCallback(
     (key: keyof typeof TRANSLATIONS["en"]) => {
       return (

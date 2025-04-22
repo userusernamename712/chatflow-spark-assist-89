@@ -1,12 +1,15 @@
 
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
+import { useLanguage } from '@/hooks/useLanguage';
 
 interface ChatHeaderProps {
   isHistoricalChat?: boolean;
 }
 
 const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
+  const { t } = useLanguage();
+  
   return (
     <div className="flex items-center">
       <div className="relative h-10 w-10">
@@ -21,7 +24,7 @@ const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
         <div className="flex items-center text-xs">
           <span className="h-1.5 w-1.5 rounded-full bg-[#8B5CF6] animate-pulse mr-1.5"></span>
           <span className="text-[#8E9196]">
-            {isHistoricalChat ? 'viewing chat history' : 'online'}
+            {isHistoricalChat ? t("viewing_chat_history") : t("online")}
           </span>
         </div>
       </div>

@@ -39,13 +39,13 @@ const MessageBubble = ({
     const processedContent = preprocessMarkdownContent(content);
     
     return (
-      <div className="markdown-wrapper space-y-3"> {/* Increased vertical spacing */}
+      <div className="markdown-wrapper space-y-3">
         <ReactMarkdown 
           remarkPlugins={[remarkGfm]}
           rehypePlugins={[rehypeRaw]}
           components={{
             p: ({ node, ...props }) => (
-              <p className="mb-3" {...props} /> // Added margin bottom for paragraphs
+              <p className="mb-3" {...props} />
             ),
             h1: ({ node, ...props }) => (
               <h1 className="text-xl font-bold mt-4 mb-2" {...props} />
@@ -66,7 +66,7 @@ const MessageBubble = ({
               <li className="mb-1" {...props} />
             ),
             table: ({ node, ...props }) => (
-              <div className="overflow-x-auto my-4"> {/* Increased margin */}
+              <div className="overflow-x-auto my-4">
                 <table className="border-collapse w-full" {...props} />
               </div>
             ),
@@ -97,6 +97,14 @@ const MessageBubble = ({
               <pre className="bg-gray-100 p-3 rounded-md overflow-x-auto text-sm my-3" {...props}>
                 {children}
               </pre>
+            ),
+            a: ({ node, ...props }) => (
+              <a 
+                className="text-[#1EAEDB] hover:text-[#0FA0CE] underline" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                {...props} 
+              />
             )
           }}
         >
@@ -108,10 +116,8 @@ const MessageBubble = ({
 
   // Helper function to preprocess content and convert markdown tables to HTML
   const preprocessMarkdownContent = (text: string): string => {
-    // If there's no table-like content, return as is
     if (!text.includes('|')) return text;
     
-    // Split by lines to identify potential tables
     const lines = text.split('\n');
     let inTable = false;
     let tableHTML = '';
@@ -120,25 +126,20 @@ const MessageBubble = ({
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // Check if line is part of a table
       if (line.startsWith('|') && line.endsWith('|')) {
         if (!inTable) {
-          // Start a new table
           inTable = true;
           tableHTML = '<table>';
           
-          // If this is the first row and the next row exists and has separator characters
           if (i + 1 < lines.length && lines[i + 1].includes('|-')) {
-            // This is a header row
             tableHTML += '<thead><tr>';
             const cells = line.split('|').filter(cell => cell !== '');
             cells.forEach(cell => {
               tableHTML += `<th>${cell.trim()}</th>`;
             });
             tableHTML += '</tr></thead><tbody>';
-            i++; // Skip the separator row
+            i++;
           } else {
-            // Regular row, no headers
             tableHTML += '<tbody><tr>';
             const cells = line.split('|').filter(cell => cell !== '');
             cells.forEach(cell => {
@@ -147,7 +148,6 @@ const MessageBubble = ({
             tableHTML += '</tr>';
           }
         } else {
-          // Continue the table with another row
           tableHTML += '<tr>';
           const cells = line.split('|').filter(cell => cell !== '');
           cells.forEach(cell => {
@@ -156,18 +156,15 @@ const MessageBubble = ({
           tableHTML += '</tr>';
         }
       } else if (inTable) {
-        // End the table if we encounter a non-table line
         tableHTML += '</tbody></table>';
         processedLines.push(tableHTML);
         inTable = false;
         processedLines.push(line);
       } else {
-        // Regular non-table line
         processedLines.push(line);
       }
     }
     
-    // If the last line was part of a table, close it
     if (inTable) {
       tableHTML += '</tbody></table>';
       processedLines.push(tableHTML);

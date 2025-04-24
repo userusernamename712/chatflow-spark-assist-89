@@ -1,12 +1,17 @@
 
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
+import { useCustomers } from '@/contexts/CustomerContext';
 
 interface ChatHeaderProps {
   isHistoricalChat?: boolean;
 }
 
 const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
+  const { customers } = useCustomers();
+  const selectedCustomerId = localStorage.getItem('selectedCustomerId');
+  const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+
   return (
     <div className="flex items-center">
       <div className="relative h-10 w-10">
@@ -17,7 +22,14 @@ const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
         />
       </div>
       <div className="ml-3">
-        <h1 className="font-bold text-md text-[#1A1F2C]">bookline.AI</h1>
+        <h1 className="font-bold text-md text-[#1A1F2C]">
+          bookline.AI
+          {selectedCustomer && (
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              ({selectedCustomer.name})
+            </span>
+          )}
+        </h1>
         <div className="flex items-center text-xs">
           <span className="h-1.5 w-1.5 rounded-full bg-[#8B5CF6] animate-pulse mr-1.5"></span>
           <span className="text-[#8E9196]">

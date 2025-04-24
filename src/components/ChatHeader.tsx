@@ -2,6 +2,7 @@
 import React from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useCustomers } from '@/contexts/CustomerContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatHeaderProps {
   isHistoricalChat?: boolean;
@@ -9,7 +10,8 @@ interface ChatHeaderProps {
 
 const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
   const { customers } = useCustomers();
-  const selectedCustomerId = localStorage.getItem('selectedCustomerId');
+  const { selectedCustomerId } = useAuth();
+  
   const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
 
   return (

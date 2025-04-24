@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { MessageSquare } from 'lucide-react';
 import { useCustomers } from '@/contexts/CustomerContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 
 interface ChatHeaderProps {
   isHistoricalChat?: boolean;
@@ -11,8 +12,22 @@ interface ChatHeaderProps {
 const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
   const { customers } = useCustomers();
   const { selectedCustomerId } = useAuth();
+  const [customerName, setCustomerName] = useState<string | null>(null);
   
-  const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+  useEffect(() => {
+    // First try to find customer in the fetched customers list
+    const foundCustomer = customers.find(c => c.id === selectedCustomerId);
+    
+    if (foundCustomer) {
+      setCustomerName(foundCustomer.name);
+    } else {
+      // Fallback to available customers if not found in fetched list
+      const availableCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === selectedCustomerId);
+      if (availableCustomer) {
+        setCustomerName(availableCustomer.name);
+      }
+    }
+  }, [selectedCustomerId, customers]);
 
   return (
     <div className="flex items-center">
@@ -26,9 +41,9 @@ const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
       <div className="ml-3">
         <h1 className="font-bold text-md text-[#1A1F2C]">
           bookline.AI
-          {selectedCustomer && (
+          {customerName && (
             <span className="ml-2 text-sm font-normal text-gray-500">
-              ({selectedCustomer.name})
+              ({customerName})
             </span>
           )}
         </h1>

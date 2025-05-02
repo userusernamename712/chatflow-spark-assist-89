@@ -2,6 +2,7 @@
 import { ChatEvent } from './chat';
 
 export interface Conversation {
+  user: string;
   created_at: string;
   updated_at: string;
   messages: Array<{

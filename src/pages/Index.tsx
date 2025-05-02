@@ -91,6 +91,7 @@ const Index = () => {
     sendChatMessage(
       {
         session_id: sessionId,
+        user: user.email,
         customer_id: selectedCustomerId,
         prompt: content.trim(),
       },

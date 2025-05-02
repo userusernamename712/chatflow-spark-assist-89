@@ -1,6 +1,7 @@
 
 export interface ChatRequest {
   session_id: string | null;
+  user: string | null;
   customer_id: string;
   prompt: string;
 }

@@ -89,6 +89,7 @@ const Conversation = () => {
     sendChatMessage(
       {
         session_id: conversationId || null,
+        user: user.email || null,
         customer_id: selectedCustomerId,
         prompt: content.trim(),
       },

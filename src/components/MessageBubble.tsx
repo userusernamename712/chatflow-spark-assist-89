@@ -116,6 +116,15 @@ const MessageBubble = ({
 
   // Helper function to preprocess content and convert markdown tables to HTML
   const preprocessMarkdownContent = (text: string): string => {
+    if (!text) return '';
+    
+    // Convert plain URLs to markdown links if they're not already in markdown format
+    const urlRegex = /(https?:\/\/[^\s]+)(?![^\(]*\))(?![^\[]*\])/g;
+    text = text.replace(urlRegex, (url) => {
+      return `[${url}](${url})`;
+    });
+    
+    // Process tables if present
     if (!text.includes('|')) return text;
     
     const lines = text.split('\n');

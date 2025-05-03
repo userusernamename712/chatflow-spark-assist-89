@@ -15,6 +15,7 @@ import { fetchConversation } from '@/services/conversationService';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import ConversationSidebar from '@/components/ConversationSidebar';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { ToolCall } from '@/types/conversation';
 
 const Conversation = () => {
   const { conversationId } = useParams();
@@ -39,13 +40,78 @@ const Conversation = () => {
         setIsLoading(true);
         const conversation = await fetchConversation(conversationId);
         
-        const mappedMessages: Message[] = conversation.messages
-          .filter(m => m.role !== 'system')
-          .map(m => ({
-            id: uuidv4(),
-            type: m.role === 'user' ? 'user' : 'assistant',
-            content: m.content,
-          }));
+        const mappedMessages: Message[] = [];
+        
+        // Convert Firestore conversation messages to our UI Message format
+        conversation.messages.forEach(m => {
+          // Skip system messages
+          if (m.role === 'system') return;
+          
+          // Handle user messages
+          if (m.role === 'user' && m.content) {
+            mappedMessages.push({
+              id: uuidv4(),
+              type: 'user',
+              content: m.content,
+            });
+          } 
+          // Handle assistant messages with tool calls
+          else if (m.role === 'assistant') {
+            if (m.content) {
+              mappedMessages.push({
+                id: uuidv4(),
+                type: 'assistant',
+                content: m.content,
+              });
+            }
+            
+            // Handle tool_calls if present
+            if (m.tool_calls && m.tool_calls.length > 0) {
+              m.tool_calls.forEach(toolCall => {
+                let args;
+                try {
+                  args = JSON.parse(toolCall.function.arguments);
+                } catch (e) {
+                  args = { error: "Could not parse arguments" };
+                }
+                
+                mappedMessages.push({
+                  id: uuidv4(),
+                  type: 'tool_call',
+                  content: `Using ${toolCall.function.name}...`,
+                  tool: toolCall.function.name,
+                  arguments: args,
+                  toolCallId: toolCall.id,
+                  // Result will be populated when we find matching tool message
+                });
+              });
+            }
+          } 
+          // Handle tool results
+          else if (m.role === 'tool' && m.content && m.tool_call_id) {
+            // Find the matching tool_call message
+            const toolCallIndex = mappedMessages.findIndex(
+              msg => msg.type === 'tool_call' && msg.toolCallId === m.tool_call_id
+            );
+            
+            if (toolCallIndex !== -1) {
+              // Parse tool result if it's a JSON string
+              let result;
+              try {
+                result = JSON.parse(m.content);
+              } catch (e) {
+                // If not valid JSON, use as-is
+                result = m.content;
+              }
+              
+              // Update the existing tool call with the result
+              mappedMessages[toolCallIndex] = {
+                ...mappedMessages[toolCallIndex],
+                result: result
+              };
+            }
+          }
+        });
         
         setMessages(mappedMessages);
         setRetryCount(0); // Reset retry count on success

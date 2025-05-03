@@ -24,4 +24,5 @@ export interface Message {
   tool?: string;
   arguments?: Record<string, any>;
   result?: any;
+  toolCallId?: string; // Added to track which tool call a result belongs to
 }

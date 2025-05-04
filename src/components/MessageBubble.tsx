@@ -242,7 +242,6 @@ const MessageBubble = ({
             try {
               parsedResult = typeof toolResult === 'string' ? JSON.parse(toolResult) : toolResult ?? {};
             } catch (e) {
-              console.error('Failed to parse toolResult:', e);
             }
 
             const hasDateRange = parsedResult?.start_date && parsedResult?.end_date;

@@ -267,9 +267,9 @@ const MessageBubble = ({
                 )}
 
                 <div className="flex items-center flex-wrap gap-2 text-xs text-gray-700">
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full border border-blue-200">
-                    🤖 Bot scope: <strong>{hasBotIds ? toolArgs.bot_ids.join(', ') : 'all bots'}</strong>
-                  </span>
+                <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md border border-blue-200 text-xs">
+                  🤖 Bot scope: <strong>{hasBotIds ? toolArgs.bot_ids.join(', ') : 'all bots'}</strong>
+                </span>
                 </div>
               </div>
             );

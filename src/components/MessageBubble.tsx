@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { MessageSquare, Terminal, User } from 'lucide-react';
@@ -30,6 +31,42 @@ const MessageBubble = ({
 }: MessageBubbleProps) => {
   const isUser = type === 'user';
   const isTool = type === 'tool';
+  
+  // Function to format date if available
+  const formatDateRange = () => {
+    if (!toolResult) return null;
+    
+    let startDate = null;
+    let endDate = null;
+    
+    if (typeof toolResult === 'object') {
+      startDate = toolResult.start_date;
+      endDate = toolResult.end_date;
+    }
+    
+    if (!startDate || !endDate) return null;
+    
+    try {
+      // Format dates in a user-friendly way
+      const formatDate = (dateString: string) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        });
+      };
+      
+      return (
+        <div className="mt-1 text-xs text-gray-500 italic">
+          Data from: {formatDate(startDate)} to {formatDate(endDate)}
+        </div>
+      );
+    } catch (error) {
+      console.error("Error formatting date range:", error);
+      return null;
+    }
+  };
   
   // Function to render content with proper handling of Markdown
   const renderContent = () => {
@@ -204,30 +241,35 @@ const MessageBubble = ({
 
         <div className="space-y-1 flex-1 overflow-x-auto">
           {isTool && toolName && toolResult && (
-            <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 shadow-sm">
-              <span className="font-medium text-gray-900">
-                {toolName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-              </span>
+            <div className="flex flex-col bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 shadow-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-gray-900">
+                  {toolName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                </span>
 
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="ml-2 underline cursor-help text-blue-600 hover:opacity-90 transition text-xs font-normal"
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span
+                        className="ml-2 underline cursor-help text-blue-600 hover:opacity-90 transition text-xs font-normal"
+                      >
+                        View result
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent
+                      side="top"
+                      className="max-w-sm break-words text-left whitespace-pre-wrap text-[11px] font-mono"
                     >
-                      View result
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    side="top"
-                    className="max-w-sm break-words text-left whitespace-pre-wrap text-[11px] font-mono"
-                  >
-                    {typeof toolResult === 'object'
-                      ? JSON.stringify(toolResult, null, 2)
-                      : String(toolResult)}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+                      {typeof toolResult === 'object'
+                        ? JSON.stringify(toolResult, null, 2)
+                        : String(toolResult)}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              
+              {/* Display date range information */}
+              {formatDateRange()}
             </div>
           )}
 
@@ -247,6 +289,9 @@ const MessageBubble = ({
                     ? toolArgs.bot_ids.join(', ')
                     : 'all bots'}
                 </strong>.
+                
+                {/* Display date range if available */}
+                {formatDateRange()}
               </div>
             </div>
           )}

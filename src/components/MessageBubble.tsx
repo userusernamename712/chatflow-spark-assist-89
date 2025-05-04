@@ -31,41 +31,6 @@ const MessageBubble = ({
   const isUser = type === 'user';
   const isTool = type === 'tool';
   
-  // Function to format date if available
-  const formatDateRange = () => {
-    if (!toolResult) return null;
-    
-    let startDate = null;
-    let endDate = null;
-    
-    if (typeof toolResult === 'object') {
-      startDate = toolResult.start_date;
-      endDate = toolResult.end_date;
-    }
-    
-    if (!startDate || !endDate) return null;
-    
-    try {
-      // Format dates in a user-friendly way
-      const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        });
-      };
-      
-      return {
-        startFormatted: formatDate(startDate),
-        endFormatted: formatDate(endDate)
-      };
-    } catch (error) {
-      console.error("Error formatting date range:", error);
-      return null;
-    }
-  };
-  
   // Function to render content with proper handling of Markdown
   const renderContent = () => {
     if (isStreaming) return <span className="text-[#333333]">{content}</span>;
@@ -217,8 +182,6 @@ const MessageBubble = ({
     return processedLines.join('\n');
   };
 
-  const dateRange = formatDateRange();
-
   return (
     <div
       className={cn(
@@ -241,38 +204,30 @@ const MessageBubble = ({
 
         <div className="space-y-1 flex-1 overflow-x-auto">
           {isTool && toolName && toolResult && (
-            <div className="flex flex-col bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 shadow-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-medium text-gray-900">
-                  {toolName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                </span>
+            <div className="flex items-center justify-between bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 shadow-sm">
+              <span className="font-medium text-gray-900">
+                {toolName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </span>
 
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span
-                        className="ml-2 underline cursor-help text-blue-600 hover:opacity-90 transition text-xs font-normal"
-                      >
-                        View result
-                      </span>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      side="top"
-                      className="max-w-sm break-words text-left whitespace-pre-wrap text-[11px] font-mono"
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="ml-2 underline cursor-help text-blue-600 hover:opacity-90 transition text-xs font-normal"
                     >
-                      {typeof toolResult === 'object'
-                        ? JSON.stringify(toolResult, null, 2)
-                        : String(toolResult)}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-              
-              {dateRange && (
-                <div className="mt-1 text-xs text-gray-500 italic">
-                  Data from: {dateRange.startFormatted} to {dateRange.endFormatted}
-                </div>
-              )}
+                      View result
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    side="top"
+                    className="max-w-sm break-words text-left whitespace-pre-wrap text-[11px] font-mono"
+                  >
+                    {typeof toolResult === 'object'
+                      ? JSON.stringify(toolResult, null, 2)
+                      : String(toolResult)}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
 
@@ -285,19 +240,14 @@ const MessageBubble = ({
           {isTool && (
             <div className="text-sm text-gray-600 space-y-1">
               <div>Using tool to look up information...</div>
-              {dateRange ? (
-                <div className="text-xs text-gray-700 font-medium">
-                  Data range: <span className="bg-blue-50 px-1.5 py-0.5 rounded-md">{dateRange.startFormatted}</span> to <span className="bg-blue-50 px-1.5 py-0.5 rounded-md">{dateRange.endFormatted}</span>
-                </div>
-              ) : (
-                <div className="text-xs text-gray-700">
-                  Querying data for <strong>
-                    {toolArgs?.bot_ids?.length
-                      ? toolArgs.bot_ids.join(', ')
-                      : 'all bots'}
-                  </strong>.
-                </div>
-              )}
+              <div className="text-xs text-gray-700">
+                Querying data from the last <strong>{toolArgs?.days ?? 1}</strong> day{(toolArgs?.days ?? 1) !== 1 ? 's' : ''}{' '}
+                for <strong>
+                  {toolArgs?.bot_ids?.length
+                    ? toolArgs.bot_ids.join(', ')
+                    : 'all bots'}
+                </strong>.
+              </div>
             </div>
           )}
         </div>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { MessageSquare, Terminal, User } from 'lucide-react';
@@ -57,11 +56,10 @@ const MessageBubble = ({
         });
       };
       
-      return (
-        <div className="mt-1 text-xs text-gray-500 italic">
-          Data from: {formatDate(startDate)} to {formatDate(endDate)}
-        </div>
-      );
+      return {
+        startFormatted: formatDate(startDate),
+        endFormatted: formatDate(endDate)
+      };
     } catch (error) {
       console.error("Error formatting date range:", error);
       return null;
@@ -219,6 +217,8 @@ const MessageBubble = ({
     return processedLines.join('\n');
   };
 
+  const dateRange = formatDateRange();
+
   return (
     <div
       className={cn(
@@ -268,8 +268,11 @@ const MessageBubble = ({
                 </TooltipProvider>
               </div>
               
-              {/* Display date range information */}
-              {formatDateRange()}
+              {dateRange && (
+                <div className="mt-1 text-xs text-gray-500 italic">
+                  Data from: {dateRange.startFormatted} to {dateRange.endFormatted}
+                </div>
+              )}
             </div>
           )}
 
@@ -282,17 +285,19 @@ const MessageBubble = ({
           {isTool && (
             <div className="text-sm text-gray-600 space-y-1">
               <div>Using tool to look up information...</div>
-              <div className="text-xs text-gray-700">
-                Querying data from the last <strong>{toolArgs?.days ?? 1}</strong> day{(toolArgs?.days ?? 1) !== 1 ? 's' : ''}{' '}
-                for <strong>
-                  {toolArgs?.bot_ids?.length
-                    ? toolArgs.bot_ids.join(', ')
-                    : 'all bots'}
-                </strong>.
-                
-                {/* Display date range if available */}
-                {formatDateRange()}
-              </div>
+              {dateRange ? (
+                <div className="text-xs text-gray-700 font-medium">
+                  Data range: <span className="bg-blue-50 px-1.5 py-0.5 rounded-md">{dateRange.startFormatted}</span> to <span className="bg-blue-50 px-1.5 py-0.5 rounded-md">{dateRange.endFormatted}</span>
+                </div>
+              ) : (
+                <div className="text-xs text-gray-700">
+                  Querying data for <strong>
+                    {toolArgs?.bot_ids?.length
+                      ? toolArgs.bot_ids.join(', ')
+                      : 'all bots'}
+                  </strong>.
+                </div>
+              )}
             </div>
           )}
         </div>

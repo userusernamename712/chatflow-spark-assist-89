@@ -237,19 +237,44 @@ const MessageBubble = ({
             </div>
           )}
           
-          {isTool && (
-            <div className="text-sm text-gray-600 space-y-1">
-              <div>Using tool to look up information...</div>
-              <div className="text-xs text-gray-700">
-                Querying data from the last <strong>{toolArgs?.days ?? 1}</strong> day{(toolArgs?.days ?? 1) !== 1 ? 's' : ''}{' '}
-                for <strong>
-                  {toolArgs?.bot_ids?.length
-                    ? toolArgs.bot_ids.join(', ')
-                    : 'all bots'}
-                </strong>.
+          {isTool && (() => {
+            let parsedResult: Record<string, any> = {};
+            try {
+              parsedResult = typeof toolResult === 'string' ? JSON.parse(toolResult) : toolResult ?? {};
+            } catch (e) {
+              console.error('Failed to parse toolResult:', e);
+            }
+
+            const hasDateRange = parsedResult?.start_date && parsedResult?.end_date;
+            const hasBotIds = toolArgs?.bot_ids?.length > 0;
+
+            return (
+              <div className="text-sm text-gray-600 space-y-2">
+                <div className="font-medium text-gray-800 flex items-center gap-2">
+                  <Terminal size={14} className="text-purple-600" />
+                  Tool execution summary
+                </div>
+
+                {hasDateRange && (
+                  <div className="flex items-center flex-wrap gap-2 text-xs text-gray-700">
+                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full border border-gray-300">
+                      ⏱ From: <strong>{new Date(parsedResult.start_date).toLocaleString()}</strong>
+                    </span>
+                    <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded-full border border-gray-300">
+                      ⏱ To: <strong>{new Date(parsedResult.end_date).toLocaleString()}</strong>
+                    </span>
+                  </div>
+                )}
+
+                <div className="flex items-center flex-wrap gap-2 text-xs text-gray-700">
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full border border-blue-200">
+                    🤖 Bot scope: <strong>{hasBotIds ? toolArgs.bot_ids.join(', ') : 'all bots'}</strong>
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
+
         </div>
         
         {isUser && (

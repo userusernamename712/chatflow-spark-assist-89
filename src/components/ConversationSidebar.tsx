@@ -395,22 +395,37 @@ const ConversationSidebar = ({
             </DialogDescription>
           </DialogHeader>
           
-          <div className="flex justify-center space-x-2 py-4">
-            {[1, 2, 3, 4, 5].map((rating) => (
-              <button
-                key={rating}
-                onClick={() => setFeedbackDialog(prev => ({ ...prev, rating }))}
-                className="focus:outline-none transition-transform hover:scale-110"
-              >
-                {feedbackDialog.rating && rating <= feedbackDialog.rating ? (
-                  <Star className="h-8 w-8 text-yellow-400" />
-                ) : (
-                  <StarOff className="h-8 w-8 text-gray-300" />
-                )}
-              </button>
-            ))}
+          <div className="flex justify-center py-4 space-x-1">
+            {[1, 2, 3, 4, 5].map((star) => {
+              const isActive = star <= (feedbackDialog.rating ?? 0);
+              return (
+                <button
+                  key={star}
+                  type="button"
+                  onMouseEnter={() =>
+                    setFeedbackDialog((prev) => ({ ...prev, hoveredRating: star }))
+                  }
+                  onMouseLeave={() =>
+                    setFeedbackDialog((prev) => ({ ...prev, hoveredRating: undefined }))
+                  }
+                  onClick={() =>
+                    setFeedbackDialog((prev) => ({ ...prev, rating: star }))
+                  }
+                  className="p-1 transition-opacity"
+                >
+                  <Star
+                    size={20}
+                    className={
+                      isActive
+                        ? "text-[var(--primary-color)] fill-[var(--primary-color)]"
+                        : "text-gray-300"
+                    }
+                  />
+                </button>
+              );
+            })}
           </div>
-          
+
           <Textarea
             placeholder="Add your feedback here (optional)"
             value={feedbackDialog.feedback}

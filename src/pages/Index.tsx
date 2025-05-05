@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -17,6 +16,22 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
 import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import { fetchUserEngagement } from '@/services/userEngagementService';
+import { 
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
+} from '@/components/ui/table';
+import { 
+  Card, 
+  CardContent,
+  CardHeader, 
+  CardTitle 
+} from '@/components/ui/card';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -29,6 +44,25 @@ const Index = () => {
   const queryClient = useQueryClient();
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
+
+  // Fetch user engagement data for Hall of Shame
+  const { data: usersEngagement, isLoading: isLoadingEngagement } = useQuery({
+    queryKey: ['userEngagement'],
+    queryFn: fetchUserEngagement,
+    enabled: isAuthenticated,
+  });
+
+  // Sort users by conversation_count (ascending for least engaged)
+  const sortedUsers = usersEngagement
+    ? Object.entries(usersEngagement)
+        .sort(([, a], [, b]) => a.conversation_count - b.conversation_count)
+        .slice(0, 5) // Only show top 5 least engaged users
+        .map(([email, data], index) => ({
+          email,
+          rank: index + 1,
+          ...data
+        }))
+    : [];
 
   useEffect(() => {
     if (sessionId) {
@@ -351,37 +385,84 @@ const Index = () => {
         </SheetContent>
       </Sheet>
       
-      <div className="flex flex-col flex-1 max-w-3xl mx-auto bg-white shadow-lg rounded-lg overflow-hidden border border-[#E5DEFF]">
-        <div className="flex items-center justify-between p-4 border-b bg-white">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="md:hidden mr-2"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <ChatHeader />
-          </div>
-        </div>
-        
-        {isLoadingConversation ? (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex flex-col items-center">
-              <div className="w-8 h-8 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-2"></div>
-              <div className="text-sm text-[#403E43]">Loading conversation...</div>
+      <div className="flex flex-1 max-w-6xl mx-auto gap-4 p-4">
+        {/* Chat Container */}
+        <div className="flex flex-col flex-1 bg-white shadow-lg rounded-lg overflow-hidden border border-[#E5DEFF]">
+          <div className="flex items-center justify-between p-4 border-b bg-white">
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="md:hidden mr-2"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <Menu className="h-5 w-5" />
+              </Button>
+              <ChatHeader />
             </div>
           </div>
-        ) : (
-          <ChatContainer 
-            messages={messages} 
-            isProcessing={isProcessing} 
-            onSendTypicalQuestion={handleSendTypicalQuestion}
-          />
-        )}
-        
-        <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing || isLoadingConversation} />
+          
+          {isLoadingConversation ? (
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex flex-col items-center">
+                <div className="w-8 h-8 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-2"></div>
+                <div className="text-sm text-[#403E43]">Loading conversation...</div>
+              </div>
+            </div>
+          ) : (
+            <ChatContainer 
+              messages={messages} 
+              isProcessing={isProcessing} 
+              onSendTypicalQuestion={handleSendTypicalQuestion}
+            />
+          )}
+          
+          <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing || isLoadingConversation} />
+        </div>
+
+        {/* Hall of Shame - Embedded directly in the main page */}
+        <div className={`${isMobile ? 'hidden' : 'flex'} flex-col w-80`}>
+          <Card className="shadow-lg h-full">
+            <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-lg">
+              <CardTitle className="text-xl font-bold">Hall of Shame</CardTitle>
+            </CardHeader>
+            <CardContent className="pt-4 overflow-auto">
+              {isLoadingEngagement ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-12">#</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead className="text-right">Chats</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedUsers.map((user) => (
+                      <TableRow key={user.email} className="hover:bg-purple-50">
+                        <TableCell className="font-medium">{user.rank}</TableCell>
+                        <TableCell className="max-w-[120px] truncate" title={user.email}>
+                          {user.email}
+                        </TableCell>
+                        <TableCell className="text-right">{user.conversation_count}</TableCell>
+                      </TableRow>
+                    ))}
+                    {sortedUsers.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={3} className="text-center py-8 text-gray-500">
+                          No data available
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

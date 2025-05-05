@@ -1,9 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Trophy } from 'lucide-react';
 import { useCustomers } from '@/contexts/CustomerContext';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ChatHeaderProps {
   isHistoricalChat?: boolean;
@@ -41,23 +38,6 @@ const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
           </div>
         </div>
       </div>
-
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Link 
-              to="/hall-of-shame" 
-              className="p-2 rounded-full hover:bg-purple-100 transition-colors"
-              aria-label="Hall of Shame"
-            >
-              <Trophy className="h-5 w-5 text-[#8B5CF6]" />
-            </Link>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>View Hall of Shame</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
     </div>
   );
 };

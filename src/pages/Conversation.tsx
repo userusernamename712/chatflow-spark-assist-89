@@ -41,7 +41,6 @@ const Conversation = () => {
         const conversation = await fetchConversation(conversationId);
         
         const mappedMessages: Message[] = [];
-        let assistantMessageIndex = 0;
         
         // Store the interactions ratings
         setInteractionsRating(conversation.interactions_rating || {});
@@ -67,9 +66,8 @@ const Conversation = () => {
                 id: uuidv4(),
                 type: 'assistant',
                 content: m.content,
-                messageIndex: index,
+                messageIndex: index, // Ensure all assistant messages get an index
               });
-              assistantMessageIndex++;
             }
             
             // Handle tool_calls if present
@@ -204,7 +202,7 @@ const Conversation = () => {
               type: 'assistant',
               content: event.message || '',
               isStreaming: !event.finished,
-              messageIndex: currentMessages.length,
+              messageIndex: currentMessages.length, // Ensure messageIndex is set correctly
             },
           ];
         }
@@ -221,7 +219,7 @@ const Conversation = () => {
           tool: event.tool,
           arguments: event.arguments,
           result: event.result,
-          messageIndex: prev.length,
+          messageIndex: prev.length, // Ensure messageIndex is set
         },
       ]);
     } else if (event.type === 'error') {

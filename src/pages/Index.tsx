@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -45,6 +44,7 @@ const Index = () => {
   const queryClient = useQueryClient();
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
+  const [interactionsRating, setInteractionsRating] = useState<Record<string, number>>({});
 
   // Fetch user engagement data for Hall of Shame
   const { data: usersEngagement, isLoading: isLoadingEngagement } = useQuery({
@@ -78,8 +78,11 @@ const Index = () => {
       
       const mappedMessages: Message[] = [];
       
+      // Store interactions ratings for loaded conversation
+      setInteractionsRating(conversation.interactions_rating || {});
+      
       // Convert Firestore conversation messages to our UI Message format
-      conversation.messages.forEach(m => {
+      conversation.messages.forEach((m, index) => {
         // Skip system messages
         if (m.role === 'system') return;
         
@@ -89,6 +92,7 @@ const Index = () => {
             id: uuidv4(),
             type: 'user',
             content: m.content,
+            messageIndex: index,
           });
         } 
         // Handle assistant messages with tool calls
@@ -98,6 +102,7 @@ const Index = () => {
               id: uuidv4(),
               type: 'assistant',
               content: m.content,
+              messageIndex: index, // Ensure all assistant messages get an index
             });
           }
           
@@ -274,7 +279,7 @@ const Index = () => {
               type: 'assistant',
               content: event.message || '',
               isStreaming: !event.finished,
-              messageIndex: prev.length,
+              messageIndex: prev.length, // Ensure messageIndex is set correctly
             },
           ];
         }
@@ -299,7 +304,7 @@ const Index = () => {
           tool: event.tool,
           arguments: event.arguments,
           result: event.result,
-          messageIndex: prev.length,
+          messageIndex: prev.length, // Ensure messageIndex is set
         },
       ]);
     } else if (event.type === 'error') {
@@ -418,7 +423,7 @@ const Index = () => {
               isProcessing={isProcessing} 
               onSendTypicalQuestion={handleSendTypicalQuestion}
               conversationId={sessionId}
-              interactionsRating={{}} // Empty object since it's a new chat
+              interactionsRating={interactionsRating} // Pass interactionsRating to ChatContainer
             />
           )}
           

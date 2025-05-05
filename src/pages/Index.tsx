@@ -420,10 +420,9 @@ const Index = () => {
           <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing || isLoadingConversation} />
         </div>
 
-        {/* Hall of Shame - Embedded directly in the main page */}
         <div className={`${isMobile ? 'hidden' : 'flex'} flex-col w-80`}>
           <Card className="shadow-lg h-full">
-            <CardHeader className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-lg">
+            <CardHeader className="bg-primary text-white rounded-t-lg">
               <CardTitle className="text-xl font-bold">Hall of Shame</CardTitle>
             </CardHeader>
             <CardContent className="pt-4 overflow-auto">
@@ -438,6 +437,7 @@ const Index = () => {
                       <TableHead className="w-12">#</TableHead>
                       <TableHead>User</TableHead>
                       <TableHead className="text-right">Chats</TableHead>
+                      <TableHead className="text-right">Mean messages</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -448,6 +448,7 @@ const Index = () => {
                           {user.email}
                         </TableCell>
                         <TableCell className="text-right">{user.conversation_count}</TableCell>
+                        <TableCell className="text-right">{user.mean_user_messages}</TableCell>
                       </TableRow>
                     ))}
                     {sortedUsers.length === 0 && (

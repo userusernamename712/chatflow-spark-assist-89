@@ -9,9 +9,17 @@ type ChatContainerProps = {
   messages: Message[];
   isProcessing: boolean;
   onSendTypicalQuestion?: (question: string) => void;
+  conversationId?: string;
+  interactionsRating?: Record<string, number>;
 };
 
-const ChatContainer = ({ messages, isProcessing, onSendTypicalQuestion }: ChatContainerProps) => {
+const ChatContainer = ({ 
+  messages, 
+  isProcessing, 
+  onSendTypicalQuestion,
+  conversationId,
+  interactionsRating = {}
+}: ChatContainerProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll when messages change or streaming updates
@@ -70,6 +78,7 @@ const ChatContainer = ({ messages, isProcessing, onSendTypicalQuestion }: ChatCo
                   key={message.id}
                   type="user"
                   content={message.content}
+                  messageIndex={message.messageIndex}
                 />
               );
             } else if (message.type === 'tool_call') {
@@ -81,6 +90,7 @@ const ChatContainer = ({ messages, isProcessing, onSendTypicalQuestion }: ChatCo
                   toolName={message.tool}
                   toolArgs={message.arguments}
                   toolResult={message.result}
+                  messageIndex={message.messageIndex}
                 />
               );
             } else {
@@ -90,6 +100,9 @@ const ChatContainer = ({ messages, isProcessing, onSendTypicalQuestion }: ChatCo
                   type="assistant"
                   content={message.content}
                   isStreaming={message.isStreaming}
+                  conversationId={conversationId}
+                  messageIndex={message.messageIndex}
+                  interactionsRating={interactionsRating}
                 />
               );
             }

@@ -27,6 +27,7 @@ const Conversation = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [retryCount, setRetryCount] = useState(0);
+  const [interactionsRating, setInteractionsRating] = useState<Record<string, number>>({});
   const maxRetries = 3;
 
   useEffect(() => {
@@ -41,9 +42,13 @@ const Conversation = () => {
         const conversation = await fetchConversation(conversationId);
         
         const mappedMessages: Message[] = [];
+        let assistantMessageIndex = 0;
+        
+        // Store the interactions ratings
+        setInteractionsRating(conversation.interactions_rating || {});
         
         // Convert Firestore conversation messages to our UI Message format
-        conversation.messages.forEach(m => {
+        conversation.messages.forEach((m, index) => {
           // Skip system messages
           if (m.role === 'system') return;
           
@@ -53,6 +58,7 @@ const Conversation = () => {
               id: uuidv4(),
               type: 'user',
               content: m.content,
+              messageIndex: index,
             });
           } 
           // Handle assistant messages with tool calls
@@ -62,7 +68,9 @@ const Conversation = () => {
                 id: uuidv4(),
                 type: 'assistant',
                 content: m.content,
+                messageIndex: index,
               });
+              assistantMessageIndex++;
             }
             
             // Handle tool_calls if present
@@ -82,6 +90,7 @@ const Conversation = () => {
                   tool: toolCall.function.name,
                   arguments: args,
                   toolCallId: toolCall.id,
+                  messageIndex: index,
                   // Result will be populated when we find matching tool message
                 });
               });
@@ -196,6 +205,7 @@ const Conversation = () => {
               type: 'assistant',
               content: event.message || '',
               isStreaming: !event.finished,
+              messageIndex: currentMessages.length,
             },
           ];
         }
@@ -212,6 +222,7 @@ const Conversation = () => {
           tool: event.tool,
           arguments: event.arguments,
           result: event.result,
+          messageIndex: prev.length,
         },
       ]);
     } else if (event.type === 'error') {
@@ -236,6 +247,14 @@ const Conversation = () => {
 
   const handleChangeCustomer = (customerId: string) => {
     navigate('/');
+  };
+
+  // Pass the conversation ID and interactions rating to ChatContainer
+  const passMessagesToContainer = () => {
+    return messages.map(message => ({
+      ...message,
+      conversationId: conversationId,
+    }));
   };
 
   if (loading || isLoading) {
@@ -303,9 +322,11 @@ const Conversation = () => {
           </div>
         </div>
         <ChatContainer 
-          messages={messages} 
-          isProcessing={isProcessing} 
+          messages={passMessagesToContainer()} 
+          isProcessing={isProcessing}
           onSendTypicalQuestion={handleSendTypicalQuestion}
+          conversationId={conversationId}
+          interactionsRating={interactionsRating}
         />
         <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />
       </div>

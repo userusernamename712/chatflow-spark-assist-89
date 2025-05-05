@@ -24,10 +24,16 @@ export interface Conversation {
   customer_id: string;
   session_id: string;
   rating: number | null;
+  interactions_rating: Record<string, number>;
   feedback: string | null;
 }
 
 export interface ConversationRating {
   rating: number;
   feedback?: string;
+}
+
+export interface InteractionRating {
+  messageIndex: number;
+  rating: number;
 }

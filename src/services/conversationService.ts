@@ -1,5 +1,5 @@
 
-import { Conversation, ConversationRating } from "@/types/conversation";
+import { Conversation, ConversationRating, InteractionRating } from "@/types/conversation";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -53,6 +53,30 @@ export const updateConversation = async (
     return await response.json();
   } catch (error) {
     console.error('Error updating conversation:', error);
+    throw error;
+  }
+};
+
+export const rateInteraction = async (
+  conversationId: string,
+  interactionRating: InteractionRating
+): Promise<Conversation> => {
+  try {
+    const response = await fetch(`${API_URL}/conversations/${conversationId}/interactions`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(interactionRating),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Failed to rate interaction: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error rating interaction:', error);
     throw error;
   }
 };

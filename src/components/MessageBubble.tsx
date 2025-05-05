@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { MessageSquare, Terminal, User } from 'lucide-react';
@@ -10,6 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import MessageRating from './MessageRating';
 
 type MessageBubbleProps = {
   type: 'user' | 'assistant' | 'tool';
@@ -18,6 +20,9 @@ type MessageBubbleProps = {
   toolArgs?: Record<string, any>;
   toolResult?: any;
   isStreaming?: boolean;
+  conversationId?: string;
+  messageIndex?: number;
+  interactionsRating?: Record<string, number>;
 };
 
 const MessageBubble = ({
@@ -26,10 +31,14 @@ const MessageBubble = ({
   toolName,
   toolArgs,
   toolResult,
-  isStreaming = false
+  isStreaming = false,
+  conversationId,
+  messageIndex,
+  interactionsRating = {}
 }: MessageBubbleProps) => {
   const isUser = type === 'user';
   const isTool = type === 'tool';
+  const existingRating = messageIndex !== undefined ? interactionsRating[messageIndex.toString()] : undefined;
   
   // Function to render content with proper handling of Markdown
   const renderContent = () => {
@@ -273,6 +282,16 @@ const MessageBubble = ({
               </div>
             );
           })()}
+
+          {!isUser && !isTool && !isStreaming && conversationId && messageIndex !== undefined && (
+            <div className="flex justify-end pt-2">
+              <MessageRating 
+                conversationId={conversationId}
+                messageIndex={messageIndex}
+                existingRating={existingRating}
+              />
+            </div>
+          )}
 
         </div>
         

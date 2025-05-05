@@ -25,4 +25,5 @@ export interface Message {
   arguments?: Record<string, any>;
   result?: any;
   toolCallId?: string; // Added to track which tool call a result belongs to
+  messageIndex?: number; // Added to track the index of the message in the conversation
 }

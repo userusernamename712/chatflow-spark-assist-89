@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -273,6 +274,7 @@ const Index = () => {
               type: 'assistant',
               content: event.message || '',
               isStreaming: !event.finished,
+              messageIndex: prev.length,
             },
           ];
         }
@@ -297,6 +299,7 @@ const Index = () => {
           tool: event.tool,
           arguments: event.arguments,
           result: event.result,
+          messageIndex: prev.length,
         },
       ]);
     } else if (event.type === 'error') {
@@ -414,6 +417,8 @@ const Index = () => {
               messages={messages} 
               isProcessing={isProcessing} 
               onSendTypicalQuestion={handleSendTypicalQuestion}
+              conversationId={sessionId}
+              interactionsRating={{}} // Empty object since it's a new chat
             />
           )}
           

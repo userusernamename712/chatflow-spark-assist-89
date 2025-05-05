@@ -74,18 +74,13 @@ const Index = () => {
     try {
       setIsLoadingConversation(true);
       const conversation = await fetchConversation(conversationId);
-      
+  
       const mappedMessages: Message[] = [];
-      
-      // Store interactions ratings for loaded conversation
       setInteractionsRating(conversation.interactions_rating || {});
-      
-      // Convert Firestore conversation messages to our UI Message format
+  
       conversation.messages.forEach((m, index) => {
-        // Skip system messages
         if (m.role === 'system') return;
-        
-        // Handle user messages
+  
         if (m.role === 'user' && m.content) {
           mappedMessages.push({
             id: uuidv4(),
@@ -93,28 +88,25 @@ const Index = () => {
             content: m.content,
             messageIndex: index,
           });
-        } 
-        // Handle assistant messages with tool calls
-        else if (m.role === 'assistant') {
+        } else if (m.role === 'assistant') {
           if (m.content) {
             mappedMessages.push({
               id: uuidv4(),
               type: 'assistant',
               content: m.content,
-              messageIndex: index, // Ensure all assistant messages get an index
+              messageIndex: index,
             });
           }
-          
-          // Handle tool_calls if present
-          if (m.tool_calls && m.tool_calls.length > 0) {
+  
+          if (m.tool_calls?.length) {
             m.tool_calls.forEach(toolCall => {
               let args;
               try {
                 args = JSON.parse(toolCall.function.arguments);
-              } catch (e) {
-                args = { error: "Could not parse arguments" };
+              } catch {
+                args = { error: 'Could not parse arguments' };
               }
-              
+  
               mappedMessages.push({
                 id: uuidv4(),
                 type: 'tool_call',
@@ -122,58 +114,36 @@ const Index = () => {
                 tool: toolCall.function.name,
                 arguments: args,
                 toolCallId: toolCall.id,
-                // Result will be populated when we find matching tool message
               });
             });
           }
-        } 
-        // Handle tool results
-        else if (m.role === 'tool' && m.content && m.tool_call_id) {
-          // Find the matching tool_call message
+        } else if (m.role === 'tool' && m.content && m.tool_call_id) {
           const toolCallIndex = mappedMessages.findIndex(
             msg => msg.type === 'tool_call' && msg.toolCallId === m.tool_call_id
           );
-          
+  
           if (toolCallIndex !== -1) {
-            // Parse tool result if it's a JSON string
             let result;
             try {
               result = JSON.parse(m.content);
-            } catch (e) {
-              // If not valid JSON, use as-is
+            } catch {
               result = m.content;
             }
-            
-            // Update the existing tool call with the result
+  
             mappedMessages[toolCallIndex] = {
               ...mappedMessages[toolCallIndex],
-              result: result
+              result,
             };
           }
         }
       });
-      
+  
       setMessages(mappedMessages);
-      setRetryCount(0); // Reset retry count on success
-    } catch (error) {
-      console.error('Error loading conversation:', error);
-      
-      // Silent retry mechanism - don't show error to user
-      if (retryCount < maxRetries) {
-        setRetryCount(prev => prev + 1);
-        // Exponential backoff
-        const delay = Math.pow(2, retryCount) * 1000;
-        
-        setTimeout(() => {
-          loadConversation(conversationId);
-        }, delay);
-      } else {
-        // After max retries, still don't show error toast to user
-        // Just reset conversation state without notification
-        localStorage.removeItem('chatSessionId');
-        setSessionId(null);
-        setRetryCount(0);
-      }
+      setSessionId(conversationId);
+      setRetryCount(0);
+    } catch (err) {
+      localStorage.removeItem('chatSessionId');
+      throw err; // Let the caller handle fallback
     } finally {
       setIsLoadingConversation(false);
     }

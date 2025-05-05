@@ -445,19 +445,24 @@ const Index = () => {
                     <TableRow>
                       <TableHead className="w-12">#</TableHead>
                       <TableHead>User</TableHead>
-                      <TableHead className="text-right">Chats</TableHead>
-                      <TableHead className="text-right">Mean messages</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {sortedUsers.map((user) => (
-                      <TableRow key={user.email} className="hover:bg-purple-50">
+                      <TableRow 
+                      key={user.email}
+                      className="hover:bg-purple-100 cursor-pointer transition"
+                      onClick={() => {
+                        toast({
+                          title: `Stats for ${user.email}`,
+                          description: `Conversations: ${user.conversation_count}, Avg. messages: ${user.mean_user_messages.toFixed(2)}`,
+                        });
+                      }}
+                    >
                         <TableCell className="font-medium">{user.rank}</TableCell>
                         <TableCell className="max-w-[120px] truncate" title={user.email}>
                           {user.email}
                         </TableCell>
-                        <TableCell className="text-right">{user.conversation_count}</TableCell>
-                        <TableCell className="text-right">{user.mean_user_messages}</TableCell>
                       </TableRow>
                     ))}
                     {sortedUsers.length === 0 && (

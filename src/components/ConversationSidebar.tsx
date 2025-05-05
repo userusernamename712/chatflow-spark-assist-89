@@ -359,13 +359,13 @@ const ConversationSidebar = ({
       <div className="p-4 border-t">
       <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
           <Button 
-            variant="ghost" 
+            variant="secondary"
             size="sm" 
-            className="flex items-center gap-2 h-6 px-2 py-0" 
+            className="flex items-center gap-2 h-7 px-3 py-1 border border-gray-300 bg-white hover:bg-gray-100 text-black"
             onClick={() => setIsProfileOpen(true)}
           >
-            <User className="h-3.5 w-3.5 text-[#8E9196]" />
-            <span className="truncate text-[#8E9196]">{user?.email}</span>
+            <User className="h-4 w-4 text-black" />
+            <span className="truncate">{user?.email}</span>
           </Button>
         </div>
         <Button

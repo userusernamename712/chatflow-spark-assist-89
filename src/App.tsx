@@ -9,6 +9,7 @@ import { CustomerProvider } from "./contexts/CustomerContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import ConversationAnalyzerPage from "./pages/ConversationAnalyzer";
+import HallOfShame from "./pages/HallOfShame";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,7 +30,8 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
-              <Route path="/c/:conversation_id" element={<ConversationAnalyzerPage />} /> 
+              <Route path="/c/:conversation_id" element={<ConversationAnalyzerPage />} />
+              <Route path="/hall-of-shame" element={<HallOfShame />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

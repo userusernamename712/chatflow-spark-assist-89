@@ -57,7 +57,6 @@ const Index = () => {
   const sortedUsers = usersEngagement
     ? Object.entries(usersEngagement)
         .sort(([, a], [, b]) => a.conversation_count - b.conversation_count)
-        .slice(0, 5) // Only show top 5 least engaged users
         .map(([email, data], index) => ({
           email,
           rank: index + 1,

@@ -62,24 +62,47 @@ export const rateInteraction = async (
   interactionRating: InteractionRating
 ): Promise<Conversation> => {
   try {
-    const response = await fetch(`${API_URL}/conversations/${conversationId}/interactions`, {
+    // Step 1: Fetch the existing conversation
+    const existingRes = await fetch(`${API_URL}/conversations/${conversationId}`);
+    if (!existingRes.ok) {
+      throw new Error(`Failed to fetch conversation: ${existingRes.status}`);
+    }
+
+    const existingConversation: Conversation = await existingRes.json();
+    const existingRatings = existingConversation.interactions_rating || {};
+
+    // Step 2: Merge the new rating into the existing object
+    const updatedRatings = {
+      ...existingRatings,
+      [interactionRating.messageIndex]: interactionRating.rating,
+    };
+
+    const payload = {
+      interactions_rating: updatedRatings,
+    };
+
+    console.log("Merged interaction rating payload:", payload);
+
+    // Step 3: PATCH the updated interactions_rating back to the conversation
+    const patchResponse = await fetch(`${API_URL}/conversations/${conversationId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(interactionRating),
+      body: JSON.stringify(payload),
     });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to rate interaction: ${response.status}`);
+
+    if (!patchResponse.ok) {
+      throw new Error(`Failed to rate interaction: ${patchResponse.status}`);
     }
-    
-    return await response.json();
+
+    return await patchResponse.json();
   } catch (error) {
     console.error('Error rating interaction:', error);
     throw error;
   }
 };
+
 
 export const deleteConversation = async (conversationId: string): Promise<void> => {
   try {

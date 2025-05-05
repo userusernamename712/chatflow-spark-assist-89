@@ -1,15 +1,11 @@
-
-import React from 'react';
-import { useCustomers } from '@/contexts/CustomerContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ChatHeaderProps {
   isHistoricalChat?: boolean;
 }
 
 const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
-  const { customers } = useCustomers();
-  const selectedCustomerId = localStorage.getItem('selectedCustomerId');
-  const selectedCustomer = customers.find(c => c.id === selectedCustomerId);
+  const { selectedCustomerId } = useAuth();
 
   return (
     <div className="flex items-center justify-between">
@@ -22,11 +18,11 @@ const ChatHeader = ({ isHistoricalChat = false }: ChatHeaderProps) => {
           />
         </div>
         <div className="ml-3">
-          <h1 className="font-bold text-md text-[#1A1F2C]">
+          <h1 className="font-bold text-md text-[#1A1F2C] flex items-center gap-2">
             bookline.AI
-            {selectedCustomer && (
-              <span className="ml-2 text-sm font-normal text-gray-500">
-                ({selectedCustomer.name})
+            {selectedCustomerId && (
+              <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 border border-purple-300">
+                Customer: {selectedCustomerId}
               </span>
             )}
           </h1>

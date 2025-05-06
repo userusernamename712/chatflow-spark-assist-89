@@ -72,7 +72,7 @@ const ChatContainer = ({
             onClick={() => handleQuestionClick("Compare the number of calls received during April and during March")}
           >
             <MessageSquare className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
-            <span>Or "Compare the number of calls received during April and March"</span>
+            <span>Or "Compare the number of calls received during April and during March"</span>
           </div>
         </div>
       </div>

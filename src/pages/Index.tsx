@@ -56,7 +56,7 @@ const Index = () => {
   // Sort users by conversation_count (ascending for least engaged)
   const sortedUsers = usersEngagement
     ? Object.entries(usersEngagement)
-        .sort(([, a], [, b]) => a.conversation_count - b.conversation_count)
+        .sort(([, a], [, b]) => a.conversation_count * a.mean_user_messages - b.conversation_count * b.mean_user_messages)
         .map(([email, data], index) => ({
           email,
           displayName: extractUserNameFromEmail(email),
@@ -405,8 +405,8 @@ const Index = () => {
             <CardHeader className="bg-primary text-white rounded-t-lg">
               <CardTitle className="text-xl font-bold">Hall of Shame</CardTitle>
             </CardHeader>
-            <CardContent className="pt-4 overflow-auto">
-              {isLoadingEngagement ? (
+            <CardContent className="pt-4 overflow-y-auto max-h-[calc(100vh-200px)]">
+            {isLoadingEngagement ? (
                 <div className="flex items-center justify-center h-32">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
                 </div>
@@ -417,6 +417,7 @@ const Index = () => {
                       <TableHead className="w-12">#</TableHead>
                       <TableHead>User</TableHead>
                       <TableHead className="text-right">Count</TableHead>
+                      <TableHead className="text-right">Mean messages</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -436,6 +437,7 @@ const Index = () => {
                           {user.displayName}
                         </TableCell>
                         <TableCell className="text-right">{user.conversation_count}</TableCell>
+                        <TableCell className="text-right">{user.mean_user_messages}</TableCell>
                       </TableRow>
                     ))}
                     {sortedUsers.length === 0 && (

@@ -19,7 +19,6 @@ const allUsers = [
   "almudena@bookline.ai",
   "antonio@bookline.ai",
   "ariadna.ros@bookline.ai",
-  "ariadna@bookline.ai",
   "bea@bookline.ai",
   "bernat@bookline.ai",
   "blanca@bookline.ai",

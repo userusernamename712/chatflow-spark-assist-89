@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -17,7 +18,7 @@ import { fetchConversation, fetchConversationHistory } from '@/services/conversa
 import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
-import { fetchUserEngagement, extractUserNameFromEmail } from '@/services/userEngagementService';
+import { fetchUserEngagement, getFullNameFromEmail } from '@/services/userEngagementService';
 import { 
   Table,
   TableBody,
@@ -59,7 +60,7 @@ const Index = () => {
         .sort(([, a], [, b]) => a.conversation_count * a.mean_user_messages - b.conversation_count * b.mean_user_messages)
         .map(([email, data], index) => ({
           email,
-          displayName: extractUserNameFromEmail(email),
+          fullName: getFullNameFromEmail(email),
           rank: index + 1,
           ...data
         }))
@@ -427,22 +428,22 @@ const Index = () => {
                         className="hover:bg-purple-100 cursor-pointer transition"
                         onClick={() => {
                           toast({
-                            title: `Stats for ${user.displayName}`,
+                            title: `Stats for ${user.fullName}`,
                             description: `Conversations: ${user.conversation_count}, Avg. messages: ${user.mean_user_messages.toFixed(2)}`,
                           });
                         }}
                       >
                         <TableCell className="font-medium">{user.rank}</TableCell>
                         <TableCell className="max-w-[120px] truncate" title={user.email}>
-                          {user.displayName}
+                          {user.fullName}
                         </TableCell>
                         <TableCell className="text-right">{user.conversation_count}</TableCell>
-                        <TableCell className="text-right">{user.mean_user_messages}</TableCell>
+                        <TableCell className="text-right">{user.mean_user_messages.toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
                     {sortedUsers.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={3} className="text-center py-8 text-gray-500">
+                        <TableCell colSpan={4} className="text-center py-8 text-gray-500">
                           No data available
                         </TableCell>
                       </TableRow>

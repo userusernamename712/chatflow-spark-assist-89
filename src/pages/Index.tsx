@@ -17,7 +17,7 @@ import { fetchConversation, fetchConversationHistory } from '@/services/conversa
 import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
-import { fetchUserEngagement } from '@/services/userEngagementService';
+import { fetchUserEngagement, extractUserNameFromEmail } from '@/services/userEngagementService';
 import { 
   Table,
   TableBody,
@@ -59,6 +59,7 @@ const Index = () => {
         .sort(([, a], [, b]) => a.conversation_count - b.conversation_count)
         .map(([email, data], index) => ({
           email,
+          displayName: extractUserNameFromEmail(email),
           rank: index + 1,
           ...data
         }))
@@ -392,7 +393,7 @@ const Index = () => {
               isProcessing={isProcessing} 
               onSendTypicalQuestion={handleSendTypicalQuestion}
               conversationId={sessionId}
-              interactionsRating={interactionsRating} // Pass interactionsRating to ChatContainer
+              interactionsRating={interactionsRating}
             />
           )}
           
@@ -415,24 +416,26 @@ const Index = () => {
                     <TableRow>
                       <TableHead className="w-12">#</TableHead>
                       <TableHead>User</TableHead>
+                      <TableHead className="text-right">Count</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {sortedUsers.map((user) => (
                       <TableRow 
-                      key={user.email}
-                      className="hover:bg-purple-100 cursor-pointer transition"
-                      onClick={() => {
-                        toast({
-                          title: `Stats for ${user.email}`,
-                          description: `Conversations: ${user.conversation_count}, Avg. messages: ${user.mean_user_messages.toFixed(2)}`,
-                        });
-                      }}
-                    >
+                        key={user.email}
+                        className="hover:bg-purple-100 cursor-pointer transition"
+                        onClick={() => {
+                          toast({
+                            title: `Stats for ${user.displayName}`,
+                            description: `Conversations: ${user.conversation_count}, Avg. messages: ${user.mean_user_messages.toFixed(2)}`,
+                          });
+                        }}
+                      >
                         <TableCell className="font-medium">{user.rank}</TableCell>
                         <TableCell className="max-w-[120px] truncate" title={user.email}>
-                          {user.email}
+                          {user.displayName}
                         </TableCell>
+                        <TableCell className="text-right">{user.conversation_count}</TableCell>
                       </TableRow>
                     ))}
                     {sortedUsers.length === 0 && (

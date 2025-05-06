@@ -26,7 +26,6 @@ export const allUsers: UserInfo[] = [
   { email: "almudena@bookline.ai", firstName: "Almudena", lastName: "Ucha", fullName: "Almudena Ucha" },
   { email: "antonio@bookline.ai", firstName: "Antonio", lastName: "Hidalgo", fullName: "Antonio Hidalgo" },
   { email: "ariadna.ros@bookline.ai", firstName: "Ariadna", lastName: "Ros", fullName: "Ariadna Ros" },
-  { email: "ariadna@bookline.ai", firstName: "Ariadna", lastName: "Campana", fullName: "Ariadna Campana" },
   { email: "bea@bookline.ai", firstName: "Beatriz", lastName: "Oliveira", fullName: "Beatriz Oliveira" },
   { email: "bernat@bookline.ai", firstName: "Bernat", lastName: "Clivillé", fullName: "Bernat Clivillé" },
   { email: "blanca@bookline.ai", firstName: "Blanca María", lastName: "Sánchez Jurado", fullName: "Blanca María Sánchez Jurado" },

@@ -41,9 +41,14 @@ const ChatContainer = ({
     }
   };
 
+  // Filter out empty assistant messages before rendering
+  const validMessages = messages.filter(msg => 
+    msg.type !== 'assistant' || (msg.content && msg.content.trim() !== '')
+  );
+
   return (
     <ScrollArea className="flex-1 p-2 bg-white">
-      {messages.length === 0 ? (
+      {validMessages.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-center p-8">
         <div className="rounded-full bg-[var(--primary--color-medium)] p-4 mb-4">
           <MessageSquare className="h-6 w-6 text-[var(--primary-color)]" />
@@ -78,7 +83,7 @@ const ChatContainer = ({
       </div>
       ) : (
         <div className="space-y-1 px-1">
-          {messages.map((message) => {
+          {validMessages.map((message) => {
             if (message.type === 'user') {
               return (
                 <MessageBubble
@@ -114,7 +119,7 @@ const ChatContainer = ({
               );
             }
           })}
-          {isProcessing && !messages.some(msg => msg.isStreaming) && (
+          {isProcessing && !validMessages.some(msg => msg.isStreaming) && (
             <div className="flex space-x-2 p-2 items-center justify-center">
               <div className="h-1.5 w-1.5 bg-[var(--primary-color)] rounded-full animate-pulse"></div>
               <div className="h-1.5 w-1.5 bg-[var(--primary-color)] rounded-full animate-pulse delay-150"></div>

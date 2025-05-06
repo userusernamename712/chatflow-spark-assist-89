@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { cn } from '@/lib/utils';
 import { MessageSquare, Terminal, User } from 'lucide-react';
@@ -39,6 +38,9 @@ const MessageBubble = ({
   const isUser = type === 'user';
   const isTool = type === 'tool';
   const existingRating = messageIndex !== undefined ? interactionsRating[messageIndex.toString()] : undefined;
+  
+  // Skip rendering if there's no content and it's not a tool message
+  if (!content && !isTool) return null;
   
   // Function to render content with proper handling of Markdown
   const renderContent = () => {
@@ -191,6 +193,7 @@ const MessageBubble = ({
     return processedLines.join('\n');
   };
 
+  // Only render if there's content to display or it's a tool message
   return (
     <div
       className={cn(
@@ -240,7 +243,7 @@ const MessageBubble = ({
             </div>
           )}
 
-          {!isTool && (
+          {!isTool && content && (
             <div className={cn(isStreaming && "typing-indicator", "text-gray-900")}>
               {renderContent()}
             </div>
@@ -283,7 +286,9 @@ const MessageBubble = ({
             );
           })()}
 
-          {!isUser && !isTool && !isStreaming && conversationId && messageIndex !== undefined && (
+          {/* Only show rating if it's an assistant message with actual content */}
+          {!isUser && !isTool && !isStreaming && conversationId && 
+           messageIndex !== undefined && content && content.trim() !== '' && (
             <div className="flex justify-end pt-2">
               <MessageRating 
                 conversationId={conversationId}

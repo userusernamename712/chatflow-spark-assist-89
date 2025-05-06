@@ -45,30 +45,37 @@ const ChatContainer = ({
     <ScrollArea className="flex-1 p-2 bg-white">
       {messages.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-center p-8">
-          <div className="rounded-full bg-[var(--primary--color-medium)] p-4 mb-4">
-            <MessageSquare className="h-6 w-6 text-[var(--primary-color)]" />
+        <div className="rounded-full bg-[var(--primary--color-medium)] p-4 mb-4">
+          <MessageSquare className="h-6 w-6 text-[var(--primary-color)]" />
+        </div>
+        <h3 className="text-lg font-medium mb-2 text-[var(--neutral-color-dark)]">Welcome</h3>
+        <p className="text-sm text-[var(--neutral-color-medium)] max-w-md mb-6">
+          I'm your AI assistant. Ask me questions or request information to get started.
+        </p>
+        <div className="mt-4 flex flex-col space-y-3">
+          <div 
+            className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
+            onClick={() => handleQuestionClick("What can you help me with?")}
+          >
+            <HelpCircle className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
+            <span>Try asking "What can you help me with?"</span>
           </div>
-          <h3 className="text-lg font-medium mb-2 text-[var(--neutral-color-dark)]">Welcome</h3>
-          <p className="text-sm text-[var(--neutral-color-medium)] max-w-md mb-6">
-            I'm your AI assistant. Ask me questions or request information to get started.
-          </p>
-          <div className="mt-4 flex flex-col space-y-3">
-            <div 
-              className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
-              onClick={() => handleQuestionClick("What can you help me with?")}
-            >
-              <HelpCircle className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
-              <span>Try asking "What can you help me with?"</span>
-            </div>
-            <div 
-              className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
-              onClick={() => handleQuestionClick("Tell me about my account")}
-            >
-              <MessageSquare className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
-              <span>Or "Tell me about my account"</span>
-            </div>
+          <div 
+            className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
+            onClick={() => handleQuestionClick("How many bookings did I get from the 7th of April to the 20th of April?")}
+          >
+            <MessageSquare className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
+            <span>Try asking "How many bookings did I get from the 7th of April to the 20th of April?"</span>
+          </div>
+          <div 
+            className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
+            onClick={() => handleQuestionClick("How many calls did I receive from the 7th of April to the 20th of April?")}
+          >
+            <MessageSquare className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
+            <span>Or "Compare the number of calls received during April and March"</span>
           </div>
         </div>
+      </div>
       ) : (
         <div className="space-y-1 px-1">
           {messages.map((message) => {

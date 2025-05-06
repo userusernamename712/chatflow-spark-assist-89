@@ -77,43 +77,63 @@ export const allUsers: UserInfo[] = [
 
 // Get user info by email
 export const getUserInfo = (email: string): UserInfo | undefined => {
-  return allUsers.find(user => user.email === email);
+  const [name, domain] = email.split("@");
+  if (!name || !domain.startsWith("bookline")) return undefined;
+
+  return allUsers.find(user => user.email.startsWith(`${name}@bookline`));
 };
 
 export const fetchUserEngagement = async (): Promise<UserEngagementResponse> => {
   try {
     const response = await fetch(`${API_URL}/conversations/count-by-user`);
-    
+
     if (!response.ok) {
       throw new Error(`Failed to fetch user engagement data: ${response.status}`);
     }
-    
+
     const apiData = await response.json();
-    
-    // Create a complete list including all users (with zero values for missing users)
+
     const completeData: UserEngagementResponse = {};
-    
-    // Add all hardcoded users with zero values
-    allUsers.forEach(user => {
-      completeData[user.email] = {
-        conversation_count: 0,
-        mean_user_messages: 0
-      };
-    });
-    
-    // Override with actual data from API for users that have conversations
+
+    // Temp map to deduplicate by `name@bookline`
+    const deduped: { [key: string]: { email: string; data: UserEngagement } } = {};
+
+    // Populate deduped map from API data
     Object.entries(apiData).forEach(([email, data]) => {
-      if (email && typeof email === 'string') {
-        completeData[email] = data as UserEngagement;
+      const [name, domain] = email.split("@");
+      if (!name || !domain.startsWith("bookline")) return;
+
+      const key = `${name}@bookline`;
+
+      // If not already present, add it
+      if (!deduped[key]) {
+        deduped[key] = { email, data: data as UserEngagement };
       }
     });
-    
+
+    // Add all users with default 0 values
+    allUsers.forEach(user => {
+      const [name] = user.email.split("@");
+      const key = `${name}@bookline`;
+
+      if (deduped[key]) {
+        completeData[user.email] = deduped[key].data;
+      } else {
+        completeData[user.email] = {
+          conversation_count: 0,
+          mean_user_messages: 0
+        };
+      }
+    });
+
     return completeData;
   } catch (error) {
     console.error('Error fetching user engagement data:', error);
     throw error;
   }
 };
+
+
 
 // Helper function to extract user name from email
 export const extractUserNameFromEmail = (email: string): string => {

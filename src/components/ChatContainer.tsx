@@ -1,9 +1,11 @@
 
 import React, { useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { HelpCircle, MessageSquare, User } from 'lucide-react';
+import { HelpCircle, MessageSquare, User, AlertTriangle } from 'lucide-react';
 import MessageBubble from './MessageBubble';
 import { Message } from '@/types/chat';
+import { useCustomers } from '@/contexts/CustomerContext';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 type ChatContainerProps = {
   messages: Message[];
@@ -21,6 +23,7 @@ const ChatContainer = ({
   interactionsRating = {}
 }: ChatContainerProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { hasTools, checkingTools } = useCustomers();
 
   // Auto-scroll when messages change or streaming updates
   useEffect(() => {
@@ -36,7 +39,7 @@ const ChatContainer = ({
   }, [messages.map(m => m.isStreaming ? m.content : '').join('')]);
 
   const handleQuestionClick = (question: string) => {
-    if (onSendTypicalQuestion) {
+    if (onSendTypicalQuestion && hasTools) {
       onSendTypicalQuestion(question);
     }
   };
@@ -46,41 +49,68 @@ const ChatContainer = ({
     msg.type !== 'assistant' || (msg.content && msg.content.trim() !== '')
   );
 
+  // If customer has no tools, display a warning message instead of welcome screen
+  if (!hasTools && validMessages.length === 0) {
+    return (
+      <ScrollArea className="flex-1 p-2 bg-white">
+        <div className="h-full flex flex-col items-center justify-center text-center p-8">
+          <div className="rounded-full bg-red-100 p-4 mb-4">
+            <AlertTriangle className="h-6 w-6 text-red-600" />
+          </div>
+          <h3 className="text-lg font-medium mb-2 text-red-800">Customer Not Supported</h3>
+          <p className="text-sm text-gray-600 max-w-md mb-6">
+            This customer doesn't have any tools available to use with the chatbot. 
+            Please contact support or switch to a different customer.
+          </p>
+        </div>
+      </ScrollArea>
+    );
+  }
+
   return (
     <ScrollArea className="flex-1 p-2 bg-white">
       {validMessages.length === 0 ? (
         <div className="h-full flex flex-col items-center justify-center text-center p-8">
-        <div className="rounded-full bg-[var(--primary--color-medium)] p-4 mb-4">
-          <MessageSquare className="h-6 w-6 text-[var(--primary-color)]" />
+          {checkingTools ? (
+            <div className="flex flex-col items-center">
+              <div className="w-8 h-8 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-2"></div>
+              <div className="text-sm text-[#403E43]">Checking customer tools...</div>
+            </div>
+          ) : (
+            <>
+              <div className="rounded-full bg-[var(--primary--color-medium)] p-4 mb-4">
+                <MessageSquare className="h-6 w-6 text-[var(--primary-color)]" />
+              </div>
+              <h3 className="text-lg font-medium mb-2 text-[var(--neutral-color-dark)]">Welcome</h3>
+              <p className="text-sm text-[var(--neutral-color-medium)] max-w-md mb-6">
+                I'm your AI assistant. Ask me questions or request information to get started.
+              </p>
+              <div className="mt-4 flex flex-col space-y-3">
+                <div 
+                  className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
+                  onClick={() => handleQuestionClick("What can you help me with?")}
+                >
+                  <HelpCircle className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
+                  <span>Try asking "What can you help me with?"</span>
+                </div>
+                <div 
+                  className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
+                  onClick={() => handleQuestionClick("How many bookings did I get from the 7th of April to the 20th of April?")}
+                >
+                  <MessageSquare className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
+                  <span>Try asking "How many bookings did I get from the 7th of April to the 20th of April?"</span>
+                </div>
+                <div 
+                  className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
+                  onClick={() => handleQuestionClick("Compare the number of calls received during April and during March")}
+                >
+                  <MessageSquare className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
+                  <span>Or "Compare the number of calls received during April and during March"</span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
-        <h3 className="text-lg font-medium mb-2 text-[var(--neutral-color-dark)]">Welcome</h3>
-        <p className="text-sm text-[var(--neutral-color-medium)] max-w-md mb-6">
-          I'm your AI assistant. Ask me questions or request information to get started.
-        </p>
-        <div className="mt-4 flex flex-col space-y-3">
-          <div 
-            className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
-            onClick={() => handleQuestionClick("What can you help me with?")}
-          >
-            <HelpCircle className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
-            <span>Try asking "What can you help me with?"</span>
-          </div>
-          <div 
-            className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
-            onClick={() => handleQuestionClick("How many bookings did I get from the 7th of April to the 20th of April?")}
-          >
-            <MessageSquare className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
-            <span>Try asking "How many bookings did I get from the 7th of April to the 20th of April?"</span>
-          </div>
-          <div 
-            className="flex items-center card-darken-hover p-3 rounded-sm text-sm text-[var(--neutral-color-medium)] border-l-2 border-[var(--primary-color)] cursor-pointer"
-            onClick={() => handleQuestionClick("Compare the number of calls received during April and during March")}
-          >
-            <MessageSquare className="h-3 w-3 mr-2 text-[var(--primary-color)]" />
-            <span>Or "Compare the number of calls received during April and during March"</span>
-          </div>
-        </div>
-      </div>
       ) : (
         <div className="space-y-1 px-1">
           {validMessages.map((message) => {

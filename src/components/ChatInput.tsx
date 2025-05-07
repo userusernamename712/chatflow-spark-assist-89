@@ -1,80 +1,81 @@
 
-import React, { useState, FormEvent, useRef, useEffect } from 'react';
-import { Send, MessageSquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
+import { SendHorizontal } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
+import { useCustomers } from '@/contexts/CustomerContext';
 
-type ChatInputProps = {
-  onSendMessage: (message: string) => void;
+interface ChatInputProps {
+  onSendMessage: (content: string) => void;
   isProcessing: boolean;
-};
+}
 
 const ChatInput = ({ onSendMessage, isProcessing }: ChatInputProps) => {
-  const [message, setMessage] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [inputValue, setInputValue] = useState('');
+  const { hasTools, checkingTools } = useCustomers();
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !isProcessing) {
-      onSendMessage(message);
-      setMessage('');
+    
+    if (!hasTools) {
+      return; // Prevent sending if no tools available
+    }
+    
+    if (inputValue.trim() && !isProcessing) {
+      onSendMessage(inputValue);
+      setInputValue('');
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      
+      if (!hasTools) {
+        return; // Prevent sending if no tools available
+      }
+      
+      if (inputValue.trim() && !isProcessing) {
+        onSendMessage(inputValue);
+        setInputValue('');
+      }
     }
   };
 
-  // Auto resize textarea based on content
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(
-        textareaRef.current.scrollHeight,
-        150
-      )}px`;
-    }
-  }, [message]);
-
-  // Auto focus when processing is complete
-  useEffect(() => {
-    if (!isProcessing && textareaRef.current) {
-      textareaRef.current.focus();
-    }
-  }, [isProcessing]);
-
   return (
-    <form onSubmit={handleSubmit} className="p-3 bg-white rounded-b-lg border-t border-[var(--neutral-color-strokes)]">
-      <div className="relative flex items-end">
-        <div className="absolute left-3 bottom-3 text-[var(--primary-color)]">
-          <MessageSquare className="h-4 w-4" />
-        </div>
+    <div className="p-4 border-t bg-white">
+      {!hasTools && (
+        <Alert variant="destructive" className="mb-3">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Customer not supported</AlertTitle>
+          <AlertDescription>
+            This customer doesn't have any tools available. Please contact support or switch to a different customer.
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      <form onSubmit={handleSubmit} className="flex space-x-2">
         <Textarea
-          ref={textareaRef}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Ask me anything..."
-          className="min-h-[50px] max-h-[150px] pr-12 pl-10 rounded-md resize-none bg-[var(--neutral-color-background)] text-[var(--neutral-color-dark)] focus-visible:ring-[var(--primary-color)] font-sans text-sm border-[var(--neutral-color-strokes)]"
-          disabled={isProcessing}
+          placeholder={hasTools ? "Type your message..." : "Chat is disabled for this customer"}
+          disabled={isProcessing || !hasTools || checkingTools}
+          className="flex-1 resize-none min-h-[60px] max-h-[180px]"
+          rows={1}
         />
-        <Button
-          type="submit"
+        <Button 
+          type="submit" 
           size="icon"
-          className="absolute right-2 bottom-2 rounded-md h-8 w-8 bg-[var(--primary-color)] hover:bg-[var(--primary-color-hover)] text-white transition-all duration-200"
-          disabled={!message.trim() || isProcessing}
+          disabled={isProcessing || !inputValue.trim() || !hasTools || checkingTools}
+          className="rounded-full h-10 w-10 flex items-center justify-center bg-[var(--primary-color)] hover:bg-[var(--primary-color-dark)] disabled:opacity-50"
         >
-          <Send className="h-4 w-4" />
-          <span className="sr-only">Send</span>
+          <SendHorizontal className="h-5 w-5 text-white" />
         </Button>
-      </div>
-      <div className="mt-1.5 text-xs text-[var(--neutral-color-medium)] text-center">
-        {isProcessing ? "Thinking..." : "Type your message and press Enter to send"}
-      </div>
-    </form>
+      </form>
+    </div>
   );
 };
 

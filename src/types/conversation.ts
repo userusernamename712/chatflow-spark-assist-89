@@ -23,6 +23,7 @@ export interface Conversation {
   }>;
   customer_id: string;
   session_id: string;
+  title?: string; // Making title optional since it might not always be present
   rating: number | null;
   interactions_rating: Record<string, number>;
   feedback: string | null;

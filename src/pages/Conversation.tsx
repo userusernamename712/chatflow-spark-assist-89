@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -246,6 +247,10 @@ const Conversation = () => {
     navigate('/');
   };
 
+  const startNewChat = () => {
+    navigate('/');
+  };
+
   // Pass the conversation ID and interactions rating to ChatContainer
   const passMessagesToContainer = () => {
     return messages.map(message => ({
@@ -278,6 +283,7 @@ const Conversation = () => {
           sessionId={conversationId || null}
           onSelectConversation={(conversation) => handleSelectConversation(conversation)}
           onChangeCustomer={handleChangeCustomer}
+          startNewChat={startNewChat}
         />
       </div>
       
@@ -290,6 +296,7 @@ const Conversation = () => {
             onChangeCustomer={handleChangeCustomer}
             isMobile={true}
             onCloseMobile={() => setSidebarOpen(false)}
+            startNewChat={startNewChat}
           />
         </SheetContent>
       </Sheet>

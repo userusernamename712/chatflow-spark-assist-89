@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchConversationHistory } from '@/services/conversationService';
@@ -36,7 +37,7 @@ const ConversationSidebar = ({
   isMobile = false,
   onCloseMobile,
 }: ConversationSidebarProps) => {
-  const { selectedCustomerId, selectCustomer } = useAuth();
+  const { selectedCustomerId, startNewSession } = useAuth();
   const { hasTools } = useCustomers();
 
   // Fetch conversations for the selected customer
@@ -50,7 +51,7 @@ const ConversationSidebar = ({
   });
 
   const handleCustomerChange = (value: string) => {
-    selectCustomer(value);
+    startNewSession(value);
     startNewChat(); // Start a new chat when changing customers
     toast({
       title: "Customer Changed",
@@ -135,7 +136,8 @@ const ConversationSidebar = ({
                 disabled={!hasTools}
               >
                 <div className="text-sm font-medium truncate">
-                  {conversation.title || 'New conversation'}
+                  {/* Since title might not exist, provide a fallback */}
+                  {conversation.session_id.substring(0, 8) || 'New conversation'}
                 </div>
                 <div className="text-xs text-gray-500">
                   {new Date(conversation.created_at).toLocaleDateString()}

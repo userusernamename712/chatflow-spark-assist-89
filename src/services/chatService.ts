@@ -3,6 +3,22 @@ import { ChatRequest, ChatEvent } from '@/types/chat';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Helper function to get auth headers
+const getAuthHeaders = (): HeadersInit => {
+  let headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'Accept': 'text/event-stream',
+  };
+
+  // Get the auth token from local storage
+  const token = localStorage.getItem('chatAuthToken');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return headers;
+};
+
 export const sendChatMessage = async (
   request: ChatRequest,
   onEvent: (event: ChatEvent) => void,
@@ -20,10 +36,7 @@ export const sendChatMessage = async (
     
     const response = await fetch(`${API_URL}/chat`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'text/event-stream',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(request),
     });
 

@@ -1,10 +1,28 @@
+
 import { Conversation, ConversationRating, InteractionRating } from "@/types/conversation";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// Helper function to get auth headers
+const getAuthHeaders = (): HeadersInit => {
+  let headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  // Get the auth token from local storage
+  const token = localStorage.getItem('chatAuthToken');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return headers;
+};
+
 export const fetchConversationHistory = async (customerId: string): Promise<Conversation[]> => {
   try {
-    const response = await fetch(`${API_URL}/customers/${customerId}/conversations`);
+    const response = await fetch(`${API_URL}/customers/${customerId}/conversations`, {
+      headers: getAuthHeaders()
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch conversations: ${response.status}`);
@@ -19,7 +37,9 @@ export const fetchConversationHistory = async (customerId: string): Promise<Conv
 
 export const fetchConversation = async (conversationId: string): Promise<Conversation> => {
   try {
-    const response = await fetch(`${API_URL}/conversations/${conversationId}`);
+    const response = await fetch(`${API_URL}/conversations/${conversationId}`, {
+      headers: getAuthHeaders()
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch conversation: ${response.status}`);
@@ -39,9 +59,7 @@ export const updateConversation = async (
   try {
     const response = await fetch(`${API_URL}/conversations/${conversationId}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(rating),
     });
 
@@ -62,7 +80,9 @@ export const rateInteraction = async (
 ): Promise<Conversation> => {
   try {
     // Step 1: Fetch the existing conversation
-    const existingRes = await fetch(`${API_URL}/conversations/${conversationId}`);
+    const existingRes = await fetch(`${API_URL}/conversations/${conversationId}`, {
+      headers: getAuthHeaders()
+    });
     if (!existingRes.ok) {
       throw new Error(`Failed to fetch conversation: ${existingRes.status}`);
     }
@@ -85,9 +105,7 @@ export const rateInteraction = async (
     // Step 3: PATCH the updated interactions_rating back to the conversation
     const patchResponse = await fetch(`${API_URL}/conversations/${conversationId}`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: getAuthHeaders(),
       body: JSON.stringify(payload),
     });
 
@@ -106,6 +124,7 @@ export const deleteConversation = async (conversationId: string): Promise<void> 
   try {
     const response = await fetch(`${API_URL}/conversations/${conversationId}`, {
       method: 'DELETE',
+      headers: getAuthHeaders()
     });
 
     if (!response.ok) {

@@ -15,6 +15,13 @@ interface CustomerResponse {
 const API_URL = "https://papi.bookline.io/customers/ids_names";
 const API_KEY = import.meta.env.VITE_PAPI_API_KEY;
 
+// Helper function to get auth headers for PAPI
+const getPapiAuthHeaders = (): HeadersInit => {
+  return {
+    'apikey': API_KEY,
+  };
+};
+
 export const fetchCustomers = async (): Promise<Customer[]> => {
   const customers: Customer[] = [];
   const limit = 250;
@@ -28,9 +35,7 @@ export const fetchCustomers = async (): Promise<Customer[]> => {
       }
 
       const response = await fetch(`${API_URL}?${params}`, {
-        headers: {
-          'apikey': API_KEY,
-        },
+        headers: getPapiAuthHeaders(),
       });
 
       if (!response.ok) {

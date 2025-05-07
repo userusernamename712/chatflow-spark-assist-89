@@ -4,6 +4,21 @@ import { ApiResponse } from '@/types/api';
 const API_URL = import.meta.env.VITE_API_URL;
 const API_KEY = import.meta.env.VITE_API_KEY;
 
+// Helper function to get auth headers
+const getAuthHeaders = (): HeadersInit => {
+  let headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  // Get the auth token from local storage
+  const token = localStorage.getItem('chatAuthToken');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  return headers;
+};
+
 export interface UserEngagement {
   conversation_count: number;
   mean_user_messages: number;
@@ -19,7 +34,6 @@ export interface UserInfo {
   lastName: string;
   fullName: string;
 }
-
 
 // Complete list of users with their full names
 export const allUsers: UserInfo[] = [
@@ -87,7 +101,9 @@ export const getUserInfo = (email: string): UserInfo | undefined => {
 
 export const fetchUserEngagement = async (): Promise<UserEngagementResponse> => {
   try {
-    const response = await fetch(`${API_URL}/conversations/count-by-user`);
+    const response = await fetch(`${API_URL}/conversations/count-by-user`, {
+      headers: getAuthHeaders()
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch user engagement data: ${response.status}`);
@@ -134,8 +150,6 @@ export const fetchUserEngagement = async (): Promise<UserEngagementResponse> => 
     throw error;
   }
 };
-
-
 
 // Helper function to extract user name from email
 export const extractUserNameFromEmail = (email: string): string => {

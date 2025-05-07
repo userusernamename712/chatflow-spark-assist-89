@@ -14,6 +14,7 @@ interface AuthContextType extends AuthState {
   startNewSession: (customerId: string) => void;
   loading: boolean;
   error: string | null;
+  getAuthToken: () => string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,6 +28,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isAuthenticated: false,
     selectedCustomerId: localStorage.getItem('chatSelectedCustomer') || DEFAULT_CUSTOMER_ID,
   });
+  const [authToken, setAuthToken] = useState<string | null>(localStorage.getItem('chatAuthToken'));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +57,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (firebaseUser) {
         loadUserData(firebaseUser);
+        // Get the auth token if available
+        firebaseUser.getIdToken().then(token => {
+          localStorage.setItem('chatAuthToken', token);
+          setAuthToken(token);
+        });
       } else {
         setAuthState({
           user: null,
@@ -64,6 +71,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.removeItem('chatUser');
         localStorage.removeItem('chatSelectedCustomer');
         localStorage.removeItem('chatSessionId');
+        localStorage.removeItem('chatAuthToken');
+        setAuthToken(null);
       }
       setLoading(false);
     });
@@ -118,6 +127,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('chatUser', JSON.stringify(userData));
         localStorage.setItem('chatSelectedCustomer', customerId);
         
+        // For demo mode, create a simple token
+        const demoToken = `demo-token-${Date.now()}`;
+        localStorage.setItem('chatAuthToken', demoToken);
+        setAuthToken(demoToken);
+        
         setAuthState({
           user: userData,
           isAuthenticated: true,
@@ -133,6 +147,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           username: firebaseUser.displayName || email.split('@')[0] || 'User',
           createdAt: new Date(firebaseUser.metadata.creationTime || Date.now()),
         };
+        
+        // Get the auth token
+        const token = await firebaseUser.getIdToken();
+        localStorage.setItem('chatAuthToken', token);
+        setAuthToken(token);
         
         localStorage.setItem('chatUser', JSON.stringify(userData));
         localStorage.setItem('chatSelectedCustomer', customerId);
@@ -163,6 +182,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('chatUser');
       localStorage.removeItem('chatSelectedCustomer');
       localStorage.removeItem('chatSessionId');
+      localStorage.removeItem('chatAuthToken');
+      setAuthToken(null);
       
       setAuthState({
         user: null,
@@ -189,6 +210,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     window.location.reload();
   };
 
+  const getAuthToken = () => {
+    return authToken;
+  };
+
   return (
     <AuthContext.Provider 
       value={{ 
@@ -197,7 +222,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout, 
         startNewSession,
         loading,
-        error
+        error,
+        getAuthToken
       }}
     >
       {children}

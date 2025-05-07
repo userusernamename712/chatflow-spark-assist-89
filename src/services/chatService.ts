@@ -2,6 +2,7 @@
 import { ChatRequest, ChatEvent } from '@/types/chat';
 
 const API_URL = import.meta.env.VITE_API_URL;
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 export const sendChatMessage = async (
   request: ChatRequest,
@@ -23,6 +24,7 @@ export const sendChatMessage = async (
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
+        'mcpikey': API_KEY
       },
       body: JSON.stringify(request),
     });

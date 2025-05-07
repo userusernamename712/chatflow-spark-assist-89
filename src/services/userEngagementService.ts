@@ -2,6 +2,7 @@
 import { ApiResponse } from '@/types/api';
 
 const API_URL = import.meta.env.VITE_API_URL;
+const API_KEY = import.meta.env.VITE_API_KEY;
 
 export interface UserEngagement {
   conversation_count: number;
@@ -18,6 +19,10 @@ export interface UserInfo {
   lastName: string;
   fullName: string;
 }
+
+const authHeaders = {
+  'mcpikey': API_KEY,
+};
 
 // Complete list of users with their full names
 export const allUsers: UserInfo[] = [
@@ -85,7 +90,9 @@ export const getUserInfo = (email: string): UserInfo | undefined => {
 
 export const fetchUserEngagement = async (): Promise<UserEngagementResponse> => {
   try {
-    const response = await fetch(`${API_URL}/conversations/count-by-user`);
+    const response = await fetch(`${API_URL}/conversations/count-by-user`, {
+      headers: authHeaders
+    });
 
     if (!response.ok) {
       throw new Error(`Failed to fetch user engagement data: ${response.status}`);

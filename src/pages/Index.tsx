@@ -15,6 +15,7 @@ import { Menu } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
+import { fetchApiMetadata } from '@/services/apiService';
 import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
 import { useQuery } from '@tanstack/react-query';
@@ -46,6 +47,28 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
   const [interactionsRating, setInteractionsRating] = useState<Record<string, number>>({});
+  const [customerHasTools, setCustomerHasTools] = useState(true);
+  const [isCheckingMetadata, setIsCheckingMetadata] = useState(false);
+
+  useEffect(() => {
+    if (!selectedCustomerId) return;
+  
+    const checkTools = async () => {
+      setIsCheckingMetadata(true);
+      try {
+        const metadata = await fetchApiMetadata(selectedCustomerId);
+        setCustomerHasTools(metadata.tools && Object.keys(metadata.tools).length > 0);
+      } catch (err) {
+        console.error('Failed to fetch tools metadata:', err);
+        setCustomerHasTools(false); // Assume false if there's an error
+      } finally {
+        setIsCheckingMetadata(false);
+      }
+    };
+  
+    checkTools();
+  }, [selectedCustomerId]);
+
 
   // Fetch user engagement data for Hall of Shame
   const { data: usersEngagement, isLoading: isLoadingEngagement } = useQuery({
@@ -395,10 +418,11 @@ const Index = () => {
               onSendTypicalQuestion={handleSendTypicalQuestion}
               conversationId={sessionId}
               interactionsRating={interactionsRating}
+              disabled={!customerHasTools}
             />
           )}
           
-          <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing || isLoadingConversation} />
+          <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing || isLoadingConversation} disabled={!customerHasTools}/>
         </div>
 
         <div className={`${isMobile ? 'hidden' : 'flex'} flex-col w-80`}>

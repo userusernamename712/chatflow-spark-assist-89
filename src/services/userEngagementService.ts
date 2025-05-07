@@ -20,9 +20,6 @@ export interface UserInfo {
   fullName: string;
 }
 
-const authHeaders = {
-  'mcpikey': API_KEY,
-};
 
 // Complete list of users with their full names
 export const allUsers: UserInfo[] = [
@@ -90,9 +87,7 @@ export const getUserInfo = (email: string): UserInfo | undefined => {
 
 export const fetchUserEngagement = async (): Promise<UserEngagementResponse> => {
   try {
-    const response = await fetch(`${API_URL}/conversations/count-by-user`, {
-      headers: authHeaders
-    });
+    const response = await fetch(`${API_URL}/conversations/count-by-user`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch user engagement data: ${response.status}`);

@@ -1,17 +1,10 @@
 import { Conversation, ConversationRating, InteractionRating } from "@/types/conversation";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const API_KEY = import.meta.env.VITE_API_KEY;
-
-const authHeaders = {
-  'mcpikey': API_KEY,
-};
 
 export const fetchConversationHistory = async (customerId: string): Promise<Conversation[]> => {
   try {
-    const response = await fetch(`${API_URL}/customers/${customerId}/conversations`, {
-      headers: authHeaders,
-    });
+    const response = await fetch(`${API_URL}/customers/${customerId}/conversations`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch conversations: ${response.status}`);
@@ -26,9 +19,7 @@ export const fetchConversationHistory = async (customerId: string): Promise<Conv
 
 export const fetchConversation = async (conversationId: string): Promise<Conversation> => {
   try {
-    const response = await fetch(`${API_URL}/conversations/${conversationId}`, {
-      headers: authHeaders,
-    });
+    const response = await fetch(`${API_URL}/conversations/${conversationId}`);
 
     if (!response.ok) {
       throw new Error(`Failed to fetch conversation: ${response.status}`);
@@ -50,7 +41,6 @@ export const updateConversation = async (
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
       },
       body: JSON.stringify(rating),
     });
@@ -72,9 +62,7 @@ export const rateInteraction = async (
 ): Promise<Conversation> => {
   try {
     // Step 1: Fetch the existing conversation
-    const existingRes = await fetch(`${API_URL}/conversations/${conversationId}`, {
-      headers: authHeaders,
-    });
+    const existingRes = await fetch(`${API_URL}/conversations/${conversationId}`);
     if (!existingRes.ok) {
       throw new Error(`Failed to fetch conversation: ${existingRes.status}`);
     }
@@ -99,7 +87,6 @@ export const rateInteraction = async (
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        ...authHeaders,
       },
       body: JSON.stringify(payload),
     });
@@ -119,7 +106,6 @@ export const deleteConversation = async (conversationId: string): Promise<void> 
   try {
     const response = await fetch(`${API_URL}/conversations/${conversationId}`, {
       method: 'DELETE',
-      headers: authHeaders,
     });
 
     if (!response.ok) {

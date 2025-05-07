@@ -1,156 +1,491 @@
 
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { fetchConversationHistory } from '@/services/conversationService';
-import { Conversation } from '@/types/conversation';
-import { useAuth } from '@/contexts/AuthContext';
-import { useCustomers } from '@/contexts/CustomerContext';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, AlertTriangle, X } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { AVAILABLE_CUSTOMERS } from '@/types/auth';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Conversation, ConversationRating } from '@/types/conversation';
+import { fetchConversationHistory, updateConversation, deleteConversation } from '@/services/conversationService';
 import { toast } from '@/components/ui/use-toast';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/AuthContext';
+import { AVAILABLE_CUSTOMERS } from '@/types/auth';
+import ProfileDialog from './ProfileDialog';
 
 interface ConversationSidebarProps {
   customerId: string;
   sessionId: string | null;
   onSelectConversation: (conversation: Conversation) => void;
-  startNewChat: () => void;
-  onChangeCustomer: (customerId: string) => void;
   isMobile?: boolean;
   onCloseMobile?: () => void;
+  startNewChat?: () => void;
+  onChangeCustomer?: (customerId: string) => void;
 }
 
-const ConversationSidebar = ({
-  customerId,
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied to clipboard",
+      description: `URL: ${text}`,
+    });
+  } catch (err) {
+    toast({
+      variant: "destructive",
+      title: "Failed to copy",
+      description: err instanceof Error ? err.message : 'An error occurred',
+    });
+  }
+};
+
+
+const ConversationSidebar = ({ 
+  customerId, 
   sessionId,
   onSelectConversation,
-  startNewChat,
-  onChangeCustomer,
   isMobile = false,
   onCloseMobile,
+  startNewChat,
+  onChangeCustomer
 }: ConversationSidebarProps) => {
-  const { selectedCustomerId, startNewSession } = useAuth();
-  const { hasTools } = useCustomers();
-
-  // Fetch conversations for the selected customer
-  const {
-    data: conversations,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: ['conversations', customerId],
-    queryFn: () => fetchConversationHistory(customerId),
+  const { user, logout, startNewSession } = useAuth();
+  const [feedbackDialog, setFeedbackDialog] = useState<{
+    isOpen: boolean;
+    conversationId: string | null;
+    rating: number | null;
+    feedback: string;
+  }>({
+    isOpen: false,
+    conversationId: null,
+    rating: null,
+    feedback: '',
+  });
+  
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{
+    isOpen: boolean;
+    conversationId: string | null;
+  }>({
+    isOpen: false,
+    conversationId: null,
   });
 
-  const handleCustomerChange = (value: string) => {
-    startNewSession(value);
-    startNewChat(); // Start a new chat when changing customers
-    toast({
-      title: "Customer Changed",
-      description: `Switched to ${AVAILABLE_CUSTOMERS.find(c => c.id === value)?.name || value}`,
+  const queryClient = useQueryClient();
+  
+  const { data: conversations = [], isLoading, error } = useQuery({
+    queryKey: ['conversations', customerId],
+    queryFn: () => fetchConversationHistory(customerId),
+    enabled: !!customerId,
+    // Removed refetchInterval to stop frequent fetching
+  });
+  
+  const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
+    customer.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, rating }: { id: string; rating: ConversationRating }) => 
+      updateConversation(id, rating),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', customerId] });
+      toast({
+        title: 'Feedback saved',
+        description: 'Thank you for your feedback!',
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: 'Error saving feedback',
+        description: error instanceof Error ? error.message : 'An error occurred',
+      });
+    },
+  });
+  
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteConversation(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['conversations', customerId] });
+      toast({
+        title: 'Conversation deleted',
+        description: 'The conversation has been removed.',
+      });
+    },
+    onError: (error) => {
+      toast({
+        variant: "destructive",
+        title: 'Error deleting conversation',
+        description: error instanceof Error ? error.message : 'An error occurred',
+      });
+    },
+  });
+
+  const handleOpenFeedbackDialog = (conversationId: string, currentRating: number | null) => {
+    const conversation = conversations.find(c => c.session_id === conversationId);
+    setFeedbackDialog({
+      isOpen: true,
+      conversationId,
+      rating: currentRating || 0,
+      feedback: conversation?.feedback || '',
     });
   };
 
+  const handleSaveFeedback = () => {
+    if (!feedbackDialog.conversationId || feedbackDialog.rating === null) return;
+    
+    updateMutation.mutate({
+      id: feedbackDialog.conversationId,
+      rating: {
+        rating: feedbackDialog.rating,
+        feedback: feedbackDialog.feedback || undefined,
+      },
+    });
+    
+    setFeedbackDialog({
+      isOpen: false,
+      conversationId: null,
+      rating: null,
+      feedback: '',
+    });
+  };
+
+  const handleRateConversation = (conversationId: string, rating: number) => {
+    updateMutation.mutate({
+      id: conversationId,
+      rating: { rating },
+    });
+  };
+
+  const handleOpenDeleteDialog = (conversationId: string) => {
+    setDeleteConfirmDialog({
+      isOpen: true,
+      conversationId
+    });
+  };
+
+  const handleDeleteConversation = () => {
+    if (!deleteConfirmDialog.conversationId) return;
+    
+    deleteMutation.mutate(deleteConfirmDialog.conversationId);
+    
+    if (sessionId === deleteConfirmDialog.conversationId) {
+      localStorage.removeItem('chatSessionId');
+      window.location.reload();
+    }
+    
+    setDeleteConfirmDialog({
+      isOpen: false,
+      conversationId: null
+    });
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const getFirstUserMessage = (conversation: Conversation) => {
+    const userMessage = conversation.messages.find(m => m.role === 'user');
+    if (!userMessage) return 'New conversation';
+    
+    return userMessage.content.length > 30 
+      ? `${userMessage.content.substring(0, 30)}...` 
+      : userMessage.content;
+  };
+
+  const handleStartNewConversation = () => {
+    if (startNewChat) {
+      startNewChat();
+    } else {
+      startNewSession(customerId);
+      localStorage.removeItem('chatSessionId');
+      window.location.reload();
+    }
+    
+    if (isMobile && onCloseMobile) {
+      onCloseMobile();
+    }
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    if (isMobile && onCloseMobile) {
+      onCloseMobile();
+    }
+  };
+
+  const handleCustomerSelect = (customerId: string) => {
+    if (onChangeCustomer) {
+      onChangeCustomer(customerId);
+      setSearchQuery('');
+      
+      // Show toast notification when customer is selected
+      const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
+      toast({
+        title: "Customer Selected",
+        description: `Switched to ${selectedCustomer?.name}`,
+        className: "bg-[#F1F0FB] border-[#9b87f5]",
+      });
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full p-4">
+        <div className="w-6 h-6 border-t-2 border-[#9b87f5] rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="p-4 text-red-500">
+        Error loading conversations: {error instanceof Error ? error.message : 'Unknown error'}
+      </div>
+    );
+  }
+
+  const sortedConversations = [...conversations].sort(
+    (a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+  );
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b">
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center justify-between p-3 border-b">
+        <h2 className="text-sm font-medium">Conversation History</h2>
         {isMobile && (
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold">Conversations</h2>
-            {onCloseMobile && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onCloseMobile}
-                className="h-8 w-8 rounded-full"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          <Button variant="ghost" size="sm" onClick={onCloseMobile}>
+            <X className="h-4 w-4" />
+          </Button>
         )}
+      </div>
 
-        <div className="mb-4">
-          <Select value={customerId} onValueChange={handleCustomerChange}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select customer" />
-            </SelectTrigger>
-            <SelectContent>
-              {AVAILABLE_CUSTOMERS.map((customer) => (
-                <SelectItem key={customer.id} value={customer.id}>
-                  {customer.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {!hasTools && (
-          <Alert variant="destructive" className="mb-3">
-            <AlertTriangle className="h-4 w-4" />
-            <AlertTitle>Customer not supported</AlertTitle>
-            <AlertDescription>
-              This customer doesn't have any tools available for the chatbot.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <Button
-          onClick={startNewChat}
-          className="w-full flex items-center justify-center gap-2"
-          disabled={!hasTools}
+      <div className="p-3 border-b">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleStartNewConversation}
+          className="w-full mb-2 border-[#E5DEFF] hover:bg-[#F1F0FB]"
         >
-          <PlusCircle className="h-4 w-4" />
-          New conversation
+          <Plus className="h-4 w-4 mr-1 text-[#9b87f5]" />
+          New Chat
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2">
-        {isLoading ? (
-          <div className="flex justify-center items-center p-4">
-            <div className="w-6 h-6 border-t-2 border-blue-500 rounded-full animate-spin"></div>
-          </div>
-        ) : isError ? (
-          <div className="text-center p-4 text-red-500 text-sm">
-            Error loading conversations
-          </div>
-        ) : conversations && conversations.length > 0 ? (
-          <div className="space-y-1">
-            {conversations.map((conversation) => (
-              <button
-                key={conversation.session_id}
-                onClick={() => onSelectConversation(conversation)}
-                className={`w-full text-left p-3 rounded-lg transition-colors ${
-                  sessionId === conversation.session_id
-                    ? 'bg-[#E5DEFF] text-[#6643EA]'
-                    : 'hover:bg-gray-100'
-                }`}
-                disabled={!hasTools}
-              >
-                <div className="text-sm font-medium truncate">
-                  {/* Since title might not exist, provide a fallback */}
-                  {conversation.session_id.substring(0, 8) || 'New conversation'}
-                </div>
-                <div className="text-xs text-gray-500">
-                  {new Date(conversation.created_at).toLocaleDateString()}
-                </div>
-              </button>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center p-4 text-gray-500 text-sm">
+      <ScrollArea className="flex-1">
+        {sortedConversations.length === 0 ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">
             No conversations yet
           </div>
+        ) : (
+          <div className="p-2 space-y-2">
+            {sortedConversations.map((conversation) => (
+              <div 
+                key={conversation.session_id}
+                className={`flex flex-col rounded-md border ${
+                  sessionId === conversation.session_id 
+                    ? 'bg-[#F1F0FB] border-[#9b87f5]' 
+                    : 'bg-white border-[#E5DEFF] hover:bg-[#F9F8FF]'
+                } transition-colors`}
+              >
+                <div className="flex items-center justify-between p-2">
+                  <div 
+                    className="flex-1 cursor-pointer" 
+                    onClick={() => onSelectConversation(conversation)}
+                  >
+                    <div className="text-sm font-medium truncate">
+                      {getFirstUserMessage(conversation)}
+                    </div>
+                    <div className="flex items-center text-xs text-[#8E9196]">
+                      <Clock className="h-3 w-3 mr-1" />
+                      {formatDate(conversation.updated_at)}
+                    </div>
+                  </div>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                        <MoreHorizontal className="h-4 w-4 text-[#8E9196]" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleOpenFeedbackDialog(
+                        conversation.session_id,
+                        conversation.rating
+                      )}>
+                        Add feedback
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleOpenDeleteDialog(conversation.session_id)}>
+                        Delete conversation
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          const shareUrl = `${window.location.origin}/c/${conversation.session_id}`;
+                          copyToClipboard(shareUrl);
+                        }}
+                      >
+                        Share Conversation
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
+      </ScrollArea>
+
+      <div className="p-4 border-t">
+      <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
+          <Button 
+            variant="secondary"
+            size="sm" 
+            className="flex items-center gap-2 h-7 px-3 py-1 border border-gray-300 bg-white hover:bg-gray-100 text-black"
+            onClick={() => setIsProfileOpen(true)}
+          >
+            <User className="h-4 w-4 text-black" />
+            <span className="truncate">{user?.email}</span>
+          </Button>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleLogout}
+          className="w-full border-[#E5DEFF] hover:bg-[#F1F0FB] text-[#9b87f5] hover:text-[#7E69AB]"
+        >
+          <LogOut className="h-4 w-4 mr-2" />
+          Sign out
+        </Button>
       </div>
+
+      <Dialog 
+        open={feedbackDialog.isOpen} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setFeedbackDialog(prev => ({ ...prev, isOpen: false }));
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rate Conversation</DialogTitle>
+            <DialogDescription>
+              Please rate your experience and provide any feedback.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex justify-center py-4 space-x-1">
+            {[1, 2, 3, 4, 5].map((star) => {
+              const isActive = star <= (feedbackDialog.rating ?? 0);
+              return (
+                <button
+                  key={star}
+                  type="button"
+                  onMouseEnter={() =>
+                    setFeedbackDialog((prev) => ({ ...prev, hoveredRating: star }))
+                  }
+                  onMouseLeave={() =>
+                    setFeedbackDialog((prev) => ({ ...prev, hoveredRating: undefined }))
+                  }
+                  onClick={() =>
+                    setFeedbackDialog((prev) => ({ ...prev, rating: star }))
+                  }
+                  className="p-1 transition-opacity"
+                >
+                  <Star
+                    size={20}
+                    className={
+                      isActive
+                        ? "text-[var(--primary-color)] fill-[var(--primary-color)]"
+                        : "text-gray-300"
+                    }
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          <Textarea
+            placeholder="Add your feedback here (optional)"
+            value={feedbackDialog.feedback}
+            onChange={(e) => setFeedbackDialog(prev => ({ ...prev, feedback: e.target.value }))}
+            className="min-h-[100px]"
+          />
+          
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setFeedbackDialog(prev => ({ ...prev, isOpen: false }))}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleSaveFeedback}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={deleteConfirmDialog.isOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConfirmDialog(prev => ({ ...prev, isOpen: false }));
+          }
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Delete Conversation</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this conversation? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button 
+              variant="outline" 
+              onClick={() => setDeleteConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteConversation}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ProfileDialog
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        customerId={customerId}
+        onChangeCustomer={handleCustomerSelect}
+      />
     </div>
   );
 };

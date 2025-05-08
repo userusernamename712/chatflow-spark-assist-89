@@ -100,8 +100,6 @@ export const rateInteraction = async (
       interactions_rating: updatedRatings,
     };
 
-    console.log("Merged interaction rating payload:", payload);
-
     // Step 3: PATCH the updated interactions_rating back to the conversation
     const patchResponse = await fetch(`${API_URL}/conversations/${conversationId}`, {
       method: 'PATCH',

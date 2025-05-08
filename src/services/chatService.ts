@@ -26,13 +26,6 @@ export const sendChatMessage = async (
   onError: (error: Error) => void
 ) => {
   try {
-    // Log the chat request with customer info
-    console.log('Sending chat request:', JSON.stringify(request));
-    
-    // Ensure request includes session ID for tracking the conversation
-    if (!request.session_id) {
-      console.log('No session ID provided, server will create one');
-    }
     
     const response = await fetch(`${API_URL}/chat`, {
       method: 'POST',
@@ -102,8 +95,6 @@ export const sendChatMessage = async (
                 event.session_id = sessionIdFromResponse;
               }
               
-              // Log each received event with session and user info
-              console.log('Received event:', JSON.stringify(event));
               onEvent(event);
             } catch (e) {
               console.error('Error parsing JSON:', e, line);

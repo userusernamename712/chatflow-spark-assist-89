@@ -215,7 +215,6 @@ const Index = () => {
     } 
     // If this was the first message and we didn't get a session ID from stream
     else if (!sessionId && !streamSessionId) {
-      console.log('No session ID from stream, fetching from history');
       
       // We need to extract the session ID from the server response
       // The conversation should have been created on the server

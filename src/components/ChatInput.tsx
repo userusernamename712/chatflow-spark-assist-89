@@ -9,7 +9,7 @@ type ChatInputProps = {
   disabled?: boolean;
 };
 
-const ChatInput = ({ onSendMessage, isProcessing, disabled = true }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, isProcessing, disabled = false }: ChatInputProps) => {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 

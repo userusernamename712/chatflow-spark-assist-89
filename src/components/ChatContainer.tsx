@@ -19,7 +19,7 @@ const ChatContainer = ({
   onSendTypicalQuestion,
   conversationId,
   interactionsRating = {},
-  disabled = true,
+  disabled = false,
 }: ChatContainerProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 

@@ -4,6 +4,7 @@ export interface ChatRequest {
   user: string | null;
   customer_id: string;
   prompt: string;
+  timezone: string;
 }
 
 export interface ChatEvent {

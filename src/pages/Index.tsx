@@ -193,6 +193,7 @@ const Index = () => {
         user: user.email,
         customer_id: selectedCustomerId,
         prompt: content.trim(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
       handleChatEvent,
       handleChatComplete,

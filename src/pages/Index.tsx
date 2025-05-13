@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -49,66 +50,25 @@ const Index = () => {
   const [customerHasTools, setCustomerHasTools] = useState(true);
   const [isCheckingMetadata, setIsCheckingMetadata] = useState(false);
 
-  // Improved tools availability check with clearer error handling
   useEffect(() => {
-    // Reset tool availability when customer changes or on initial load
-    if (!selectedCustomerId) {
-      setCustomerHasTools(true);
-      return;
-    }
+    if (!selectedCustomerId) return;
   
     const checkTools = async () => {
       setIsCheckingMetadata(true);
       try {
-        // Clear any cached state first to avoid issues on customer switch
-        setCustomerHasTools(true);
-        
         const metadata = await fetchApiMetadata(selectedCustomerId);
-        const toolsAvailable = metadata.tools && Object.keys(metadata.tools).length > 0;
-        
-        console.log(`Customer ${selectedCustomerId} tools available:`, toolsAvailable);
-        setCustomerHasTools(toolsAvailable);
-        
-        // If tools aren't available, show a toast to explain why chat is disabled
-        if (!toolsAvailable) {
-          toast({
-            variant: "destructive",
-            title: "Service Unavailable",
-            description: "This customer doesn't have access to chat services.",
-          });
-        }
+        setCustomerHasTools(metadata.tools && Object.keys(metadata.tools).length > 0);
       } catch (err) {
         console.error('Failed to fetch tools metadata:', err);
-        // Default to allowing chat if we can't determine tool availability
-        // This prevents incorrect disabling
-        setCustomerHasTools(true);
+        setCustomerHasTools(false); // Assume false if there's an error
       } finally {
         setIsCheckingMetadata(false);
       }
     };
   
-    // Use sessionStorage to avoid repeated API calls in same session
-    const cachedStatus = sessionStorage.getItem(`customer_${selectedCustomerId}_tools`);
-    
-    if (cachedStatus === null) {
-      // Only check if we don't have cached status
-      checkTools();
-    } else {
-      // Use cached value if available
-      setCustomerHasTools(cachedStatus === 'true');
-    }
-    
+    checkTools();
   }, [selectedCustomerId]);
-  
-  // Cache tool availability in sessionStorage (not localStorage) to expire with session
-  useEffect(() => {
-    if (selectedCustomerId) {
-      sessionStorage.setItem(
-        `customer_${selectedCustomerId}_tools`, 
-        customerHasTools.toString()
-      );
-    }
-  }, [selectedCustomerId, customerHasTools]);
+
 
   // Fetch user engagement data for Hall of Shame
   const { data: usersEngagement, isLoading: isLoadingEngagement } = useQuery({
@@ -457,18 +417,13 @@ const Index = () => {
               onSendTypicalQuestion={handleSendTypicalQuestion}
               conversationId={sessionId}
               interactionsRating={interactionsRating}
-              disabled={!customerHasTools || isCheckingMetadata}
+              disabled={!customerHasTools}
             />
           )}
           
-          <ChatInput 
-            onSendMessage={handleSendMessage} 
-            isProcessing={isProcessing || isLoadingConversation || isCheckingMetadata}
-            disabled={!customerHasTools} 
-          />
+          <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing || isLoadingConversation} disabled={!customerHasTools}/>
         </div>
 
-        {/* Hall of Shame section */}
         <div className={`${isMobile ? 'hidden' : 'flex'} flex-col w-80`}>
           <Card className="shadow-lg h-full">
             <CardHeader className="bg-primary text-white rounded-t-lg">

@@ -1,4 +1,3 @@
-
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import { Send, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -50,11 +49,6 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled = false }: ChatInputP
   // Determine if button should be disabled (message empty, processing, or chat disabled)
   const isButtonDisabled = !message.trim() || isProcessing || disabled;
 
-  // Clean placeholder text (avoid extremely long red text)
-  const placeholderText = disabled 
-    ? "Service unavailable" 
-    : "Ask me anything...";
-
   return (
     <form onSubmit={handleSubmit} className="p-3 bg-white rounded-b-lg border-t border-[var(--neutral-color-strokes)]">
       <div className="relative flex items-end">
@@ -66,7 +60,7 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled = false }: ChatInputP
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={placeholderText}
+          placeholder={"Ask me anything..."}
           disabled={isProcessing || disabled}
           className={`min-h-[50px] max-h-[150px] pr-12 pl-10 rounded-md resize-none bg-[var(--neutral-color-background)] font-sans text-sm
             ${disabled

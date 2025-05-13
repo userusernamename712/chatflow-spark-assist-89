@@ -24,28 +24,69 @@ export const fetchApiMetadata = async (customer_id: string): Promise<ApiResponse
     const queryParam = `?customer_id=${encodeURIComponent(customer_id)}`;
     const headers = getAuthHeaders();
 
-    const [resourcesRes, templatesRes, toolsRes, serversRes] = await Promise.all([
+    // Use Promise.allSettled to ensure all requests complete, even if some fail
+    const [resourcesRes, templatesRes, toolsRes, serversRes] = await Promise.allSettled([
       fetch(`${API_URL}/resources${queryParam}`, { headers }),
       fetch(`${API_URL}/resource-templates${queryParam}`, { headers }),
       fetch(`${API_URL}/tools${queryParam}`, { headers }),
       fetch(`${API_URL}/servers`, { headers }),
     ]);
 
-    const [resources, resource_templates, tools, { servers }] = await Promise.all([
-      resourcesRes.json(),
-      templatesRes.json(),
-      toolsRes.json(),
-      serversRes.json(),
-    ]);
+    // Default empty values
+    const defaultResponse = {
+      resources: [],
+      resource_templates: [],
+      tools: {},
+      servers: [],
+    };
 
+    // Helper to safely parse JSON from responses
+    const safeJsonParse = async (response: PromiseFulfilledResult<Response>) => {
+      if (!response.value.ok) {
+        console.warn(`API returned ${response.value.status} status`);
+        return null;
+      }
+      
+      try {
+        return await response.value.json();
+      } catch (error) {
+        console.error('Error parsing JSON response:', error);
+        return null;
+      }
+    };
+
+    // Parse responses safely
+    const resources = resourcesRes.status === 'fulfilled' 
+      ? await safeJsonParse(resourcesRes) 
+      : null;
+    
+    const resource_templates = templatesRes.status === 'fulfilled' 
+      ? await safeJsonParse(templatesRes) 
+      : null;
+    
+    const tools = toolsRes.status === 'fulfilled' 
+      ? await safeJsonParse(toolsRes) 
+      : null;
+    
+    const servers = serversRes.status === 'fulfilled' 
+      ? await safeJsonParse(serversRes) 
+      : null;
+
+    // Construct response with fallbacks for missing data
     return {
-      resources: resources.resources,
-      resource_templates: resource_templates.resource_templates,
-      tools: tools.tools,
-      servers,
+      resources: resources?.resources || defaultResponse.resources,
+      resource_templates: resource_templates?.resource_templates || defaultResponse.resource_templates,
+      tools: tools?.tools || defaultResponse.tools,
+      servers: servers?.servers || defaultResponse.servers,
     };
   } catch (error) {
     console.error('Error fetching API metadata:', error);
-    throw error;
+    // Return default empty response instead of throwing
+    return {
+      resources: [],
+      resource_templates: [],
+      tools: {},
+      servers: [],
+    };
   }
 };

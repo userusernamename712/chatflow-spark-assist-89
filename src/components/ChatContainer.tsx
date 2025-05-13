@@ -19,9 +19,10 @@ const ChatContainer = ({
   onSendTypicalQuestion,
   conversationId,
   interactionsRating = {},
-  disabled = false,
+  disabled,
 }: ChatContainerProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  console.log(`Is it disabled : ${disabled}`)
 
   // Auto-scroll when messages change or streaming updates
   useEffect(() => {
@@ -58,6 +59,16 @@ const ChatContainer = ({
             I'm your AI assistant. Ask me questions or request information to get started.
           </p>
 
+          {disabled && (
+            <div className="mt-2 text-sm text-red-500 flex items-center space-x-2">
+              <button
+                className="underline text-red-600 hover:text-red-800 transition"
+                onClick={() => window.location.reload()}
+              >
+                Try refreshing
+              </button>
+            </div>
+          )}
           {!disabled && (
             <div className="mt-4 flex flex-col space-y-3">
               <div

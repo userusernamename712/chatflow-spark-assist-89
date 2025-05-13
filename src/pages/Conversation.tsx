@@ -164,6 +164,7 @@ const Conversation = () => {
         user: user.email || null,
         customer_id: selectedCustomerId,
         prompt: content.trim(),
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       },
       handleChatEvent,
       (sessionId) => {

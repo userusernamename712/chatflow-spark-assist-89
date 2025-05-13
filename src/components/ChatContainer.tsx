@@ -22,6 +22,7 @@ const ChatContainer = ({
   disabled = false,
 }: ChatContainerProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  console.log(`Is it disabled : ${disabled}`)
 
   // Auto-scroll when messages change or streaming updates
   useEffect(() => {

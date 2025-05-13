@@ -19,7 +19,7 @@ const ChatContainer = ({
   onSendTypicalQuestion,
   conversationId,
   interactionsRating = {},
-  disabled = false,
+  disabled,
 }: ChatContainerProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   console.log(`Is it disabled : ${disabled}`)

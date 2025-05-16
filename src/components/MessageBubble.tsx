@@ -215,6 +215,7 @@ const MessageBubble = ({
             catch {}
             const hasDateRange = parsed.start_date && parsed.end_date;
             const hasBotIds = Array.isArray(toolArgs?.bot_ids) && toolArgs.bot_ids.length > 0;
+            const hasVenueIds = Array.isArray(toolArgs?.venue_ids) && toolArgs.venue_ids.length > 0;
             return (
               <div className="text-sm text-gray-600 space-y-2">
                 <div className="font-medium text-gray-800 flex items-center gap-2">
@@ -234,6 +235,9 @@ const MessageBubble = ({
                 <div className="flex items-center flex-wrap gap-2 text-xs text-gray-700">
                   <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-md border border-blue-200 text-xs">
                     🤖 For bots: <strong>{hasBotIds ? toolArgs.bot_ids.join(', ') : 'all bots'}</strong>
+                  </span>
+                  <span className="bg-purple-100 text-purple-800 px-2 py-0.5 rounded-md border border-purple-200 text-xs">
+                    📍 For venues: <strong>{hasVenueIds ? toolArgs.venue_ids.join(', ') : 'all venues'}</strong>
                   </span>
                 </div>
               </div>

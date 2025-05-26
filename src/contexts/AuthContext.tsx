@@ -165,6 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch (error: any) {
       console.error('Login error:', error);
       setError(error.message || 'Failed to log in. Please try again.');
+      throw error;
     } finally {
       setLoading(false);
     }

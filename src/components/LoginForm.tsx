@@ -1,5 +1,3 @@
-
-import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,10 +34,16 @@ const LoginForm = () => {
       await login(values.email, values.password, DEFAULT_CUSTOMER_ID);
       toast({
         title: "Welcome back!",
-        description: `You've logged in successfully to the bookline.AI team portal.`,
+        description: `You've logged in successfully to the bookline.ai team portal.`,
       });
     } catch (err) {
       console.error('Auth error:', err);
+      // It's good practice to show the error in the toast too
+      toast({
+        title: "Login Failed",
+        description: error || "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -48,14 +52,16 @@ const LoginForm = () => {
       {/* Left side - Logo and branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-slate-900 flex-col justify-center items-center p-12">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-white rounded-full mb-8">
+          {/* Logo container for dark background */}
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full mb-8 overflow-hidden">
+            {/* The image itself should be transparent or black-on-transparent */}
             <img 
               src="/lovable-uploads/550aab05-c6c5-4d4a-8ef2-665352be8d2e.png" 
-              alt="bookline.AI Logo" 
-              className="h-10 w-10 object-contain"
+              alt="bookline.ai Logo" 
+              className="h-full w-full object-contain filter invert" // 'invert' if the logo is white-on-transparent and you want it white on dark, or black-on-white and you want it white on dark
             />
           </div>
-          <h1 className="text-4xl font-light text-white mb-4">bookline.AI</h1>
+          <h1 className="text-4xl font-light text-white mb-4">bookline.ai</h1>
           <p className="text-slate-400 text-lg font-light max-w-md">
             Transform your data into actionable insights with our advanced analytics platform
           </p>
@@ -67,11 +73,11 @@ const LoginForm = () => {
         <div className="w-full max-w-md mx-auto">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-900 rounded-full mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 overflow-hidden bg-slate-900">
               <img 
                 src="/lovable-uploads/550aab05-c6c5-4d4a-8ef2-665352be8d2e.png" 
                 alt="bookline.AI Logo" 
-                className="h-8 w-8 object-contain filter brightness-0 invert"
+                className="h-full w-full object-contain filter invert" // Invert filter for the dark mobile logo
               />
             </div>
             <h1 className="text-2xl font-light text-slate-900 mb-2">bookline.AI</h1>
@@ -162,7 +168,7 @@ const LoginForm = () => {
 
           <div className="mt-8 text-center">
             <p className="text-xs text-slate-500">
-              Secure authentication • bookline.AI
+              Secure authentication • bookline.ai
             </p>
           </div>
         </div>

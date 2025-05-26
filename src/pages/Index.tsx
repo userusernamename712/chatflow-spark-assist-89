@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -18,22 +17,6 @@ import { fetchConversation, fetchConversationHistory } from '@/services/conversa
 import { fetchApiMetadata } from '@/services/apiService';
 import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
-import { useQuery } from '@tanstack/react-query';
-import { fetchUserEngagement, getFullNameFromEmail } from '@/services/userEngagementService';
-import { 
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from '@/components/ui/table';
-import { 
-  Card, 
-  CardContent,
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -52,7 +35,7 @@ const Index = () => {
 
   useEffect(() => {
     if (!selectedCustomerId) return;
-  
+
     const checkTools = async () => {
       setIsCheckingMetadata(true);
       try {
@@ -60,34 +43,14 @@ const Index = () => {
         setCustomerHasTools(metadata.tools && Object.keys(metadata.tools).length > 0);
       } catch (err) {
         console.error('Failed to fetch tools metadata:', err);
-        setCustomerHasTools(false); // Assume false if there's an error
+        setCustomerHasTools(false);
       } finally {
         setIsCheckingMetadata(false);
       }
     };
-  
+
     checkTools();
   }, [selectedCustomerId]);
-
-
-  // Fetch user engagement data for Hall of Shame
-  const { data: usersEngagement, isLoading: isLoadingEngagement } = useQuery({
-    queryKey: ['userEngagement'],
-    queryFn: fetchUserEngagement,
-    enabled: isAuthenticated,
-  });
-
-  // Sort users by conversation_count (ascending for least engaged)
-  const sortedUsers = usersEngagement
-    ? Object.entries(usersEngagement)
-        .sort(([, a], [, b]) => a.conversation_count * a.mean_user_messages - b.conversation_count * b.mean_user_messages)
-        .map(([email, data], index) => ({
-          email,
-          fullName: getFullNameFromEmail(email),
-          rank: index + 1,
-          ...data
-        }))
-    : [];
 
   useEffect(() => {
     if (sessionId) {
@@ -99,13 +62,13 @@ const Index = () => {
     try {
       setIsLoadingConversation(true);
       const conversation = await fetchConversation(conversationId);
-  
+
       const mappedMessages: Message[] = [];
       setInteractionsRating(conversation.interactions_rating || {});
-  
+
       conversation.messages.forEach((m, index) => {
         if (m.role === 'system') return;
-  
+
         if (m.role === 'user' && m.content) {
           mappedMessages.push({
             id: uuidv4(),
@@ -122,7 +85,7 @@ const Index = () => {
               messageIndex: index,
             });
           }
-  
+
           if (m.tool_calls?.length) {
             m.tool_calls.forEach(toolCall => {
               let args;
@@ -131,7 +94,7 @@ const Index = () => {
               } catch {
                 args = { error: 'Could not parse arguments' };
               }
-  
+
               mappedMessages.push({
                 id: uuidv4(),
                 type: 'tool_call',
@@ -146,7 +109,7 @@ const Index = () => {
           const toolCallIndex = mappedMessages.findIndex(
             msg => msg.type === 'tool_call' && msg.toolCallId === m.tool_call_id
           );
-  
+
           if (toolCallIndex !== -1) {
             let result;
             try {
@@ -154,7 +117,7 @@ const Index = () => {
             } catch {
               result = m.content;
             }
-  
+
             mappedMessages[toolCallIndex] = {
               ...mappedMessages[toolCallIndex],
               result,
@@ -162,13 +125,13 @@ const Index = () => {
           }
         }
       });
-  
+
       setMessages(mappedMessages);
       setSessionId(conversationId);
       setRetryCount(0);
     } catch (err) {
       localStorage.removeItem('chatSessionId');
-      throw err; // Let the caller handle fallback
+      throw err;
     } finally {
       setIsLoadingConversation(false);
     }
@@ -186,7 +149,6 @@ const Index = () => {
     setMessages((prev) => [...prev, newUserMessage]);
     setIsProcessing(true);
 
-    // Send message with current sessionId
     sendChatMessage(
       {
         session_id: sessionId,
@@ -201,38 +163,25 @@ const Index = () => {
     );
   };
 
-  // Function to handle chat completion with the session ID from the stream
   const handleChatComplete = (streamSessionId?: string | null) => {
     setIsProcessing(false);
-    
-    // If we received a session ID from the stream, use it directly
+
     if (streamSessionId && !sessionId) {
       localStorage.setItem('chatSessionId', streamSessionId);
       setSessionId(streamSessionId);
-      
-      // Still invalidate queries to keep the sidebar up to date
-      // but don't fetch and reload the conversation
       queryClient.invalidateQueries({ queryKey: ['conversations', selectedCustomerId] });
-    } 
-    // If this was the first message and we didn't get a session ID from stream
-    else if (!sessionId && !streamSessionId) {
-      
-      // We need to extract the session ID from the server response
-      // The conversation should have been created on the server
+    } else if (!sessionId && !streamSessionId) {
       queryClient.invalidateQueries({ queryKey: ['conversations', selectedCustomerId] });
-      
-      // This is our fallback method if the stream didn't provide a session ID
-      queryClient.fetchQuery({ 
+
+      queryClient.fetchQuery({
         queryKey: ['conversations', selectedCustomerId],
         queryFn: async () => {
           const conversations = await fetchConversationHistory(selectedCustomerId);
           if (conversations && conversations.length > 0) {
-            // Get the most recent conversation
             const newestConversation = conversations.sort(
               (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
             )[0];
-            
-            // Set the session ID only if we didn't get one from the stream
+
             if (!sessionId && !streamSessionId) {
               const newSessionId = newestConversation.session_id;
               localStorage.setItem('chatSessionId', newSessionId);
@@ -240,7 +189,7 @@ const Index = () => {
             }
           }
           return conversations;
-        }
+        },
       });
     }
   };
@@ -253,11 +202,10 @@ const Index = () => {
 
   const handleChatEvent = (event: ChatEvent) => {
     if (event.type === 'text') {
-      // Update messages based on streaming response
       setMessages((prev) => {
         const currentMessages = [...prev];
         const lastMessage = currentMessages[currentMessages.length - 1];
-        
+
         if (lastMessage && lastMessage.type === 'assistant' && lastMessage.isStreaming) {
           const updatedMessage = {
             ...lastMessage,
@@ -273,19 +221,15 @@ const Index = () => {
               type: 'assistant',
               content: event.message || '',
               isStreaming: !event.finished,
-              messageIndex: prev.length, // Ensure messageIndex is set correctly
+              messageIndex: prev.length,
             },
           ];
         }
-        
+
         return currentMessages;
       });
-      
-      // Store the session ID in memory but don't update state yet
-      // This prevents the UI from reloading during streaming
-      // We'll set it in handleChatComplete when streaming is done
+
       if (event.session_id && !sessionId) {
-        // Just save to localStorage, but don't update state until streaming is complete
         localStorage.setItem('chatSessionId', event.session_id);
       }
     } else if (event.type === 'tool_call') {
@@ -298,7 +242,7 @@ const Index = () => {
           tool: event.tool,
           arguments: event.arguments,
           result: event.result,
-          messageIndex: prev.length, // Ensure messageIndex is set
+          messageIndex: prev.length,
         },
       ]);
     } else if (event.type === 'error') {
@@ -310,9 +254,9 @@ const Index = () => {
     console.error('Chat error:', error);
     setIsProcessing(false);
     toast({
-      variant: "destructive",
-      title: "Error",
-      description: error.message || "Something went wrong. Please try again.",
+      variant: 'destructive',
+      title: 'Error',
+      description: error.message || 'Something went wrong. Please try again.',
     });
   };
 
@@ -338,8 +282,7 @@ const Index = () => {
   };
 
   const handleChangeCustomer = (customerId: string) => {
-    // This will be handled by the auth context
-    // Show toast in ConversationSidebar component
+    // Handled by auth context
   };
 
   if (loading) {
@@ -355,7 +298,7 @@ const Index = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col h-screen items-center justify-center p-4 bg-gradient-to-b from-[#F1F0FB] to-white">
+      <div className="flex flex-col h-screen items-center justify-center p-4 bg-white">
         <LoginForm />
       </div>
     );
@@ -364,7 +307,7 @@ const Index = () => {
   return (
     <div className="flex h-screen bg-[#F6F6F7]">
       <div className="hidden md:block w-72 border-r border-[#E5DEFF] bg-white shadow-sm">
-        <ConversationSidebar 
+        <ConversationSidebar
           customerId={selectedCustomerId}
           sessionId={sessionId}
           onSelectConversation={handleSelectConversation}
@@ -372,10 +315,10 @@ const Index = () => {
           onChangeCustomer={handleChangeCustomer}
         />
       </div>
-      
+
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-[300px]">
-          <ConversationSidebar 
+          <ConversationSidebar
             customerId={selectedCustomerId}
             sessionId={sessionId}
             onSelectConversation={handleSelectConversation}
@@ -386,15 +329,14 @@ const Index = () => {
           />
         </SheetContent>
       </Sheet>
-      
+
       <div className="flex flex-1 max-w-6xl mx-auto gap-4 p-4">
-        {/* Chat Container */}
         <div className="flex flex-col flex-1 bg-white shadow-lg rounded-lg overflow-hidden border border-[#E5DEFF]">
           <div className="flex items-center justify-between p-4 border-b bg-white">
             <div className="flex items-center">
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="md:hidden mr-2"
                 onClick={() => setSidebarOpen(true)}
               >
@@ -403,7 +345,7 @@ const Index = () => {
               <ChatHeader />
             </div>
           </div>
-          
+
           {isLoadingConversation ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="flex flex-col items-center">
@@ -412,71 +354,21 @@ const Index = () => {
               </div>
             </div>
           ) : (
-            <ChatContainer 
-              messages={messages} 
-              isProcessing={isProcessing} 
+            <ChatContainer
+              messages={messages}
+              isProcessing={isProcessing}
               onSendTypicalQuestion={handleSendTypicalQuestion}
               conversationId={sessionId}
               interactionsRating={interactionsRating}
               disabled={!customerHasTools}
             />
           )}
-          
-          <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing || isLoadingConversation} disabled={!customerHasTools}/>
-        </div>
 
-        <div className={`${isMobile ? 'hidden' : 'flex'} flex-col w-80`}>
-          <Card className="shadow-lg h-full">
-            <CardHeader className="bg-primary text-white rounded-t-lg">
-              <CardTitle className="text-xl font-bold">Hall of Shame</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-4 overflow-y-auto max-h-[calc(100vh-200px)]">
-            {isLoadingEngagement ? (
-                <div className="flex items-center justify-center h-32">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-12">#</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead className="text-right">Count</TableHead>
-                      <TableHead className="text-right">Mean messages</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedUsers.map((user) => (
-                      <TableRow 
-                        key={user.email}
-                        className="hover:bg-purple-100 cursor-pointer transition"
-                        onClick={() => {
-                          toast({
-                            title: `Stats for ${user.fullName}`,
-                            description: `Conversations: ${user.conversation_count}, Avg. messages: ${user.mean_user_messages.toFixed(2)}`,
-                          });
-                        }}
-                      >
-                        <TableCell className="font-medium">{user.rank}</TableCell>
-                        <TableCell className="max-w-[120px] truncate" title={user.email}>
-                          {user.fullName}
-                        </TableCell>
-                        <TableCell className="text-right">{user.conversation_count}</TableCell>
-                        <TableCell className="text-right">{user.mean_user_messages.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                    {sortedUsers.length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-8 text-gray-500">
-                          No data available
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <ChatInput
+            onSendMessage={handleSendMessage}
+            isProcessing={isProcessing || isLoadingConversation}
+            disabled={!customerHasTools}
+          />
         </div>
       </div>
     </div>

@@ -10,20 +10,22 @@ import { Message, ChatEvent } from '@/types/chat';
 import { sendChatMessage } from '@/services/chatService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Menu, X, User } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
 import { fetchApiMetadata } from '@/services/apiService';
 import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
+import ProfileDialog from '@/components/ProfileDialog';
+import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 
 const Index = () => {
   const isMobile = useIsMobile();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chatSessionId'));
   const queryClient = useQueryClient();
@@ -285,6 +287,17 @@ const Index = () => {
     // Handled by auth context
   };
 
+  const handleCustomerSelect = (customerId: string) => {
+    handleChangeCustomer(customerId);
+    
+    const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
+    toast({
+      title: "Customer Selected",
+      description: `Switched to ${selectedCustomer?.name}`,
+      className: "bg-[#F1F0FB] border-[#9b87f5]",
+    });
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
@@ -306,46 +319,47 @@ const Index = () => {
 
   return (
     <div className="flex h-screen bg-[#F6F6F7]">
-      <div className="hidden md:block w-72 border-r border-[#E5DEFF] bg-white shadow-sm">
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-72' : 'w-0'} transition-all duration-300 overflow-hidden bg-white border-r border-[#E5DEFF] shadow-sm`}>
         <ConversationSidebar
           customerId={selectedCustomerId}
           sessionId={sessionId}
           onSelectConversation={handleSelectConversation}
           startNewChat={handleStartNewChat}
           onChangeCustomer={handleChangeCustomer}
+          isCollapsed={!sidebarOpen}
         />
       </div>
 
-      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-[300px]">
-          <ConversationSidebar
-            customerId={selectedCustomerId}
-            sessionId={sessionId}
-            onSelectConversation={handleSelectConversation}
-            isMobile={true}
-            onCloseMobile={() => setSidebarOpen(false)}
-            startNewChat={handleStartNewChat}
-            onChangeCustomer={handleChangeCustomer}
-          />
-        </SheetContent>
-      </Sheet>
-
-      <div className="flex flex-1 max-w-6xl mx-auto gap-4 p-4">
-        <div className="flex flex-col flex-1 bg-white shadow-lg rounded-lg overflow-hidden border border-[#E5DEFF]">
-          <div className="flex items-center justify-between p-4 border-b bg-white">
-            <div className="flex items-center">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="md:hidden mr-2"
-                onClick={() => setSidebarOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </Button>
-              <ChatHeader />
-            </div>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col bg-[#F6F6F7] relative">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 bg-[#F6F6F7] border-b border-[#E5DEFF]">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="text-[#8E9196] hover:text-[#403E43] hover:bg-[#F1F0FB]"
+            >
+              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+            <ChatHeader />
           </div>
+          
+          <Button 
+            variant="ghost"
+            size="sm" 
+            className="flex items-center gap-2 text-[#8E9196] hover:text-[#403E43] hover:bg-[#F1F0FB]"
+            onClick={() => setIsProfileOpen(true)}
+          >
+            <User className="h-4 w-4" />
+            <span className="hidden sm:inline">{user?.email}</span>
+          </Button>
+        </div>
 
+        {/* Chat Content */}
+        <div className="flex-1 flex flex-col bg-[#F6F6F7] relative">
           {isLoadingConversation ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="flex flex-col items-center">
@@ -364,13 +378,25 @@ const Index = () => {
             />
           )}
 
-          <ChatInput
-            onSendMessage={handleSendMessage}
-            isProcessing={isProcessing || isLoadingConversation}
-            disabled={!customerHasTools}
-          />
+          {/* Floating Input */}
+          <div className="p-4">
+            <div className="max-w-4xl mx-auto">
+              <ChatInput
+                onSendMessage={handleSendMessage}
+                isProcessing={isProcessing || isLoadingConversation}
+                disabled={!customerHasTools}
+              />
+            </div>
+          </div>
         </div>
       </div>
+
+      <ProfileDialog
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        customerId={selectedCustomerId}
+        onChangeCustomer={handleCustomerSelect}
+      />
     </div>
   );
 };

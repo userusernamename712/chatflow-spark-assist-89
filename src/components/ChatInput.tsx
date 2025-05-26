@@ -50,48 +50,50 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled }: ChatInputProps) =>
   const isButtonDisabled = !message.trim() || isProcessing || disabled;
 
   return (
-    <form onSubmit={handleSubmit} className="p-3 bg-white rounded-b-lg border-t border-[var(--neutral-color-strokes)]">
-      <div className="relative flex items-end">
-        <div className="absolute left-3 bottom-3 text-[var(--primary-color)]">
-          <MessageSquare className="h-4 w-4" />
+    <form onSubmit={handleSubmit} className="relative">
+      <div className="bg-white rounded-xl shadow-lg border border-[#E5DEFF] p-4">
+        <div className="relative flex items-end">
+          <div className="absolute left-3 bottom-3 text-[#9b87f5]">
+            <MessageSquare className="h-4 w-4" />
+          </div>
+          <Textarea
+            ref={textareaRef}
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={"Ask me anything..."}
+            disabled={isProcessing || disabled}
+            className={`min-h-[50px] max-h-[150px] pr-12 pl-10 border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 font-sans text-sm
+              ${disabled
+                ? 'text-red-500 placeholder-red-500'
+                : 'text-[#403E43] placeholder-[#8E9196]'
+              }
+            `}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className={`absolute right-2 bottom-2 rounded-lg h-8 w-8 transition-all duration-200 ${
+              disabled
+                ? 'border-2 border-red-500 text-red-500 bg-transparent hover:bg-red-50'
+                : 'bg-[#9b87f5] hover:bg-[#7E69AB] text-white'
+            }`}
+            disabled={isButtonDisabled}
+          >
+            <Send className="h-4 w-4" />
+            <span className="sr-only">Send</span>
+          </Button>
         </div>
-        <Textarea
-          ref={textareaRef}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={"Ask me anything..."}
-          disabled={isProcessing || disabled}
-          className={`min-h-[50px] max-h-[150px] pr-12 pl-10 rounded-md resize-none bg-[var(--neutral-color-background)] font-sans text-sm
-            ${disabled
-              ? 'border-2 border-red-500 text-red-500 placeholder-red-500 focus-visible:ring-red-500'
-              : 'border-[var(--neutral-color-strokes)] text-[var(--neutral-color-dark)] placeholder-[var(--neutral-color-medium)] focus-visible:ring-[var(--primary-color)]'
-            }
-          `}
-        />
-        <Button
-          type="submit"
-          size="icon"
-          className={`absolute right-2 bottom-2 rounded-md h-8 w-8 transition-all duration-200 ${
-            disabled
-              ? 'border-2 border-red-500 text-red-500 bg-transparent'
-              : 'bg-[var(--primary-color)] hover:bg-[var(--primary-color-hover)] text-white'
-          }`}
-          disabled={isButtonDisabled}
-        >
-          <Send className="h-4 w-4" />
-          <span className="sr-only">Send</span>
-        </Button>
-      </div>
-      <div className={`mt-1.5 text-xs text-center ${
-        disabled && !isProcessing ? 'text-red-500' : 'text-[var(--neutral-color-medium)]'
-      }`}>
-        {isProcessing
-          ? "Thinking..."
-          : disabled
-            ? "This service is not available for this customer"
-            : "Type your message and press Enter to send"
-        }
+        <div className={`mt-2 text-xs text-center ${
+          disabled && !isProcessing ? 'text-red-500' : 'text-[#8E9196]'
+        }`}>
+          {isProcessing
+            ? "Thinking..."
+            : disabled
+              ? "This service is not available for this customer"
+              : "Type your message and press Enter to send"
+          }
+        </div>
       </div>
     </form>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MoreHorizontal, LogOut, Star, StarOff, Plus, User, X, Clock } from 'lucide-react';
@@ -34,6 +33,7 @@ interface ConversationSidebarProps {
   onCloseMobile?: () => void;
   startNewChat?: () => void;
   onChangeCustomer?: (customerId: string) => void;
+  isCollapsed?: boolean;
 }
 
 const copyToClipboard = async (text: string) => {
@@ -52,7 +52,6 @@ const copyToClipboard = async (text: string) => {
   }
 };
 
-
 const ConversationSidebar = ({ 
   customerId, 
   sessionId,
@@ -60,9 +59,11 @@ const ConversationSidebar = ({
   isMobile = false,
   onCloseMobile,
   startNewChat,
-  onChangeCustomer
+  onChangeCustomer,
+  isCollapsed = false
 }: ConversationSidebarProps) => {
   const { user, logout, startNewSession } = useAuth();
+  
   const [feedbackDialog, setFeedbackDialog] = useState<{
     isOpen: boolean;
     conversationId: string | null;
@@ -92,7 +93,6 @@ const ConversationSidebar = ({
     queryKey: ['conversations', customerId],
     queryFn: () => fetchConversationHistory(customerId),
     enabled: !!customerId,
-    // Removed refetchInterval to stop frequent fetching
   });
   
   const filteredCustomers = AVAILABLE_CUSTOMERS.filter(customer =>
@@ -240,7 +240,6 @@ const ConversationSidebar = ({
       onChangeCustomer(customerId);
       setSearchQuery('');
       
-      // Show toast notification when customer is selected
       const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
       toast({
         title: "Customer Selected",
@@ -249,6 +248,10 @@ const ConversationSidebar = ({
       });
     }
   };
+
+  if (isCollapsed) {
+    return null;
+  }
 
   if (isLoading) {
     return (
@@ -357,7 +360,7 @@ const ConversationSidebar = ({
       </ScrollArea>
 
       <div className="p-4 border-t">
-      <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
+        <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
           <Button 
             variant="secondary"
             size="sm" 

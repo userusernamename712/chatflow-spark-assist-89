@@ -1,4 +1,5 @@
 
+
 import { ChatRequest, ChatEvent } from '@/types/chat';
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -23,7 +24,8 @@ export const sendChatMessage = async (
   request: ChatRequest,
   onEvent: (event: ChatEvent) => void,
   onComplete: (sessionId?: string | null) => void,
-  onError: (error: Error) => void
+  onError: (error: Error) => void,
+  signal?: AbortSignal
 ) => {
   try {
     
@@ -31,6 +33,7 @@ export const sendChatMessage = async (
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(request),
+      signal,
     });
 
     if (!response.ok) {
@@ -77,6 +80,12 @@ export const sendChatMessage = async (
           break;
         }
 
+        // Check if request was aborted
+        if (signal?.aborted) {
+          reader.cancel();
+          throw new Error('Request aborted');
+        }
+
         // Append new data to buffer
         buffer += decoder.decode(value, { stream: true });
         
@@ -106,6 +115,12 @@ export const sendChatMessage = async (
 
     processStream().catch(onError);
   } catch (error) {
-    onError(error instanceof Error ? error : new Error(String(error)));
+    if (error instanceof Error && error.name === 'AbortError') {
+      const abortError = new Error('Request aborted');
+      abortError.name = 'AbortError';
+      onError(abortError);
+    } else {
+      onError(error instanceof Error ? error : new Error(String(error)));
+    }
   }
 };

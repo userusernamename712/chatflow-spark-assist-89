@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import ChatHeader from '@/components/ChatHeader';
@@ -10,14 +10,14 @@ import { Message, ChatEvent } from '@/types/chat';
 import { sendChatMessage } from '@/services/chatService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Menu, PanelLeftClose, Square } from 'lucide-react';
+import { Menu, PanelLeftClose } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
 import { fetchApiMetadata } from '@/services/apiService';
 import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
+import ProfileDialog from '@/components/ProfileDialog';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
-import { Drawer, DrawerContent } from '@/components/ui/drawer';
 
 const Index = () => {
   const isMobile = useIsMobile();
@@ -33,7 +33,6 @@ const Index = () => {
   const [interactionsRating, setInteractionsRating] = useState<Record<string, number>>({});
   const [customerHasTools, setCustomerHasTools] = useState(true);
   const [isCheckingMetadata, setIsCheckingMetadata] = useState(false);
-  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Close sidebar on mobile by default and when screen size changes
   useEffect(() => {
@@ -145,11 +144,7 @@ const Index = () => {
   };
 
   const handleSendMessage = (content: string) => {
-    if (!content.trim() || !user) return;
-
-    // Create abort controller for this request
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
+    if (!content.trim() || isProcessing || !user) return;
 
     const newUserMessage: Message = {
       id: uuidv4(),
@@ -170,27 +165,12 @@ const Index = () => {
       },
       handleChatEvent,
       handleChatComplete,
-      handleError,
-      abortController.signal
+      handleError
     );
-  };
-
-  const handleStopGeneration = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-      setIsProcessing(false);
-      
-      toast({
-        title: "Generation stopped",
-        description: "The response generation has been stopped.",
-      });
-    }
   };
 
   const handleChatComplete = (streamSessionId?: string | null) => {
     setIsProcessing(false);
-    abortControllerRef.current = null;
 
     if (streamSessionId && !sessionId) {
       localStorage.setItem('chatSessionId', streamSessionId);
@@ -221,7 +201,9 @@ const Index = () => {
   };
 
   const handleSendTypicalQuestion = (question: string) => {
-    handleSendMessage(question);
+    if (!isProcessing) {
+      handleSendMessage(question);
+    }
   };
 
   const handleChatEvent = (event: ChatEvent) => {
@@ -277,15 +259,11 @@ const Index = () => {
   const handleError = (error: Error) => {
     console.error('Chat error:', error);
     setIsProcessing(false);
-    abortControllerRef.current = null;
-    
-    if (error.name !== 'AbortError') {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: error.message || 'Something went wrong. Please try again.',
-      });
-    }
+    toast({
+      variant: 'destructive',
+      title: 'Error',
+      description: error.message || 'Something went wrong. Please try again.',
+    });
   };
 
   const handleSelectConversation = (conversation: Conversation) => {
@@ -345,43 +323,23 @@ const Index = () => {
 
   return (
     <div className="flex h-screen bg-[#F6F6F7] w-full">
-      {/* Desktop Sidebar */}
-      {!isMobile && (
-        <div className={`${
-          sidebarOpen 
-            ? 'w-72 md:w-80' 
-            : 'w-0'
-          } transition-all duration-300 overflow-hidden bg-white border-r border-[#E5DEFF] shadow-sm flex-shrink-0`}>
-          <ConversationSidebar
-            customerId={selectedCustomerId}
-            sessionId={sessionId}
-            onSelectConversation={handleSelectConversation}
-            startNewChat={handleStartNewChat}
-            onChangeCustomer={handleChangeCustomer}
-            isCollapsed={!sidebarOpen}
-            isMobile={false}
-            onCloseMobile={() => setSidebarOpen(false)}
-          />
-        </div>
-      )}
-
-      {/* Mobile Drawer */}
-      {isMobile && (
-        <Drawer open={sidebarOpen} onOpenChange={setSidebarOpen}>
-          <DrawerContent className="h-[90vh] p-0">
-            <ConversationSidebar
-              customerId={selectedCustomerId}
-              sessionId={sessionId}
-              onSelectConversation={handleSelectConversation}
-              startNewChat={handleStartNewChat}
-              onChangeCustomer={handleChangeCustomer}
-              isCollapsed={false}
-              isMobile={true}
-              onCloseMobile={() => setSidebarOpen(false)}
-            />
-          </DrawerContent>
-        </Drawer>
-      )}
+      {/* Sidebar - Responsive */}
+      <div className={`${
+        sidebarOpen 
+          ? 'w-72 md:w-80' 
+          : 'w-0'
+        } transition-all duration-300 overflow-hidden bg-white border-r border-[#E5DEFF] shadow-sm flex-shrink-0`}>
+        <ConversationSidebar
+          customerId={selectedCustomerId}
+          sessionId={sessionId}
+          onSelectConversation={handleSelectConversation}
+          startNewChat={handleStartNewChat}
+          onChangeCustomer={handleChangeCustomer}
+          isCollapsed={!sidebarOpen}
+          isMobile={isMobile}
+          onCloseMobile={() => setSidebarOpen(false)}
+        />
+      </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col bg-[#F6F6F7] relative min-w-0">
@@ -402,19 +360,6 @@ const Index = () => {
             </Button>
             <ChatHeader />
           </div>
-          
-          {/* Stop Generation Button */}
-          {isProcessing && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleStopGeneration}
-              className="border-red-500 text-red-500 hover:bg-red-50"
-            >
-              <Square className="h-4 w-4 mr-2" />
-              Stop
-            </Button>
-          )}
         </div>
 
         {/* Chat Content */}
@@ -442,13 +387,21 @@ const Index = () => {
             <div className="max-w-4xl mx-auto">
               <ChatInput
                 onSendMessage={handleSendMessage}
-                isProcessing={false}
+                isProcessing={isProcessing || isLoadingConversation}
                 disabled={!customerHasTools}
               />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import { Send, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,7 +15,7 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled }: ChatInputProps) =>
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !disabled) {
+    if (message.trim() && !isProcessing && !disabled) {
       onSendMessage(message);
       setMessage('');
     }
@@ -40,15 +39,15 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled }: ChatInputProps) =>
     }
   }, [message]);
 
-  // Auto focus when not disabled
+  // Auto focus when processing is complete
   useEffect(() => {
-    if (!disabled && textareaRef.current) {
+    if (!isProcessing && textareaRef.current) {
       textareaRef.current.focus();
     }
-  }, [disabled]);
+  }, [isProcessing]);
 
-  // Determine if button should be disabled (message empty or chat disabled)
-  const isButtonDisabled = !message.trim() || disabled;
+  // Determine if button should be disabled (message empty, processing, or chat disabled)
+  const isButtonDisabled = !message.trim() || isProcessing || disabled;
 
   return (
     <form onSubmit={handleSubmit} className="relative">
@@ -63,7 +62,7 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled }: ChatInputProps) =>
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={"Ask me anything..."}
-            disabled={disabled}
+            disabled={isProcessing || disabled}
             className={`min-h-[50px] max-h-[150px] pr-12 pl-10 border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 font-sans text-sm
               ${disabled
                 ? 'text-red-500 placeholder-red-500'
@@ -86,11 +85,13 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled }: ChatInputProps) =>
           </Button>
         </div>
         <div className={`mt-2 text-xs text-center ${
-          disabled ? 'text-red-500' : 'text-[#8E9196]'
+          disabled && !isProcessing ? 'text-red-500' : 'text-[#8E9196]'
         }`}>
-          {disabled
-            ? "This service is not available for this customer"
-            : "Type your message and press Enter to send"
+          {isProcessing
+            ? "Thinking..."
+            : disabled
+              ? "This service is not available for this customer"
+              : "Type your message and press Enter to send"
           }
         </div>
       </div>

@@ -274,7 +274,8 @@ const ConversationSidebar = ({
   );
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <div className="flex flex-col h-full bg-white relative">
+      {/* Header with close button for mobile */}
       <div className="flex items-center justify-between p-3 border-b">
         <h2 className="text-sm font-medium">Conversation History</h2>
         {isMobile && (
@@ -359,12 +360,13 @@ const ConversationSidebar = ({
         )}
       </ScrollArea>
 
+      {/* Profile and Logout in sidebar footer */}
       <div className="p-4 border-t">
         <div className="flex items-center mb-3 px-2 text-sm text-[#8E9196]">
           <Button 
             variant="secondary"
             size="sm" 
-            className="flex items-center gap-2 h-7 px-3 py-1 border border-gray-300 bg-white hover:bg-gray-100 text-black"
+            className="flex items-center gap-2 h-8 px-3 py-1 border border-gray-300 bg-white hover:bg-gray-100 text-black w-full justify-start"
             onClick={() => setIsProfileOpen(true)}
           >
             <User className="h-4 w-4 text-black" />
@@ -382,6 +384,7 @@ const ConversationSidebar = ({
         </Button>
       </div>
 
+      {/* Keep existing dialogs */}
       <Dialog 
         open={feedbackDialog.isOpen} 
         onOpenChange={(open) => {

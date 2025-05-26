@@ -10,7 +10,7 @@ import { Message, ChatEvent } from '@/types/chat';
 import { sendChatMessage } from '@/services/chatService';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User } from 'lucide-react';
+import { Menu, PanelLeftClose } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
 import { fetchApiMetadata } from '@/services/apiService';
@@ -24,8 +24,7 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chatSessionId'));
   const queryClient = useQueryClient();
@@ -34,6 +33,11 @@ const Index = () => {
   const [interactionsRating, setInteractionsRating] = useState<Record<string, number>>({});
   const [customerHasTools, setCustomerHasTools] = useState(true);
   const [isCheckingMetadata, setIsCheckingMetadata] = useState(false);
+
+  // Close sidebar on mobile by default and when screen size changes
+  useEffect(() => {
+    setSidebarOpen(!isMobile);
+  }, [isMobile]);
 
   useEffect(() => {
     if (!selectedCustomerId) return;
@@ -318,9 +322,13 @@ const Index = () => {
   }
 
   return (
-    <div className="flex h-screen bg-[#F6F6F7]">
-      {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'w-72' : 'w-0'} transition-all duration-300 overflow-hidden bg-white border-r border-[#E5DEFF] shadow-sm`}>
+    <div className="flex h-screen bg-[#F6F6F7] w-full">
+      {/* Sidebar - Responsive */}
+      <div className={`${
+        sidebarOpen 
+          ? 'w-72 md:w-80' 
+          : 'w-0'
+        } transition-all duration-300 overflow-hidden bg-white border-r border-[#E5DEFF] shadow-sm flex-shrink-0`}>
         <ConversationSidebar
           customerId={selectedCustomerId}
           sessionId={sessionId}
@@ -328,13 +336,15 @@ const Index = () => {
           startNewChat={handleStartNewChat}
           onChangeCustomer={handleChangeCustomer}
           isCollapsed={!sidebarOpen}
+          isMobile={isMobile}
+          onCloseMobile={() => setSidebarOpen(false)}
         />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-[#F6F6F7] relative">
+      <div className="flex-1 flex flex-col bg-[#F6F6F7] relative min-w-0">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-[#F6F6F7] border-b border-[#E5DEFF]">
+        <div className="flex items-center justify-between p-4 bg-[#F6F6F7] border-b border-[#E5DEFF] flex-shrink-0">
           <div className="flex items-center gap-3">
             <Button
               variant="ghost"
@@ -342,24 +352,18 @@ const Index = () => {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="text-[#8E9196] hover:text-[#403E43] hover:bg-[#F1F0FB]"
             >
-              {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {sidebarOpen ? (
+                <PanelLeftClose className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </Button>
             <ChatHeader />
           </div>
-          
-          <Button 
-            variant="ghost"
-            size="sm" 
-            className="flex items-center gap-2 text-[#8E9196] hover:text-[#403E43] hover:bg-[#F1F0FB]"
-            onClick={() => setIsProfileOpen(true)}
-          >
-            <User className="h-4 w-4" />
-            <span className="hidden sm:inline">{user?.email}</span>
-          </Button>
         </div>
 
         {/* Chat Content */}
-        <div className="flex-1 flex flex-col bg-[#F6F6F7] relative">
+        <div className="flex-1 flex flex-col bg-[#F6F6F7] relative min-h-0">
           {isLoadingConversation ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="flex flex-col items-center">
@@ -379,7 +383,7 @@ const Index = () => {
           )}
 
           {/* Floating Input */}
-          <div className="p-4">
+          <div className="p-4 flex-shrink-0">
             <div className="max-w-4xl mx-auto">
               <ChatInput
                 onSendMessage={handleSendMessage}
@@ -391,12 +395,13 @@ const Index = () => {
         </div>
       </div>
 
-      <ProfileDialog
-        isOpen={isProfileOpen}
-        onClose={() => setIsProfileOpen(false)}
-        customerId={selectedCustomerId}
-        onChangeCustomer={handleCustomerSelect}
-      />
+      {/* Mobile Overlay */}
+      {isMobile && sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
 import ChatHeader from '@/components/ChatHeader';
@@ -33,6 +33,7 @@ const Index = () => {
   const [interactionsRating, setInteractionsRating] = useState<Record<string, number>>({});
   const [customerHasTools, setCustomerHasTools] = useState(true);
   const [isCheckingMetadata, setIsCheckingMetadata] = useState(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   // Close sidebar on mobile by default and when screen size changes
   useEffect(() => {
@@ -144,7 +145,7 @@ const Index = () => {
   };
 
   const handleSendMessage = (content: string) => {
-    if (!content.trim() || isProcessing || !user) return;
+    if (!content.trim() || !user) return;
 
     const newUserMessage: Message = {
       id: uuidv4(),
@@ -154,6 +155,9 @@ const Index = () => {
 
     setMessages((prev) => [...prev, newUserMessage]);
     setIsProcessing(true);
+
+    // Create a new AbortController for this request
+    abortControllerRef.current = new AbortController();
 
     sendChatMessage(
       {
@@ -165,8 +169,23 @@ const Index = () => {
       },
       handleChatEvent,
       handleChatComplete,
-      handleError
+      handleError,
+      abortControllerRef.current.signal
     );
+  };
+
+  const handleStopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsProcessing(false);
+      
+      toast({
+        title: "Generation stopped",
+        description: "The response generation has been interrupted.",
+        className: "bg-[#F1F0FB] border-[#9b87f5]",
+      });
+    }
   };
 
   const handleChatComplete = (streamSessionId?: string | null) => {
@@ -387,6 +406,7 @@ const Index = () => {
             <div className="max-w-4xl mx-auto">
               <ChatInput
                 onSendMessage={handleSendMessage}
+                onStopGeneration={handleStopGeneration}
                 isProcessing={isProcessing || isLoadingConversation}
                 disabled={!customerHasTools}
               />

@@ -1,21 +1,25 @@
+
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, MessageSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 type ChatInputProps = {
   onSendMessage: (message: string) => void;
+  onStopGeneration: () => void;
   isProcessing: boolean;
   disabled?: boolean;
 };
 
-const ChatInput = ({ onSendMessage, isProcessing, disabled }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: ChatInputProps) => {
   const [message, setMessage] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (message.trim() && !isProcessing && !disabled) {
+    if (isProcessing) {
+      onStopGeneration();
+    } else if (message.trim() && !disabled) {
       onSendMessage(message);
       setMessage('');
     }
@@ -46,8 +50,8 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled }: ChatInputProps) =>
     }
   }, [isProcessing]);
 
-  // Determine if button should be disabled (message empty, processing, or chat disabled)
-  const isButtonDisabled = !message.trim() || isProcessing || disabled;
+  // Determine if button should be disabled (message empty when not processing, or chat disabled)
+  const isButtonDisabled = (!isProcessing && !message.trim()) || disabled;
 
   return (
     <form onSubmit={handleSubmit} className="relative">
@@ -62,7 +66,7 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled }: ChatInputProps) =>
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={"Ask me anything..."}
-            disabled={isProcessing || disabled}
+            disabled={disabled}
             className={`min-h-[50px] max-h-[150px] pr-12 pl-10 border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 font-sans text-sm
               ${disabled
                 ? 'text-red-500 placeholder-red-500'
@@ -76,19 +80,25 @@ const ChatInput = ({ onSendMessage, isProcessing, disabled }: ChatInputProps) =>
             className={`absolute right-2 bottom-2 rounded-lg h-8 w-8 transition-all duration-200 ${
               disabled
                 ? 'border-2 border-red-500 text-red-500 bg-transparent hover:bg-red-50'
-                : 'bg-[#9b87f5] hover:bg-[#7E69AB] text-white'
+                : isProcessing
+                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  : 'bg-[#9b87f5] hover:bg-[#7E69AB] text-white'
             }`}
             disabled={isButtonDisabled}
           >
-            <Send className="h-4 w-4" />
-            <span className="sr-only">Send</span>
+            {isProcessing ? (
+              <Square className="h-4 w-4" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+            <span className="sr-only">{isProcessing ? 'Stop' : 'Send'}</span>
           </Button>
         </div>
         <div className={`mt-2 text-xs text-center ${
           disabled && !isProcessing ? 'text-red-500' : 'text-[#8E9196]'
         }`}>
           {isProcessing
-            ? "Thinking..."
+            ? "Click stop to interrupt generation..."
             : disabled
               ? "This service is not available for this customer"
               : "Type your message and press Enter to send"

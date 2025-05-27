@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import ChatHeader from '@/components/ChatHeader';
 import ChatContainer from '@/components/ChatContainer';
 import ChatInput from '@/components/ChatInput';
@@ -194,11 +194,7 @@ const Index = () => {
       };
       setMessages((prev) => [...prev, abortedMessage]);
       
-      toast({
-        title: "Generation stopped",
-        description: "The response generation has been interrupted.",
-        className: "bg-[#F1F0FB] border-[#9b87f5]",
-      });
+      toast.success("Generation stopped");
     }
   };
 

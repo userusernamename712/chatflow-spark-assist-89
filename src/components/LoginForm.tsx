@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import {
   Form,
   FormControl,
@@ -32,18 +32,11 @@ const LoginForm = () => {
   const onSubmit = async (values: FormValues) => {
     try {
       await login(values.email, values.password, DEFAULT_CUSTOMER_ID);
-      toast({
-        title: "Welcome back!",
-        description: `You've logged in successfully to the bookline.ai team portal.`,
-      });
+      toast.success(`You've logged in successfully to the bookline.ai team portal.`);
     } catch (err) {
       console.error('Auth error:', err);
       // It's good practice to show the error in the toast too
-      toast({
-        title: "Login Failed",
-        description: error || "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
+      toast.error(error || "An unexpected error occurred. Please try again.");
     }
   };
 

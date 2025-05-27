@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import ChatHeader from '@/components/ChatHeader';
 import ChatContainer from '@/components/ChatContainer';
 import ChatInput from '@/components/ChatInput';
@@ -259,11 +259,7 @@ const Conversation = () => {
   const handleError = (error: Error) => {
     console.error('Chat error:', error);
     setIsProcessing(false);
-    toast({
-      variant: "destructive",
-      title: "Error",
-      description: error.message || "Something went wrong. Please try again.",
-    });
+    toast.error(error.message || "Something went wrong. Please try again.");
   };
 
   const handleSelectConversation = (conversation: any) => {

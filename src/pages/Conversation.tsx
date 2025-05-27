@@ -28,6 +28,7 @@ const Conversation = () => {
   const [retryCount, setRetryCount] = useState(0);
   const [interactionsRating, setInteractionsRating] = useState<Record<string, number>>({});
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [lastUserMessage, setLastUserMessage] = useState<string>('');
   const maxRetries = 3;
 
   useEffect(() => {
@@ -150,6 +151,9 @@ const Conversation = () => {
   const handleSendMessage = (content: string) => {
     if (!content.trim() || isProcessing || !user) return;
 
+    // Store the last user message for potential retry
+    setLastUserMessage(content.trim());
+
     const newUserMessage: Message = {
       id: uuidv4(),
       type: 'user',
@@ -188,18 +192,15 @@ const Conversation = () => {
       abortControllerRef.current = null;
       setIsProcessing(false);
       
-      // Add an aborted message with retry options
-      const lastUserMessage = messages[messages.length - 1];
-      if (lastUserMessage && lastUserMessage.type === 'user') {
-        const abortedMessage: Message = {
-          id: uuidv4(),
-          type: 'aborted',
-          content: 'Generation was stopped.',
-          originalPrompt: lastUserMessage.content,
-          messageIndex: messages.length,
-        };
-        setMessages((prev) => [...prev, abortedMessage]);
-      }
+      // Always add an aborted message with retry options when generation is stopped
+      const abortedMessage: Message = {
+        id: uuidv4(),
+        type: 'aborted',
+        content: 'Generation was stopped.',
+        originalPrompt: lastUserMessage,
+        messageIndex: messages.length,
+      };
+      setMessages((prev) => [...prev, abortedMessage]);
     }
   };
 

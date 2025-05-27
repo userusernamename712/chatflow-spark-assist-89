@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Star } from 'lucide-react';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { rateInteraction } from '@/services/conversationService';
 
 interface MessageRatingProps {
@@ -34,14 +35,10 @@ const MessageRating = ({
       setRating(selectedRating);
       onRatingSubmit?.(selectedRating);
 
-      toast({ description: "Rating submitted!", duration: 2500 });
+      toast.success("Interaction rated successfully!");
     } catch (error) {
       console.error('Rating failed:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Could not submit your rating.",
-      });
+      toast.error("Failed to submit rating. Please try again.");
     } finally {
       setIsSubmitting(false);
     }

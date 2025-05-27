@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { Conversation, ConversationRating } from '@/types/conversation';
 import { fetchConversationHistory, updateConversation, deleteConversation } from '@/services/conversationService';
-import { toast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 import ProfileDialog from './ProfileDialog';
@@ -39,16 +39,9 @@ interface ConversationSidebarProps {
 const copyToClipboard = async (text: string) => {
   try {
     await navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied to clipboard",
-      description: `URL: ${text}`,
-    });
+    toast.success('Conversation link copied to clipboard!');
   } catch (err) {
-    toast({
-      variant: "destructive",
-      title: "Failed to copy",
-      description: err instanceof Error ? err.message : 'An error occurred',
-    });
+    toast.error('Failed to copy conversation link');
   }
 };
 
@@ -104,17 +97,10 @@ const ConversationSidebar = ({
       updateConversation(id, rating),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations', customerId] });
-      toast({
-        title: 'Feedback saved',
-        description: 'Thank you for your feedback!',
-      });
+      toast.success('Feedback saved successfully!');
     },
     onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: 'Error saving feedback',
-        description: error instanceof Error ? error.message : 'An error occurred',
-      });
+      toast.error('Failed to save feedback. Please try again.');
     },
   });
   
@@ -122,17 +108,10 @@ const ConversationSidebar = ({
     mutationFn: (id: string) => deleteConversation(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['conversations', customerId] });
-      toast({
-        title: 'Conversation deleted',
-        description: 'The conversation has been removed.',
-      });
+      toast.success('Conversation deleted successfully');
     },
     onError: (error) => {
-      toast({
-        variant: "destructive",
-        title: 'Error deleting conversation',
-        description: error instanceof Error ? error.message : 'An error occurred',
-      });
+      toast.error('Failed to delete conversation. Please try again.');
     },
   });
 
@@ -241,11 +220,7 @@ const ConversationSidebar = ({
       setSearchQuery('');
       
       const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
-      toast({
-        title: "Customer Selected",
-        description: `Switched to ${selectedCustomer?.name}`,
-        className: "bg-[#F1F0FB] border-[#9b87f5]",
-      });
+      toast.success(`Switched to ${selectedCustomer?.name}`);
     }
   };
 

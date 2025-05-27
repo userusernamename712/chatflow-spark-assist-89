@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from '@/components/ui/use-toast';
@@ -27,6 +27,7 @@ const Conversation = () => {
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [retryCount, setRetryCount] = useState(0);
   const [interactionsRating, setInteractionsRating] = useState<Record<string, number>>({});
+  const abortControllerRef = useRef<AbortController | null>(null);
   const maxRetries = 3;
 
   useEffect(() => {
@@ -158,6 +159,9 @@ const Conversation = () => {
     setMessages((prev) => [...prev, newUserMessage]);
     setIsProcessing(true);
 
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
+
     sendChatMessage(
       {
         session_id: conversationId || null,
@@ -171,9 +175,19 @@ const Conversation = () => {
         // Just set processing to false, we don't need to do anything with the session ID
         // since we already have it for historical conversations
         setIsProcessing(false);
+        abortControllerRef.current = null;
       },
-      handleError
+      handleError,
+      abortControllerRef.current.signal
     );
+  };
+
+  const handleStopGeneration = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+      setIsProcessing(false);
+    }
   };
 
   const handleSendTypicalQuestion = (question: string) => {
@@ -326,7 +340,11 @@ const Conversation = () => {
           conversationId={conversationId}
           interactionsRating={interactionsRating}
         />
-        <ChatInput onSendMessage={handleSendMessage} isProcessing={isProcessing} />
+        <ChatInput 
+          onSendMessage={handleSendMessage} 
+          onStopGeneration={handleStopGeneration}
+          isProcessing={isProcessing} 
+        />
       </div>
     </div>
   );

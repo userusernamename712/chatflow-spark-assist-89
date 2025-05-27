@@ -49,72 +49,80 @@ export const sendChatMessage = async (
     let sessionIdFromResponse = null;
 
     const processStream = async () => {
-      while (true) {
-        // Check if the request was aborted
-        if (abortSignal?.aborted) {
-          reader.cancel();
-          throw new Error('Request aborted');
-        }
-
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          if (buffer.trim()) {
-            try {
-              const event = JSON.parse(buffer.trim()) as ChatEvent;
-              
-              // Check if this event contains a session_id
-              if (event.session_id && !sessionIdFromResponse) {
-                sessionIdFromResponse = event.session_id;
-              }
-              
-              // Mark this event as the final one
-              const finalEvent = {
-                ...event,
-                finished: true
-              };
-              
-              onEvent(finalEvent);
-            } catch (e) {
-              console.error('Error parsing final buffer:', e);
-            }
+      try {
+        while (true) {
+          // Check if the request was aborted
+          if (abortSignal?.aborted) {
+            reader.cancel();
+            return; // Exit gracefully without throwing error
           }
+
+          const { done, value } = await reader.read();
           
-          // Complete the chat with the session ID obtained from the stream
-          onComplete(sessionIdFromResponse);
-          break;
-        }
-
-        // Append new data to buffer
-        buffer += decoder.decode(value, { stream: true });
-        
-        // Process complete JSON objects separated by newlines
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || ''; // Keep the last potentially incomplete line in buffer
-
-        for (const line of lines) {
-          if (line.trim()) {
-            try {
-              const event = JSON.parse(line) as ChatEvent;
-              
-              // Check if this event contains a session_id
-              if (event.session_id && !sessionIdFromResponse) {
-                sessionIdFromResponse = event.session_id;
-                event.session_id = sessionIdFromResponse;
+          if (done) {
+            if (buffer.trim()) {
+              try {
+                const event = JSON.parse(buffer.trim()) as ChatEvent;
+                
+                // Check if this event contains a session_id
+                if (event.session_id && !sessionIdFromResponse) {
+                  sessionIdFromResponse = event.session_id;
+                }
+                
+                // Mark this event as the final one
+                const finalEvent = {
+                  ...event,
+                  finished: true
+                };
+                
+                onEvent(finalEvent);
+              } catch (e) {
+                console.error('Error parsing final buffer:', e);
               }
-              
-              onEvent(event);
-            } catch (e) {
-              console.error('Error parsing JSON:', e, line);
+            }
+            
+            // Complete the chat with the session ID obtained from the stream
+            onComplete(sessionIdFromResponse);
+            break;
+          }
+
+          // Append new data to buffer
+          buffer += decoder.decode(value, { stream: true });
+          
+          // Process complete JSON objects separated by newlines
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep the last potentially incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.trim()) {
+              try {
+                const event = JSON.parse(line) as ChatEvent;
+                
+                // Check if this event contains a session_id
+                if (event.session_id && !sessionIdFromResponse) {
+                  sessionIdFromResponse = event.session_id;
+                  event.session_id = sessionIdFromResponse;
+                }
+                
+                onEvent(event);
+              } catch (e) {
+                console.error('Error parsing JSON:', e, line);
+              }
             }
           }
+        }
+      } catch (streamError) {
+        // Only throw error if it's not an abort error
+        if (streamError instanceof Error && streamError.name !== 'AbortError') {
+          throw streamError;
         }
       }
     };
 
-    processStream().catch(onError);
+    await processStream();
   } catch (error) {
-    if (error instanceof Error && error.name === 'AbortError') {
+    // Handle abort errors gracefully
+    if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted'))) {
       console.log('Request was aborted');
       return;
     }

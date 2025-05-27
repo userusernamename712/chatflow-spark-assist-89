@@ -81,7 +81,7 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
               disabled
                 ? 'border-2 border-red-500 text-red-500 bg-transparent hover:bg-red-50'
                 : isProcessing
-                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  ? 'bg-[#9b87f5] hover:bg-[#7E69AB] text-white'
                   : 'bg-[#9b87f5] hover:bg-[#7E69AB] text-white'
             }`}
             disabled={isButtonDisabled}

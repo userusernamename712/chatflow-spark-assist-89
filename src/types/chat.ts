@@ -19,12 +19,13 @@ export interface ChatEvent {
 
 export interface Message {
   id: string;
-  type: 'user' | 'assistant' | 'tool_call';
+  type: 'user' | 'assistant' | 'tool_call' | 'aborted';
   content: string;
   isStreaming?: boolean;
   tool?: string;
   arguments?: Record<string, any>;
   result?: any;
-  toolCallId?: string; // Added to track which tool call a result belongs to
-  messageIndex?: number; // Added to track the index of the message in the conversation
+  toolCallId?: string;
+  messageIndex?: number;
+  originalPrompt?: string; // For aborted messages to allow retry
 }

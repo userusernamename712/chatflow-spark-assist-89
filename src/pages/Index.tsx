@@ -180,6 +180,19 @@ const Index = () => {
       abortControllerRef.current = null;
       setIsProcessing(false);
       
+      // Add an aborted message with retry options
+      const lastUserMessage = messages[messages.length - 1];
+      if (lastUserMessage && lastUserMessage.type === 'user') {
+        const abortedMessage: Message = {
+          id: uuidv4(),
+          type: 'aborted',
+          content: 'Generation was stopped.',
+          originalPrompt: lastUserMessage.content,
+          messageIndex: messages.length,
+        };
+        setMessages((prev) => [...prev, abortedMessage]);
+      }
+      
       toast({
         title: "Generation stopped",
         description: "The response generation has been interrupted.",
@@ -321,6 +334,15 @@ const Index = () => {
     });
   };
 
+  const handleRetryMessage = (originalPrompt: string) => {
+    if (!isProcessing && originalPrompt.trim()) {
+      // Remove the aborted message first
+      setMessages((prev) => prev.filter(msg => msg.type !== 'aborted'));
+      // Send the original message again
+      handleSendMessage(originalPrompt);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col h-screen items-center justify-center p-4 bg-[#F6F6F7]">
@@ -395,6 +417,7 @@ const Index = () => {
               messages={messages}
               isProcessing={isProcessing}
               onSendTypicalQuestion={handleSendTypicalQuestion}
+              onRetryMessage={handleRetryMessage}
               conversationId={sessionId}
               interactionsRating={interactionsRating}
               disabled={!customerHasTools}

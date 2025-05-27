@@ -2,12 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { HelpCircle, MessageSquare, User } from 'lucide-react';
 import MessageBubble from './MessageBubble';
+import RetryActions from './RetryActions';
 import { Message } from '@/types/chat';
 
 type ChatContainerProps = {
   messages: Message[];
   isProcessing: boolean;
   onSendTypicalQuestion?: (question: string) => void;
+  onRetryMessage?: (originalPrompt: string) => void;
   conversationId?: string;
   interactionsRating?: Record<string, number>;
   disabled?: boolean;
@@ -17,12 +19,12 @@ const ChatContainer = ({
   messages,
   isProcessing,
   onSendTypicalQuestion,
+  onRetryMessage,
   conversationId,
   interactionsRating = {},
   disabled,
 }: ChatContainerProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  console.log(`Is it disabled : ${disabled}`)
 
   // Auto-scroll when messages change or streaming updates
   useEffect(() => {
@@ -41,6 +43,16 @@ const ChatContainer = ({
     if (onSendTypicalQuestion) {
       onSendTypicalQuestion(question);
     }
+  };
+
+  const handleRetry = (originalPrompt: string) => {
+    if (onRetryMessage) {
+      onRetryMessage(originalPrompt);
+    }
+  };
+
+  const handleRefresh = () => {
+    window.location.reload();
   };
 
   const validMessages = messages.filter(
@@ -109,7 +121,7 @@ const ChatContainer = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {validMessages.map((message) => {
+            {validMessages.map((message, index) => {
               if (message.type === 'user') {
                 return (
                   <MessageBubble
@@ -130,6 +142,21 @@ const ChatContainer = ({
                     toolResult={message.result}
                     messageIndex={message.messageIndex}
                   />
+                );
+              } else if (message.type === 'aborted') {
+                return (
+                  <div key={message.id}>
+                    <MessageBubble
+                      type="assistant"
+                      content={message.content}
+                      messageIndex={message.messageIndex}
+                    />
+                    <RetryActions
+                      onRetry={() => handleRetry(message.originalPrompt || '')}
+                      onRefresh={handleRefresh}
+                      disabled={isProcessing}
+                    />
+                  </div>
                 );
               } else {
                 return (

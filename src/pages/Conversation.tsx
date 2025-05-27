@@ -187,6 +187,19 @@ const Conversation = () => {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
       setIsProcessing(false);
+      
+      // Add an aborted message with retry options
+      const lastUserMessage = messages[messages.length - 1];
+      if (lastUserMessage && lastUserMessage.type === 'user') {
+        const abortedMessage: Message = {
+          id: uuidv4(),
+          type: 'aborted',
+          content: 'Generation was stopped.',
+          originalPrompt: lastUserMessage.content,
+          messageIndex: messages.length,
+        };
+        setMessages((prev) => [...prev, abortedMessage]);
+      }
     }
   };
 
@@ -261,7 +274,15 @@ const Conversation = () => {
     navigate('/');
   };
 
-  // Pass the conversation ID and interactions rating to ChatContainer
+  const handleRetryMessage = (originalPrompt: string) => {
+    if (!isProcessing && originalPrompt.trim()) {
+      // Remove the aborted message first
+      setMessages((prev) => prev.filter(msg => msg.type !== 'aborted'));
+      // Send the original message again
+      handleSendMessage(originalPrompt);
+    }
+  };
+
   const passMessagesToContainer = () => {
     return messages.map(message => ({
       ...message,
@@ -337,6 +358,7 @@ const Conversation = () => {
           messages={messages} 
           isProcessing={isProcessing}
           onSendTypicalQuestion={handleSendTypicalQuestion}
+          onRetryMessage={handleRetryMessage}
           conversationId={conversationId}
           interactionsRating={interactionsRating}
         />

@@ -288,11 +288,7 @@ const Index = () => {
   const handleError = (error: Error) => {
     console.error('Chat error:', error);
     setIsProcessing(false);
-    toast({
-      variant: 'destructive',
-      title: 'Error',
-      description: error.message || 'Something went wrong. Please try again.',
-    });
+    toast.error(error.message || 'Something went wrong. Please try again.');
   };
 
   const handleSelectConversation = (conversation: Conversation) => {
@@ -324,11 +320,7 @@ const Index = () => {
     handleChangeCustomer(customerId);
     
     const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
-    toast({
-      title: "Customer Selected",
-      description: `Switched to ${selectedCustomer?.name}`,
-      className: "bg-[#F1F0FB] border-[#9b87f5]",
-    });
+    toast.success(`Switched to ${selectedCustomer?.name}`);
   };
 
   const handleRetryMessage = (originalPrompt: string) => {

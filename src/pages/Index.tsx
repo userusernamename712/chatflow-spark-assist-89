@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import { Menu, PanelLeftClose } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
-import { fetchApiMetadata } from '@/services/apiService';
 import { Conversation } from '@/types/conversation';
 import { useQueryClient } from '@tanstack/react-query';
 import ProfileDialog from '@/components/ProfileDialog';
@@ -31,8 +30,6 @@ const Index = () => {
   const [retryCount, setRetryCount] = useState(0);
   const maxRetries = 3;
   const [interactionsRating, setInteractionsRating] = useState<Record<string, number>>({});
-  const [customerHasTools, setCustomerHasTools] = useState(true);
-  const [isCheckingMetadata, setIsCheckingMetadata] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [lastUserMessage, setLastUserMessage] = useState<string>('');
 
@@ -40,25 +37,6 @@ const Index = () => {
   useEffect(() => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
-
-  useEffect(() => {
-    if (!selectedCustomerId) return;
-
-    const checkTools = async () => {
-      setIsCheckingMetadata(true);
-      try {
-        const metadata = await fetchApiMetadata(selectedCustomerId);
-        setCustomerHasTools(metadata.tools && Object.keys(metadata.tools).length > 0);
-      } catch (err) {
-        console.error('Failed to fetch tools metadata:', err);
-        setCustomerHasTools(false);
-      } finally {
-        setIsCheckingMetadata(false);
-      }
-    };
-
-    checkTools();
-  }, [selectedCustomerId]);
 
   useEffect(() => {
     if (sessionId) {
@@ -409,7 +387,6 @@ const Index = () => {
               onRetryMessage={handleRetryMessage}
               conversationId={sessionId}
               interactionsRating={interactionsRating}
-              disabled={!customerHasTools}
             />
           )}
 
@@ -420,7 +397,6 @@ const Index = () => {
                 onSendMessage={handleSendMessage}
                 onStopGeneration={handleStopGeneration}
                 isProcessing={isProcessing || isLoadingConversation}
-                disabled={!customerHasTools}
               />
             </div>
           </div>

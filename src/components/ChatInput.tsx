@@ -3,6 +3,8 @@ import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import { Send, MessageSquare, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { fetchApiMetadata } from '@/services/apiService';
+import { useAuth } from '@/contexts/AuthContext';
 
 type ChatInputProps = {
   onSendMessage: (message: string) => void;
@@ -13,13 +15,39 @@ type ChatInputProps = {
 
 const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: ChatInputProps) => {
   const [message, setMessage] = useState('');
+  const [customerHasTools, setCustomerHasTools] = useState(true);
+  const [isCheckingTools, setIsCheckingTools] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { selectedCustomerId } = useAuth();
+
+  // Check tool availability every time the component renders
+  useEffect(() => {
+    if (!selectedCustomerId) {
+      setCustomerHasTools(false);
+      return;
+    }
+
+    const checkTools = async () => {
+      setIsCheckingTools(true);
+      try {
+        const metadata = await fetchApiMetadata(selectedCustomerId);
+        setCustomerHasTools(metadata.tools && Object.keys(metadata.tools).length > 0);
+      } catch (err) {
+        console.error('Failed to fetch tools metadata:', err);
+        setCustomerHasTools(false);
+      } finally {
+        setIsCheckingTools(false);
+      }
+    };
+
+    checkTools();
+  }, [selectedCustomerId]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (isProcessing) {
       onStopGeneration();
-    } else if (message.trim() && !disabled) {
+    } else if (message.trim() && !disabled && !isCheckingTools && customerHasTools) {
       onSendMessage(message);
       setMessage('');
     }
@@ -50,8 +78,11 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
     }
   }, [isProcessing]);
 
-  // Determine if button should be disabled (message empty when not processing, or chat disabled)
-  const isButtonDisabled = (!isProcessing && !message.trim()) || disabled;
+  // Determine if input should be disabled
+  const isInputDisabled = disabled || isCheckingTools || !customerHasTools;
+  
+  // Determine if button should be disabled
+  const isButtonDisabled = (!isProcessing && !message.trim()) || isInputDisabled;
 
   return (
     <form onSubmit={handleSubmit} className="relative">
@@ -65,10 +96,10 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={"Ask me anything..."}
-            disabled={disabled}
+            placeholder={isCheckingTools ? "Checking availability..." : "Ask me anything..."}
+            disabled={isInputDisabled}
             className={`min-h-[50px] max-h-[150px] pr-12 pl-10 border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 font-sans text-sm
-              ${disabled
+              ${isInputDisabled
                 ? 'text-red-500 placeholder-red-500'
                 : 'text-[#403E43] placeholder-[#8E9196]'
               }
@@ -78,7 +109,7 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
             type="submit"
             size="icon"
             className={`absolute right-2 bottom-2 rounded-lg h-8 w-8 transition-all duration-200 ${
-              disabled
+              isInputDisabled
                 ? 'border-2 border-red-500 text-red-500 bg-transparent hover:bg-red-50'
                 : isProcessing
                   ? 'bg-[#9b87f5] hover:bg-[#7E69AB] text-white'
@@ -95,13 +126,15 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
           </Button>
         </div>
         <div className={`mt-2 text-xs text-center ${
-          disabled && !isProcessing ? 'text-red-500' : 'text-[#8E9196]'
+          isInputDisabled && !isProcessing ? 'text-red-500' : 'text-[#8E9196]'
         }`}>
           {isProcessing
             ? "Click stop to interrupt generation..."
-            : disabled
-              ? "This service is not available for this customer"
-              : "Type your message and press Enter to send"
+            : isCheckingTools
+              ? "Checking service availability..."
+              : !customerHasTools
+                ? "This service is not available for this customer"
+                : "Type your message and press Enter to send"
           }
         </div>
       </div>

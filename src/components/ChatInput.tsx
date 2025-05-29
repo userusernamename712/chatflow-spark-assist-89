@@ -19,29 +19,62 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
   const [isCheckingTools, setIsCheckingTools] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { selectedCustomerId } = useAuth();
+  const lastCheckedCustomerRef = useRef<string | null>(null);
+  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check tool availability every time the component renders
+  // Force fresh check whenever customer changes or component mounts
   useEffect(() => {
     if (!selectedCustomerId) {
       setCustomerHasTools(false);
+      setIsCheckingTools(false);
       return;
     }
 
-    const checkTools = async () => {
-      setIsCheckingTools(true);
-      try {
-        const metadata = await fetchApiMetadata(selectedCustomerId);
-        setCustomerHasTools(metadata.tools && Object.keys(metadata.tools).length > 0);
-      } catch (err) {
-        console.error('Failed to fetch tools metadata:', err);
-        setCustomerHasTools(false);
-      } finally {
-        setIsCheckingTools(false);
+    // If customer changed, force immediate recheck
+    if (lastCheckedCustomerRef.current !== selectedCustomerId) {
+      lastCheckedCustomerRef.current = selectedCustomerId;
+      checkToolsImmediately();
+    }
+
+    // Set up periodic refresh every 30 seconds
+    if (checkIntervalRef.current) {
+      clearInterval(checkIntervalRef.current);
+    }
+    
+    checkIntervalRef.current = setInterval(() => {
+      checkToolsImmediately();
+    }, 30000);
+
+    return () => {
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
       }
     };
-
-    checkTools();
   }, [selectedCustomerId]);
+
+  const checkToolsImmediately = async () => {
+    if (!selectedCustomerId || isCheckingTools) return;
+
+    console.log('Checking tool availability for customer:', selectedCustomerId);
+    setIsCheckingTools(true);
+    
+    try {
+      // Add cache-busting timestamp to ensure fresh data
+      const timestamp = new Date().getTime();
+      const metadata = await fetchApiMetadata(selectedCustomerId + `&_t=${timestamp}`);
+      
+      const hasTools = metadata.tools && Object.keys(metadata.tools).length > 0;
+      console.log('Tool availability result:', hasTools, 'Tools found:', Object.keys(metadata.tools || {}));
+      
+      setCustomerHasTools(hasTools);
+    } catch (err) {
+      console.error('Failed to fetch tools metadata:', err);
+      // On error, assume tools are not available
+      setCustomerHasTools(false);
+    } finally {
+      setIsCheckingTools(false);
+    }
+  };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -77,6 +110,15 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
       textareaRef.current.focus();
     }
   }, [isProcessing]);
+
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (checkIntervalRef.current) {
+        clearInterval(checkIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Determine if input should be disabled
   const isInputDisabled = disabled || isCheckingTools || !customerHasTools;
@@ -137,6 +179,19 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
                 : "Type your message and press Enter to send"
           }
         </div>
+        {!customerHasTools && !isCheckingTools && !isProcessing && (
+          <div className="mt-1 text-center">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={checkToolsImmediately}
+              className="text-xs text-[#9b87f5] hover:text-[#7E69AB] hover:bg-[#F1F0FB]"
+            >
+              Try refreshing
+            </Button>
+          </div>
+        )}
       </div>
     </form>
   );

@@ -20,9 +20,8 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { selectedCustomerId } = useAuth();
   const lastCheckedCustomerRef = useRef<string | null>(null);
-  const checkIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Force fresh check whenever customer changes or component mounts
+  // Check tools availability when customer changes or component mounts
   useEffect(() => {
     if (!selectedCustomerId) {
       setCustomerHasTools(false);
@@ -35,21 +34,6 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
       lastCheckedCustomerRef.current = selectedCustomerId;
       checkToolsImmediately();
     }
-
-    // Set up periodic refresh every 30 seconds
-    if (checkIntervalRef.current) {
-      clearInterval(checkIntervalRef.current);
-    }
-    
-    checkIntervalRef.current = setInterval(() => {
-      checkToolsImmediately();
-    }, 30000);
-
-    return () => {
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-      }
-    };
   }, [selectedCustomerId]);
 
   const checkToolsImmediately = async () => {
@@ -110,15 +94,6 @@ const ChatInput = ({ onSendMessage, onStopGeneration, isProcessing, disabled }: 
       textareaRef.current.focus();
     }
   }, [isProcessing]);
-
-  // Cleanup interval on unmount
-  useEffect(() => {
-    return () => {
-      if (checkIntervalRef.current) {
-        clearInterval(checkIntervalRef.current);
-      }
-    };
-  }, []);
 
   // Determine if input should be disabled
   const isInputDisabled = disabled || isCheckingTools || !customerHasTools;

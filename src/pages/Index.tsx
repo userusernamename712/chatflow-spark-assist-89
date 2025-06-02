@@ -5,17 +5,14 @@ import ChatHeader from '@/components/ChatHeader';
 import ChatContainer from '@/components/ChatContainer';
 import ChatInput from '@/components/ChatInput';
 import LoginForm from '@/components/LoginForm';
-import ConversationSidebar from '@/components/ConversationSidebar';
+import AppSidebar from '@/components/AppSidebar';
 import { Message, ChatEvent } from '@/types/chat';
 import { sendChatMessage } from '@/services/chatService';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Menu, PanelLeftClose } from 'lucide-react';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
+import { useQueryClient } from '@tanstack/react-query';
 import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
 import { Conversation } from '@/types/conversation';
-import { useQueryClient } from '@tanstack/react-query';
-import ProfileDialog from '@/components/ProfileDialog';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
 
 const Index = () => {
@@ -23,7 +20,6 @@ const Index = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingConversation, setIsLoadingConversation] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const { user, isAuthenticated, selectedCustomerId, loading } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(localStorage.getItem('chatSessionId'));
   const queryClient = useQueryClient();
@@ -126,7 +122,6 @@ const Index = () => {
   const handleSendMessage = (content: string) => {
     if (!content.trim() || !user) return;
 
-    // Store the last user message for potential retry
     setLastUserMessage(content.trim());
 
     const newUserMessage: Message = {
@@ -138,7 +133,6 @@ const Index = () => {
     setMessages((prev) => [...prev, newUserMessage]);
     setIsProcessing(true);
 
-    // Create a new AbortController for this request
     abortControllerRef.current = new AbortController();
 
     sendChatMessage(
@@ -162,7 +156,6 @@ const Index = () => {
       abortControllerRef.current = null;
       setIsProcessing(false);
       
-      // Always add an aborted message with retry options when generation is stopped
       const abortedMessage: Message = {
         id: uuidv4(),
         type: 'aborted',
@@ -272,16 +265,10 @@ const Index = () => {
   const handleSelectConversation = (conversation: Conversation) => {
     localStorage.setItem('chatSessionId', conversation.session_id);
     setSessionId(conversation.session_id);
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
   };
 
   const handleStartNewChat = () => {
     startNewSession();
-    if (isMobile) {
-      setSidebarOpen(false);
-    }
   };
 
   const startNewSession = () => {
@@ -294,18 +281,9 @@ const Index = () => {
     // Handled by auth context
   };
 
-  const handleCustomerSelect = (customerId: string) => {
-    handleChangeCustomer(customerId);
-    
-    const selectedCustomer = AVAILABLE_CUSTOMERS.find(c => c.id === customerId);
-    toast.success(`Switched to ${selectedCustomer?.name}`);
-  };
-
   const handleRetryMessage = (originalPrompt: string) => {
     if (!isProcessing && originalPrompt.trim()) {
-      // Remove the aborted message first
       setMessages((prev) => prev.filter(msg => msg.type !== 'aborted'));
-      // Send the original message again
       handleSendMessage(originalPrompt);
     }
   };
@@ -330,87 +308,58 @@ const Index = () => {
   }
 
   return (
-    <div className="flex h-screen bg-[#F6F6F7] w-full">
-      {/* Sidebar - Responsive */}
-      <div className={`${
-        sidebarOpen 
-          ? 'w-72 md:w-80' 
-          : 'w-0'
-        } transition-all duration-300 overflow-hidden bg-white border-r border-[#E5DEFF] shadow-sm flex-shrink-0`}>
-        <ConversationSidebar
-          customerId={selectedCustomerId}
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-[#F6F6F7]">
+        <AppSidebar
           sessionId={sessionId}
           onSelectConversation={handleSelectConversation}
           startNewChat={handleStartNewChat}
           onChangeCustomer={handleChangeCustomer}
-          isCollapsed={!sidebarOpen}
-          isMobile={isMobile}
-          onCloseMobile={() => setSidebarOpen(false)}
         />
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col bg-[#F6F6F7] relative min-w-0">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 bg-[#F6F6F7] border-b border-[#E5DEFF] flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-[#8E9196] hover:text-[#403E43] hover:bg-[#F1F0FB]"
-            >
-              {sidebarOpen ? (
-                <PanelLeftClose className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
-            </Button>
-            <ChatHeader />
+        
+        <SidebarInset className="flex-1">
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-[#F6F6F7] border-b border-[#E5DEFF] flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <SidebarTrigger className="text-[#8E9196] hover:text-[#403E43] hover:bg-[#F1F0FB]" />
+              <ChatHeader />
+            </div>
           </div>
-        </div>
 
-        {/* Chat Content */}
-        <div className="flex-1 flex flex-col bg-[#F6F6F7] relative min-h-0">
-          {isLoadingConversation ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="flex flex-col items-center">
-                <div className="w-8 h-8 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-2"></div>
-                <div className="text-sm text-[#403E43]">Loading conversation...</div>
+          {/* Chat Content */}
+          <div className="flex-1 flex flex-col bg-[#F6F6F7] relative min-h-0">
+            {isLoadingConversation ? (
+              <div className="flex-1 flex items-center justify-center">
+                <div className="flex flex-col items-center">
+                  <div className="w-8 h-8 border-t-2 border-[#9b87f5] rounded-full animate-spin mb-2"></div>
+                  <div className="text-sm text-[#403E43]">Loading conversation...</div>
+                </div>
+              </div>
+            ) : (
+              <ChatContainer
+                messages={messages}
+                isProcessing={isProcessing}
+                onSendTypicalQuestion={handleSendTypicalQuestion}
+                onRetryMessage={handleRetryMessage}
+                conversationId={sessionId}
+                interactionsRating={interactionsRating}
+              />
+            )}
+
+            {/* Floating Input */}
+            <div className="p-4 flex-shrink-0">
+              <div className="max-w-4xl mx-auto">
+                <ChatInput
+                  onSendMessage={handleSendMessage}
+                  onStopGeneration={handleStopGeneration}
+                  isProcessing={isProcessing || isLoadingConversation}
+                />
               </div>
             </div>
-          ) : (
-            <ChatContainer
-              messages={messages}
-              isProcessing={isProcessing}
-              onSendTypicalQuestion={handleSendTypicalQuestion}
-              onRetryMessage={handleRetryMessage}
-              conversationId={sessionId}
-              interactionsRating={interactionsRating}
-            />
-          )}
-
-          {/* Floating Input */}
-          <div className="p-4 flex-shrink-0">
-            <div className="max-w-4xl mx-auto">
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                onStopGeneration={handleStopGeneration}
-                isProcessing={isProcessing || isLoadingConversation}
-              />
-            </div>
           </div>
-        </div>
+        </SidebarInset>
       </div>
-
-      {/* Mobile Overlay */}
-      {isMobile && sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden" 
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-    </div>
+    </SidebarProvider>
   );
 };
 

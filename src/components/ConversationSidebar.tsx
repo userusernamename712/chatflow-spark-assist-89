@@ -250,14 +250,9 @@ const ConversationSidebar = ({
 
   return (
     <div className="flex flex-col h-full bg-white relative">
-      {/* Header with close button for mobile */}
+      {/* Header */}
       <div className="flex items-center justify-between p-3 border-b">
         <h2 className="text-sm font-medium">Conversation History</h2>
-        {isMobile && (
-          <Button variant="ghost" size="sm" onClick={onCloseMobile}>
-            <X className="h-4 w-4" />
-          </Button>
-        )}
       </div>
 
       <div className="p-3 border-b">

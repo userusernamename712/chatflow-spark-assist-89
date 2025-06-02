@@ -14,6 +14,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { fetchConversation, fetchConversationHistory } from '@/services/conversationService';
 import { Conversation } from '@/types/conversation';
 import { AVAILABLE_CUSTOMERS } from '@/types/auth';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Index = () => {
   const isMobile = useIsMobile();

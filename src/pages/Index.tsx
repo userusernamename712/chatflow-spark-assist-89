@@ -32,7 +32,7 @@ const Index = () => {
 
   // Close sidebar on mobile by default and when screen size changes
   useEffect(() => {
-    setSidebarOpen(!isMobile);
+    
   }, [isMobile]);
 
   useEffect(() => {

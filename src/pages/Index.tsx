@@ -318,9 +318,9 @@ const Index = () => {
           onChangeCustomer={handleChangeCustomer}
         />
         
-        <SidebarInset className="flex-1 flex flex-col">
+        <SidebarInset className="flex-1 flex flex-col h-screen">
           {/* Fixed Header */}
-          <div className="flex items-center justify-between p-4 bg-[#F6F6F7] border-b border-[#E5DEFF] flex-shrink-0">
+          <div className="flex items-center justify-between p-4 bg-[#F6F6F7] border-b border-[#E5DEFF] flex-shrink-0 z-10">
             <div className="flex items-center gap-3">
               <SidebarTrigger className="text-[#8E9196] hover:text-[#403E43] hover:bg-[#F1F0FB]" />
               <ChatHeader />
@@ -328,7 +328,7 @@ const Index = () => {
           </div>
 
           {/* Scrollable Chat Content */}
-          <div className="flex-1 flex flex-col min-h-0">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {isLoadingConversation ? (
               <div className="flex-1 flex items-center justify-center">
                 <div className="flex flex-col items-center">
@@ -348,7 +348,7 @@ const Index = () => {
             )}
 
             {/* Fixed Input */}
-            <div className="p-4 flex-shrink-0 bg-[#F6F6F7]">
+            <div className="p-4 flex-shrink-0 bg-[#F6F6F7] border-t border-[#E5DEFF]">
               <div className="max-w-4xl mx-auto">
                 <ChatInput
                   onSendMessage={handleSendMessage}

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { toast } from 'sonner';
@@ -311,7 +310,7 @@ const Index = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-[#F6F6F7]">
+      <div className="min-h-screen flex w-full bg-[#F6F6F7] relative">
         <AppSidebar
           sessionId={sessionId}
           onSelectConversation={handleSelectConversation}
@@ -319,7 +318,7 @@ const Index = () => {
           onChangeCustomer={handleChangeCustomer}
         />
         
-        <SidebarInset className="flex-1 flex flex-col h-screen relative">
+        <SidebarInset className="flex-1 flex flex-col h-screen">
           {/* Fixed Header */}
           <div className="flex items-center justify-between p-4 bg-[#F6F6F7] border-b border-[#E5DEFF] flex-shrink-0 z-10">
             <div className="flex items-center gap-3">
@@ -348,18 +347,18 @@ const Index = () => {
               />
             )}
           </div>
-
-          {/* Floating Input - positioned absolutely at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-[#F6F6F7] border-t border-[#E5DEFF] z-10">
-            <div className="max-w-4xl mx-auto">
-              <ChatInput
-                onSendMessage={handleSendMessage}
-                onStopGeneration={handleStopGeneration}
-                isProcessing={isProcessing || isLoadingConversation}
-              />
-            </div>
-          </div>
         </SidebarInset>
+
+        {/* Floating Input - positioned absolutely at bottom of entire viewport */}
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-[#F6F6F7] border-t border-[#E5DEFF] z-20">
+          <div className="max-w-4xl mx-auto">
+            <ChatInput
+              onSendMessage={handleSendMessage}
+              onStopGeneration={handleStopGeneration}
+              isProcessing={isProcessing || isLoadingConversation}
+            />
+          </div>
+        </div>
       </div>
     </SidebarProvider>
   );

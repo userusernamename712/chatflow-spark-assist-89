@@ -277,29 +277,31 @@ const ConversationSidebar = ({
             {sortedConversations.map((conversation) => (
               <div 
                 key={conversation.session_id}
-                className={`flex flex-col rounded-md border ${
+                className={`relative rounded-md border overflow-hidden ${
                   sessionId === conversation.session_id 
                     ? 'bg-[#F1F0FB] border-[#9b87f5]' 
                     : 'bg-white border-[#E5DEFF] hover:bg-[#F9F8FF]'
                 } transition-colors`}
               >
-                <div className="flex items-center justify-between p-2">
+                <div className="flex items-center p-2 pr-10">
                   <div 
-                    className="flex-1 cursor-pointer" 
+                    className="flex-1 cursor-pointer min-w-0" 
                     onClick={() => onSelectConversation(conversation)}
                   >
                     <div className="text-sm font-medium truncate">
                       {getFirstUserMessage(conversation)}
                     </div>
                     <div className="flex items-center text-xs text-[#8E9196]">
-                      <Clock className="h-3 w-3 mr-1" />
+                      <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
                       {formatDate(conversation.updated_at)}
                     </div>
                   </div>
+                </div>
 
+                <div className="absolute top-2 right-2">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                         <MoreHorizontal className="h-4 w-4 text-[#8E9196]" />
                       </Button>
                     </DropdownMenuTrigger>

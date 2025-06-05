@@ -69,11 +69,11 @@ const LoginForm = () => {
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full mb-4 overflow-hidden bg-slate-900">
               <img 
                 src="/lovable-uploads/550aab05-c6c5-4d4a-8ef2-665352be8d2e.png" 
-                alt="bookline.AI Logo" 
+                alt="bookline.ai Logo" 
                 className="h-full w-full object-contain filter invert" // Invert filter for the dark mobile logo
               />
             </div>
-            <h1 className="text-2xl font-light text-slate-900 mb-2">bookline.AI</h1>
+            <h1 className="text-2xl font-light text-slate-900 mb-2">bookline.ai</h1>
           </div>
 
           <div className="mb-8">

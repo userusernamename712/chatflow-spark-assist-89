@@ -32,7 +32,7 @@ const LoginForm = () => {
   const onSubmit = async (values: FormValues) => {
     try {
       await login(values.email, values.password, DEFAULT_CUSTOMER_ID);
-      toast.success(`You've logged in successfully to the bookline.ai team portal.`);
+      toast.success(`You've logged in successfully to the bookline.ai analytics agent.`);
     } catch (err) {
       console.error('Auth error:', err);
       // It's good practice to show the error in the toast too

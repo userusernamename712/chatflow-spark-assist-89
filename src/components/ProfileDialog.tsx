@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -51,6 +52,20 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
       onChangeCustomer(selectedCustomerId);
       setSearchQuery('');
     }
+  };
+
+  // Function to format names from "get_something" to "Get Something"
+  const formatName = (name: string) => {
+    return name
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
+  // Function to truncate description
+  const truncateDescription = (description: string, maxLength: number = 100) => {
+    if (description.length <= maxLength) return description;
+    return description.substring(0, maxLength) + '...';
   };
 
   return (
@@ -113,13 +128,15 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
                           <div
                             key={`${server}-${name}`}
                             onClick={() => setSelectedDetails({ type: 'tool', item: tool, server })}
-                            className="group p-3 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
+                            className="group p-4 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
                           >
-                            <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
-                              <span className="font-medium text-sm">{tool.name}</span>
-                              <Badge variant="secondary" className="text-xs">
-                                {server.split('/').slice(-2)[0]}
-                              </Badge>
+                            <div className="space-y-2">
+                              <h3 className="font-medium text-sm">{formatName(tool.name)}</h3>
+                              {tool.description && (
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                  {truncateDescription(tool.description)}
+                                </p>
+                              )}
                             </div>
                           </div>
                         ))
@@ -134,13 +151,15 @@ const ProfileDialog = ({ isOpen, onClose, customerId, onChangeCustomer }: Profil
                           <div
                             key={`${server}-${uri}`}
                             onClick={() => setSelectedDetails({ type: 'resource', item: resource, server })}
-                            className="group p-3 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
+                            className="group p-4 border rounded-lg hover:border-primary/50 hover:bg-slate-50 cursor-pointer transition-colors"
                           >
-                            <div className="flex items-center justify-between mb-1 flex-wrap gap-1">
-                              <span className="font-medium text-sm">{resource.name}</span>
-                              <Badge variant="secondary" className="text-xs">
-                                {server.split('/').slice(-2)[0]}
-                              </Badge>
+                            <div className="space-y-2">
+                              <h3 className="font-medium text-sm">{formatName(resource.name)}</h3>
+                              {resource.description && (
+                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                  {truncateDescription(resource.description)}
+                                </p>
+                              )}
                             </div>
                           </div>
                         ))
